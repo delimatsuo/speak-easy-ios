@@ -1,0 +1,99 @@
+# Cloud Build configuration for Universal Translator Backend
+# This file enables automated CI/CD deployment to Cloud Run
+
+steps:
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/universal-translator-api:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/universal-translator-api:latest'
+      - '-f'
+      - 'backend/Dockerfile'
+      - '.'
+    id: 'build-image'
+
+  # Step 2: Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/universal-translator-api:$COMMIT_SHA'
+    id: 'push-image'
+    waitFor: ['build-image']
+
+  # Step 3: Push latest tag
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/universal-translator-api:latest'
+    id: 'push-latest'
+    waitFor: ['build-image']
+
+  # Step 4: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'universal-translator-api'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/universal-translator-api:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-secrets'
+      - 'GEMINI_API_KEY=gemini-api-key:latest'
+      - '--set-env-vars'
+      - 'GCP_PROJECT=$PROJECT_ID,ENVIRONMENT=production'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '100'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--timeout'
+      - '300'
+      - '--concurrency'
+      - '80'
+    id: 'deploy-cloud-run'
+    waitFor: ['push-image']
+
+  # Step 5: Run health check
+  - name: 'gcr.io/cloud-builders/curl'
+    args:
+      - '-f'
+      - '-X'
+      - 'GET'
+      - 'https://universal-translator-api-xxxxx.a.run.app/health'
+    id: 'health-check'
+    waitFor: ['deploy-cloud-run']
+
+# Configuration options
+options:
+  # Use high-performance machine for faster builds
+  machineType: 'E2_HIGHCPU_8'
+  # Increase disk size for Docker operations
+  diskSizeGb: 100
+  # Use substitutions for dynamic values
+  substitution_option: 'ALLOW_LOOSE'
+
+# Specify images to be pushed to registry
+images:
+  - 'gcr.io/$PROJECT_ID/universal-translator-api:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/universal-translator-api:latest'
+
+# Set timeout for entire build process
+timeout: '1200s'
+
+# Substitutions for customization
+substitutions:
+  _SERVICE_NAME: 'universal-translator-api'
+  _REGION: 'us-central1'
+  _MEMORY: '2Gi'
+  _CPU: '2'

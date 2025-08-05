@@ -1,0 +1,54 @@
+name: UniversalTranslator
+options:
+  bundleIdPrefix: com
+  deploymentTarget:
+    iOS: 15.0
+  developmentLanguage: en
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: 10.0.0
+settings:
+  base:
+    PRODUCT_BUNDLE_IDENTIFIER: com.universaltranslator.app
+    DEVELOPMENT_TEAM: ""
+    INFOPLIST_FILE: Info.plist
+    SWIFT_VERSION: 5.0
+    TARGETED_DEVICE_FAMILY: "1,2"
+    IPHONEOS_DEPLOYMENT_TARGET: 15.0
+targets:
+  UniversalTranslator:
+    type: application
+    platform: iOS
+    deploymentTarget: 15.0
+    sources:
+      - path: .
+        includes:
+          - "*.swift"
+          - "GoogleService-Info.plist"
+        excludes:
+          - "create_xcode_project.swift"
+          - "Package.swift"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.universaltranslator.app
+        INFOPLIST_FILE: Info.plist
+        SWIFT_VERSION: 5.0
+    dependencies:
+      - package: Firebase
+        products:
+          - FirebaseAnalytics
+          - FirebaseAuth
+          - FirebaseFirestore
+          - FirebaseFirestoreSwift
+          - FirebaseStorage
+    preBuildScripts:
+      - script: |
+          if [ ! -f "${SRCROOT}/GoogleService-Info.plist" ]; then
+            echo "error: GoogleService-Info.plist not found"
+            exit 1
+          fi
+        name: Check GoogleService-Info.plist
+        showEnvVars: false

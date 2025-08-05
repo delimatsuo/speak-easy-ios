@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 
+	THIS IS A TEMPLATE FILE
+	
+	The human operator needs to:
+	1. Download the actual GoogleService-Info.plist from Firebase Console
+	2. Replace this template with the real file
+	3. Ensure the bundle ID matches: com.universaltranslator.app
+	
+	The real file will contain:
+	- PROJECT_ID
+	- BUNDLE_ID  
+	- API_KEY
+	- GCM_SENDER_ID
+	- And other Firebase configuration values
+	
+	DO NOT commit the real GoogleService-Info.plist to version control.
+	-->
+	<key>TEMPLATE_FILE</key>
+	<true/>
+	<key>INSTRUCTIONS</key>
+	<string>Replace this template with the real GoogleService-Info.plist from Firebase Console</string>
+</dict>
+</plist>

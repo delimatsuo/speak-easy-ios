@@ -1,0 +1,15 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-f'
+      - 'Dockerfile_voice'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/universal-translator-api-voice:latest'
+      - '.'
+images:
+  - 'gcr.io/$PROJECT_ID/universal-translator-api-voice:latest'
+timeout: '1200s'
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY

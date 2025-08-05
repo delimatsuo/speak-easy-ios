@@ -1,0 +1,53 @@
+# Docker Compose for local development and testing
+version: '3.8'
+
+services:
+  # Backend API service
+  universal-translator-api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ENVIRONMENT=development
+      - GCP_PROJECT=universal-translator-dev
+      # For local development, you can use a local API key file
+      # DO NOT commit actual API keys to version control
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/service-account.json
+    volumes:
+      # Mount secrets directory (create this locally)
+      - ./secrets:/app/secrets:ro
+      # Mount source code for development hot reloading
+      - ./backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - translator-network
+
+  # Optional: Add a simple nginx proxy for CORS handling
+  nginx-proxy:
+    image: nginx:alpine
+    ports:
+      - "8000:80"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - universal-translator-api
+    networks:
+      - translator-network
+    restart: unless-stopped
+
+networks:
+  translator-network:
+    driver: bridge
+
+# Development volumes
+volumes:
+  secrets:
+    driver: local
