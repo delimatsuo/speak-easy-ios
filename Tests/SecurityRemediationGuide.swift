@@ -717,7 +717,7 @@ class SecureImplementationTests: XCTestCase {
         let secureManager = try SecureMemoryManager()
         
         // Test secure storage and retrieval
-        let sensitiveData = "TEST_API_KEY_REDACTED"
+        let sensitiveData = "sk-1234567890abcdef1234567890abcdef"
         try await secureManager.storeSecurely(sensitiveData, for: "test_key")
         
         let retrieved = try await secureManager.retrieveSecurely(for: "test_key")
@@ -748,17 +748,17 @@ class SecureImplementationTests: XCTestCase {
         let validator = try NetworkSecurityValidator()
         
         let originalRequest = APIRequest(
-            url: URL(string: "https://api.example.com/translate?api_key=GOOGLE_API_KEY_REDACTED")!,
+            url: URL(string: "https://api.example.com/translate?api_key=AIza1234567890abcdef1234567890abcdef123")!,
             method: .POST,
             headers: [
-                "Authorization": "Bearer TEST_API_KEY_REDACTED",
-                "X-API-Key": "GOOGLE_API_KEY_REDACTED",
+                "Authorization": "Bearer sk-1234567890abcdef1234567890abcdef",
+                "X-API-Key": "AIza1234567890abcdef1234567890abcdef123",
                 "Content-Type": "application/json"
             ],
             body: """
             {
                 "text": "Hello world",
-                "api_key": "TEST_API_KEY_REDACTED",
+                "api_key": "sk-1234567890abcdef1234567890abcdef",
                 "auth_token": "ya29.1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab"
             }
             """.data(using: .utf8)
@@ -779,7 +779,7 @@ class SecureImplementationTests: XCTestCase {
            let bodyString = String(data: bodyData, encoding: .utf8) {
             XCTAssertTrue(bodyString.contains("\"api_key\": \"[REDACTED]\""))
             XCTAssertTrue(bodyString.contains("\"auth_token\": \"[REDACTED]\""))
-            XCTAssertFalse(bodyString.contains("TEST_API_KEY_REDACTED"))
+            XCTAssertFalse(bodyString.contains("sk-1234567890abcdef1234567890abcdef"))
         }
     }
 }

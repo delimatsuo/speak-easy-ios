@@ -48,7 +48,7 @@ extension SecurityFixValidationTests {
         let expectation = expectation(description: "API key encryption validation")
         
         Task {
-            let sensitiveAPIKey = "GOOGLE_API_KEY_REDACTED"
+            let sensitiveAPIKey = "AIza1234567890abcdef1234567890abcdef123"
             
             do {
                 // Test secure storage with AES-256 encryption
@@ -248,8 +248,8 @@ extension SecurityFixValidationTests {
         let expectation = expectation(description: "Enhanced request sanitization validation")
         
         Task {
-            let testAPIKey = "GOOGLE_API_KEY_REDACTED"
-            let openAIKey = "TEST_API_KEY_REDACTED"
+            let testAPIKey = "AIza1234567890abcdef1234567890abcdef123"
+            let openAIKey = "sk-1234567890abcdef1234567890abcdef"
             let oauthToken = "ya29.1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab"
             
             let testRequest = APIRequest(
