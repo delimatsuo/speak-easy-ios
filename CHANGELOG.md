@@ -1,6 +1,6 @@
-# Changelog - VoiceBridge iOS App
+# Changelog - Mervyn Talks iOS App
 
-All notable changes to the VoiceBridge voice translation iOS app will be documented in this file.
+All notable changes to the Mervyn Talks voice translation iOS app will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🎉 Major Milestone: App Store Submission Ready
 
-This release marks the completion of all critical fixes and App Store preparation for the VoiceBridge voice translation iOS app.
+This release marks the completion of all critical fixes and App Store preparation for the Mervyn Talks voice translation iOS app.
 
 ### ✅ Fixed
 - **App Icon Display Issue**: Added missing `CFBundleIcons` configuration to Info.plist to properly reference the AppIcon asset catalog
@@ -19,7 +19,7 @@ This release marks the completion of all critical fixes and App Store preparatio
 
 ### 🎨 Changed
 - **App Icon**: Replaced original teal-to-blue gradient design with custom user-provided icon (August 5, 2025)
-- **Branding**: Updated all documentation and metadata from "Universal Translator" to "VoiceBridge" for consistent branding
+- **Branding**: Updated all documentation and metadata from "Universal Translator" to "Mervyn Talks" for consistent branding
 - **Project Structure**: Organized App Store submission materials in dedicated directories
 
 ### ➕ Added
@@ -79,7 +79,7 @@ This release marks the completion of all critical fixes and App Store preparatio
 
 ### Version 1.0.0 Summary
 
-**VoiceBridge** is now fully prepared for App Store submission with all critical issues resolved:
+**Mervyn Talks** is now fully prepared for App Store submission with all critical issues resolved:
 
 1. **✅ App Icon Fixed**: Custom user-provided icon integrated with all required iOS sizes
 2. **✅ Firebase Working**: All packages properly configured and tested on device

@@ -1,4 +1,4 @@
-# VoiceBridge Support Documentation
+# Mervyn Talks Support Documentation
 
 ## Table of Contents
 1. [Getting Started](#getting-started)
@@ -14,7 +14,7 @@
 ### First Time Setup
 
 1. **Download and Install**
-   - Download VoiceBridge from the App Store
+   - Download Mervyn Talks from the App Store
    - The app is ready to use immediately - no account needed!
 
 2. **Grant Permissions**
@@ -41,11 +41,11 @@
 **Q: Do I need an internet connection?**
 A: Yes, an active internet connection is required for translation. However, you can access your translation history offline.
 
-**Q: How many languages does VoiceBridge support?**
+**Q: How many languages does Mervyn Talks support?**
 A: Currently 12 languages: English, Spanish, French, German, Italian, Portuguese, Russian, Chinese (Simplified), Japanese, Korean, Arabic, and Hindi.
 
 **Q: Is there a subscription fee?**
-A: No! VoiceBridge is a one-time purchase with no hidden fees or subscriptions.
+A: No! Mervyn Talks is a one-time purchase with no hidden fees or subscriptions.
 
 **Q: How accurate are the translations?**
 A: Our translations are powered by advanced AI and are highly accurate for everyday conversation. However, for legal or medical documents, we recommend professional human translation.
@@ -67,13 +67,13 @@ A: Yes. Go to History and swipe left on any item to delete it.
 ### Technical Questions
 
 **Q: What iOS version is required?**
-A: VoiceBridge requires iOS 15.0 or later.
+A: Mervyn Talks requires iOS 15.0 or later.
 
 **Q: How much storage does the app use?**
 A: The app itself is about 50MB. Translation history storage depends on usage but is typically minimal.
 
 **Q: Does it work on iPad?**
-A: Yes! VoiceBridge is optimized for both iPhone and iPad.
+A: Yes! Mervyn Talks is optimized for both iPhone and iPad.
 
 ---
 
@@ -84,13 +84,13 @@ A: Yes! VoiceBridge is optimized for both iPhone and iPad.
 #### "Microphone Access Denied"
 **Solution:**
 1. Go to Settings > Privacy & Security > Microphone
-2. Find VoiceBridge and toggle it ON
+2. Find Mervyn Talks and toggle it ON
 3. Restart the app
 
 #### "Speech Recognition Not Working"
 **Solution:**
 1. Go to Settings > Privacy & Security > Speech Recognition
-2. Enable access for VoiceBridge
+2. Enable access for Mervyn Talks
 3. Ensure your device language is set correctly
 4. Speak clearly and avoid background noise
 
@@ -99,7 +99,7 @@ A: Yes! VoiceBridge is optimized for both iPhone and iPad.
 - Check your internet connection
 - Try switching to a different WiFi network or cellular data
 - Force quit and restart the app
-- Update to the latest version of VoiceBridge
+- Update to the latest version of Mervyn Talks
 
 #### "No Audio Playback"
 **Solutions:**
@@ -184,7 +184,7 @@ Please include:
 - Hindi translation may have minor accuracy issues with regional dialects
 - Background noise can affect recognition accuracy
 
-We're constantly working to improve VoiceBridge. Thank you for your patience and support!
+We're constantly working to improve Mervyn Talks. Thank you for your patience and support!
 
 ---
 

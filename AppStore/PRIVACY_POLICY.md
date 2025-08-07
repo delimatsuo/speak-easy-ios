@@ -1,10 +1,10 @@
-# Privacy Policy for VoiceBridge
+# Privacy Policy for Mervyn Talks
 
 **Last Updated: August 5, 2025**
 
 ## Introduction
 
-Welcome to VoiceBridge ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our voice translation application.
+Welcome to Mervyn Talks ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our voice translation application.
 
 ## Information We Collect
 
@@ -67,7 +67,7 @@ We implement industry-standard security measures:
 
 ## Children's Privacy
 
-VoiceBridge is not intended for children under 13. We do not knowingly collect personal information from children under 13.
+Mervyn Talks is not intended for children under 13. We do not knowingly collect personal information from children under 13.
 
 ## International Data Transfers
 

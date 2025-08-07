@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# VoiceBridge - App Store Screenshot Generation Script
+# Mervyn Talks - App Store Screenshot Generation Script
 # This script generates screenshots for all required device sizes
 
 set -e
 
-echo "🎯 Generating App Store Screenshots for VoiceBridge..."
+echo "🎯 Generating App Store Screenshots for Mervyn Talks..."
 
 # Create screenshots directory
 mkdir -p Screenshots/iPhone_6_9

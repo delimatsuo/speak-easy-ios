@@ -41,8 +41,8 @@ class TranslationService: ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = NetworkConfig.requestTimeout
         
-        // Securely retrieve API key using KeychainManager
-        if let apiKey = KeychainManager.shared.getAPIKey(forService: "GoogleTranslateAPIKey") {
+        // Securely retrieve API key using APIKeyManager
+        if let apiKey = APIKeyManager.shared.getAPIKey() {
             request.setValue(apiKey, forHTTPHeaderField: "X-API-Key")
         }
         

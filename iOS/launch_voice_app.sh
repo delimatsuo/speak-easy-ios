@@ -1,10 +1,10 @@
 #!/bin/bash
 
-echo "🎤 Building and Launching VoiceBridge..."
+echo "🎤 Building and Launching Mervyn Talks..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Build the app
-echo "🔨 Building VoiceBridge app..."
+echo "🔨 Building Mervyn Talks app..."
 xcodebuild build \
     -project "/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/UniversalTranslator.xcodeproj" \
     -scheme "UniversalTranslator" \
@@ -24,16 +24,16 @@ if [ $? -eq 0 ]; then
     sleep 3
     
     # Install app
-    echo "📲 Installing VoiceBridge..."
+    echo "📲 Installing Mervyn Talks..."
     APP_PATH="/tmp/VoiceTranslatorBuild/Build/Products/Debug-iphonesimulator/UniversalTranslator.app"
     xcrun simctl install booted "$APP_PATH"
     
     # Launch app
-    echo "🚀 Launching VoiceBridge..."
+    echo "🚀 Launching Mervyn Talks..."
     xcrun simctl launch booted com.universaltranslator.app
     
     echo ""
-    echo "✅ VoiceBridge is now running!"
+    echo "✅ Mervyn Talks is now running!"
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "🎤 Voice Translation Features:"

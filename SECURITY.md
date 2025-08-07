@@ -1,4 +1,4 @@
-# Security Policy for VoiceBridge iOS App
+# Security Policy for Mervyn Talks iOS App
 
 ## API Key Management
 

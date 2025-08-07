@@ -1,6 +1,6 @@
 //
 //  UsageStatisticsView.swift
-//  VoiceBridge
+//  Mervyn Talks
 //
 //  Displays translation usage statistics for the minutes-based payment model
 //
@@ -190,10 +190,10 @@ struct UsageDetailView: View {
                 if usageService.isUnlimitedBeta {
                     Section(header: Text("BETA INFORMATION")) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("You're using the VoiceBridge beta")
+                            Text("You're using the Mervyn Talks beta")
                                 .font(.headline)
                             
-                            Text("During the beta period, you have unlimited translation minutes. After the beta period, VoiceBridge will transition to a pay-per-minute model.")
+                            Text("During the beta period, you have unlimited translation minutes. After the beta period, Mervyn Talks will transition to a pay-per-minute model.")
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                                 .padding(.top, 4)

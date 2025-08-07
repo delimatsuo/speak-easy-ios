@@ -139,7 +139,7 @@ func generateIcon(name: String, size: Int) {
 }
 
 // Generate all icons
-print("Generating VoiceBridge app icons...")
+print("Generating Mervyn Talks app icons...")
 for (name, size) in iconSizes {
     generateIcon(name: name, size: size)
 }

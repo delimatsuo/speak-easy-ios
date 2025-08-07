@@ -1,6 +1,6 @@
 //
 //  UsageTrackingService.swift
-//  VoiceBridge
+//  Mervyn Talks
 //
 //  Tracks translation usage time for the minutes-based payment model
 //

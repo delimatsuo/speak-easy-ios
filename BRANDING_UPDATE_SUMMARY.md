@@ -1,4 +1,4 @@
-# VoiceBridge - Branding & UX Update Summary
+# Mervyn Talks - Branding & UX Update Summary
 
 ## ✅ Changes Implemented
 
@@ -15,15 +15,15 @@
 
 ### 2. App Name - UPDATED ✓
 **Old:** Voice Translator
-**New:** VoiceBridge
+**New:** Mervyn Talks
 
-**Why VoiceBridge?**
+**Why Mervyn Talks?**
 - Memorable and brandable
 - Conveys "bridging language gaps through speech"
 - Good for App Store Optimization (ASO)
 - International appeal
 - Trademark-friendly
-- Allows for brand extensions (VoiceBridge Pro, Business, etc.)
+- Allows for brand extensions (Mervyn Talks Pro, Business, etc.)
 
 ### 3. App Icon - DESIGN PROVIDED ✓
 **Concept:** Sound Wave Bridge
@@ -37,7 +37,7 @@
 
 ### Immediate Actions:
 - [x] Update swap button with better UX
-- [x] Change app name to VoiceBridge
+- [x] Change app name to Mervyn Talks
 - [x] Provide icon design specifications
 - [ ] Create actual app icon files (use template)
 - [ ] Test new swap button with users
@@ -45,7 +45,7 @@
 ### App Store Preparation:
 - [ ] Update app name in App Store Connect
 - [ ] Create all icon sizes (see AppIcon_Design_Specs.md)
-- [ ] Update app description with "VoiceBridge" branding
+- [ ] Update app description with "Mervyn Talks" branding
 - [ ] Add subtitle: "Real-Time Voice Translation"
 - [ ] Create marketing screenshots
 
@@ -57,7 +57,7 @@
    - Added accessibility labels
 
 2. **Info.plist**
-   - Updated CFBundleName to "VoiceBridge"
+   - Updated CFBundleName to "Mervyn Talks"
 
 3. **Design Assets**
    - Created AppIcon_Design_Specs.md
@@ -76,13 +76,13 @@
    - Ensure accessibility with VoiceOver
 
 3. **Marketing**
-   - Update all references from "Voice Translator" to "VoiceBridge"
+   - Update all references from "Voice Translator" to "Mervyn Talks"
    - Create App Store description emphasizing voice-to-voice translation
    - Consider tagline: "Bridge Every Conversation"
 
 ## 🎨 Brand Guidelines
 
-**App Name:** VoiceBridge
+**App Name:** Mervyn Talks
 **Tagline:** Bridge Every Conversation
 **Primary Colors:** 
 - Deep Blue (#1E40AF)
@@ -100,7 +100,7 @@
 
 The app now has:
 - ✅ Improved language swap UX with clear visual feedback
-- ✅ Professional branding as "VoiceBridge"
+- ✅ Professional branding as "Mervyn Talks"
 - ✅ Icon design ready for implementation
 - ✅ Voice-to-voice translation working perfectly
 - ✅ All expert recommendations implemented

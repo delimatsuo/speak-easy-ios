@@ -1,7 +1,7 @@
-# VoiceBridge - App Store Connect Metadata Package
+# Mervyn Talks - App Store Connect Metadata Package
 
 ## App Information
-- **App Name**: VoiceBridge
+- **App Name**: Mervyn Talks
 - **Subtitle**: Voice Translation Made Simple
 - **Bundle ID**: com.universaltranslator.app
 - **SKU**: SPEAK-EASY-2025
@@ -13,7 +13,7 @@
 
 ## App Description (4000 characters max - Current: 1847 characters)
 
-**VoiceBridge - Break Language Barriers Instantly**
+**Mervyn Talks - Break Language Barriers Instantly**
 
 Speak naturally in your language and hear instant translations in over 100 languages. Powered by advanced AI and optimized for real-world conversations.
 
@@ -35,14 +35,14 @@ Speak naturally in your language and hear instant translations in over 100 langu
 • Customer service teams
 • International students
 
-**Why VoiceBridge?**
+**Why Mervyn Talks?**
 • Lightning-fast translations (< 2 seconds)
 • Industry-leading accuracy
 • Privacy-focused design
 • No ads or subscriptions
 • Regular language updates
 
-Transform any conversation into a bridge between cultures. Download VoiceBridge and speak any language with confidence.
+Transform any conversation into a bridge between cultures. Download Mervyn Talks and speak any language with confidence.
 
 ## Keywords (100 characters max - Current: 99 characters)
 translate,translator,voice,speak,language,interpreter,travel,conversation,real-time,AI,easy,fast
@@ -80,7 +80,7 @@ Not required - app functions without account creation
 
 ### Review Notes
 ```
-VoiceBridge is a voice translation app that:
+Mervyn Talks is a voice translation app that:
 
 1. Uses device microphone for voice input (permission requested)
 2. Processes audio via Google Translate API for translation
@@ -98,7 +98,7 @@ No special setup required. App is fully functional on first launch.
 ```
 
 ### Contact Information
-- **First Name**: VoiceBridge
+- **First Name**: Mervyn Talks
 - **Last Name**: Team
 - **Phone**: +1-555-TRANSLATE
 - **Email**: review@speakeasy.app

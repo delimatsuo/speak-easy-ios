@@ -1,14 +1,14 @@
-# 📱 VoiceBridge Beta Testing Guide
+# 📱 Mervyn Talks Beta Testing Guide
 
 ## Welcome Beta Testers! 🎉
 
-Thank you for helping test VoiceBridge, the revolutionary voice translation app that breaks language barriers in real-time!
+Thank you for helping test Mervyn Talks, the revolutionary voice translation app that breaks language barriers in real-time!
 
 ## 🚀 Getting Started
 
-### What is VoiceBridge?
+### What is Mervyn Talks?
 
-VoiceBridge is a voice-to-voice translation app that allows you to:
+Mervyn Talks is a voice-to-voice translation app that allows you to:
 - Speak in your native language
 - Get instant translations in 12+ languages
 - Hear the translation spoken back to you
@@ -27,12 +27,12 @@ VoiceBridge is a voice-to-voice translation app that allows you to:
 2. **Download TestFlight** from the App Store if you don't have it
 3. **Open the invitation link** on your iPhone/iPad
 4. **Tap "Accept"** to join the beta
-5. **Install VoiceBridge** from TestFlight
+5. **Install Mervyn Talks** from TestFlight
 6. **Allow permissions** when prompted:
    - Microphone access (required for voice input)
    - Speech recognition (for transcription)
 
-## 🎯 How to Use VoiceBridge
+## 🎯 How to Use Mervyn Talks
 
 ### Basic Translation Flow
 
@@ -95,7 +95,7 @@ VoiceBridge is a voice-to-voice translation app that allows you to:
 
 3. **Report via TestFlight:**
    - Open TestFlight
-   - Go to VoiceBridge
+   - Go to Mervyn Talks
    - Tap "Send Beta Feedback"
    - Include your notes and screenshot
 
@@ -175,10 +175,10 @@ As a thank you for your valuable feedback:
 
 ## 🙏 Thank You!
 
-Your feedback is invaluable in making VoiceBridge the best translation app possible. We're excited to have you as part of our beta testing team!
+Your feedback is invaluable in making Mervyn Talks the best translation app possible. We're excited to have you as part of our beta testing team!
 
 **Happy Testing!**  
-The VoiceBridge Team
+The Mervyn Talks Team
 
 ---
 

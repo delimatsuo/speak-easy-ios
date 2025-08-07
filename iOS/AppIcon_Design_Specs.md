@@ -1,4 +1,4 @@
-# VoiceBridge App Icon Design Specifications
+# Mervyn Talks App Icon Design Specifications
 
 ## Icon Concept: Sound Wave Bridge
 
@@ -147,6 +147,6 @@ AppIcon-1024@1x.png
 ```
 
 ## Marketing Variations
-- Include "VoiceBridge" text below icon
+- Include "Mervyn Talks" text below icon
 - Create versions with tagline for promotional materials
 - Design animated version for video content

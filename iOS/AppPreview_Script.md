@@ -1,9 +1,9 @@
-# VoiceBridge - App Preview Video Script
+# Mervyn Talks - App Preview Video Script
 ## Duration: 30 seconds
 
 ### Scene 1 (0-5s): App Launch & Home Screen
-- **Visual**: App icon animation, splash screen, home screen with "VoiceBridge" branding
-- **Text Overlay**: "VoiceBridge - Break Language Barriers"
+- **Visual**: App icon animation, splash screen, home screen with "Mervyn Talks" branding
+- **Text Overlay**: "Mervyn Talks - Break Language Barriers"
 - **Action**: Show clean, modern interface with language selection buttons
 
 ### Scene 2 (5-10s): Voice Input Demo
@@ -31,7 +31,7 @@
 
 ### Scene 6 (25-30s): Call to Action
 - **Visual**: App icon with download animation
-- **Text Overlay**: "Download VoiceBridge Today"
+- **Text Overlay**: "Download Mervyn Talks Today"
 - **Action**: Show App Store download button
 - **Background**: Subtle gradient matching app icon
 
@@ -44,7 +44,7 @@
 - **Duration**: 15-30 seconds
 
 ## Recording Instructions:
-1. Use iPhone simulator with VoiceBridge app
+1. Use iPhone simulator with Mervyn Talks app
 2. Record screen using QuickTime or similar
 3. Add text overlays and animations in post-production
 4. Include background music (royalty-free)

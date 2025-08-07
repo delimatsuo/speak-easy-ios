@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🔑 Updating Gemini API Key for VoiceBridge"
+echo "🔑 Updating Gemini API Key for Mervyn Talks"
 echo "=========================================="
 echo ""
 echo "Please enter your new Gemini API key:"

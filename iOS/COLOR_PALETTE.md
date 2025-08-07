@@ -1,4 +1,4 @@
-# VoiceBridge Color Palette
+# Mervyn Talks Color Palette
 
 ## Primary Brand Colors
 

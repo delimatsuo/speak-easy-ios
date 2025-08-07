@@ -1,4 +1,4 @@
-# 🚀 VoiceBridge - Final App Store Submission Guide
+# 🚀 Mervyn Talks - Final App Store Submission Guide
 
 ## ✅ COMPLETED TASKS
 
@@ -10,7 +10,7 @@
 - [x] **Export Compliance**: Added ITSAppUsesNonExemptEncryption: NO
 - [x] **Icon Backup System**: Original icons preserved, replacement script created added to Info.plist
 - ✅ **Permissions**: Microphone and Speech Recognition properly configured
-- ✅ **App Name**: Consistently branded as "VoiceBridge" throughout all documentation
+- ✅ **App Name**: Consistently branded as "Mervyn Talks" throughout all documentation
 
 ### App Store Assets
 - ✅ **Screenshots**: Generated for iPhone 16 Pro Max and iPhone 16 Plus (partial set complete)
@@ -19,10 +19,10 @@
 - ✅ **Metadata Package**: Complete App Store Connect metadata prepared
 
 ### Documentation & Compliance
-- ✅ **Privacy Policy**: Available and updated for VoiceBridge branding
+- ✅ **Privacy Policy**: Available and updated for Mervyn Talks branding
 - ✅ **Terms of Service**: Available and updated
 - ✅ **App Store Listing**: Complete description, keywords, promotional text
-- ✅ **Submission Checklist**: Updated with VoiceBridge branding
+- ✅ **Submission Checklist**: Updated with Mervyn Talks branding
 
 ## 📋 IMMEDIATE NEXT STEPS
 
@@ -42,7 +42,7 @@ cd /Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS
 ### 3. App Store Connect Setup (1 hour)
 1. Go to [App Store Connect](https://appstoreconnect.apple.com)
 2. Create new app listing:
-   - **Name**: VoiceBridge
+   - **Name**: Mervyn Talks
    - **Bundle ID**: com.universaltranslator.app
    - **SKU**: SPEAK-EASY-2025
 3. Copy metadata from `AppStore_Connect_Metadata.md`
@@ -110,7 +110,7 @@ xcodebuild -exportArchive -archivePath ./build/SpeakEasy.xcarchive \
 
 **App Store Review Team**: Use App Store Connect messaging
 **Technical Issues**: developer.apple.com/support
-**VoiceBridge Support**: support@speakeasy.app (to be set up)
+**Mervyn Talks Support**: support@speakeasy.app (to be set up)
 
 ## 🎉 ESTIMATED TIMELINE
 
@@ -124,7 +124,7 @@ xcodebuild -exportArchive -archivePath ./build/SpeakEasy.xcarchive \
 
 ## 🚀 YOU'RE ALMOST THERE!
 
-Your VoiceBridge app has a solid technical foundation and is ready for App Store submission. The main remaining tasks are:
+Your Mervyn Talks app has a solid technical foundation and is ready for App Store submission. The main remaining tasks are:
 
 1. **Complete the screenshot set** (use existing script)
 2. **Record the app preview video** (use provided script)

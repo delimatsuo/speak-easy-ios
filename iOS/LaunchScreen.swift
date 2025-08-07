@@ -24,7 +24,7 @@ struct LaunchScreen: View {
                     .opacity(animationOpacity)
                 
                 // App Name
-                Text("VoiceBridge")
+                Text("Mervyn Talks")
                     .font(.system(size: 42, weight: .medium, design: .rounded))
                     .foregroundColor(.speakEasyTextPrimary)
                     .opacity(animationOpacity)

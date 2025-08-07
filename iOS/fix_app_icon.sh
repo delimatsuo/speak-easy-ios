@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🔧 Fixing VoiceBridge App Icon..."
+echo "🔧 Fixing Mervyn Talks App Icon..."
 echo "================================"
 
 # Path to the project

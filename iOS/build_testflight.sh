@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "📱 Building VoiceBridge for TestFlight"
+echo "📱 Building Mervyn Talks for TestFlight"
 echo "====================================="
 echo ""
 

@@ -34,17 +34,20 @@ replace_in_file() {
 echo "📝 Updating documentation files..."
 for file in $(find . -name "*.md" -type f | grep -v node_modules | grep -v .git | grep -v build); do
     replace_in_file "$file" "Mervyn Talks" "Mervyn Talks"
-    replace_in_file "$file" "SPEAK EASY" "VOICEBRIDGE"
+    replace_in_file "$file" "VOICEBRIDGE" "MERVYN TALKS"
     replace_in_file "$file" "mervyn-talks" "mervyn-talks"
 done
 
 echo "📱 Updating Swift files..."
 for file in $(find ./iOS -name "*.swift" -type f); do
     replace_in_file "$file" "Mervyn Talks" "Mervyn Talks"
-    replace_in_file "$file" "SPEAK EASY" "VOICEBRIDGE"
+    replace_in_file "$file" "VOICEBRIDGE" "MERVYN TALKS"
 done
 
 echo "🔧 Updating configuration files..."
+# Update Info.plist
+replace_in_file "./iOS/Info.plist" "Mervyn Talks" "Mervyn Talks"
+
 # Update shell scripts
 for file in $(find . -name "*.sh" -type f | grep -v node_modules | grep -v .git); do
     replace_in_file "$file" "Mervyn Talks" "Mervyn Talks"
@@ -69,10 +72,10 @@ for file in $(find . -name "*.md" -o -name "*.sh" | grep -v .git); do
     replace_in_file "$file" "Mervyn Talks app" "Mervyn Talks app"
 done
 
-# Update file names that contain "SPEAK_EASY"
+# Update file names that contain "VOICEBRIDGE"
 echo "📁 Renaming files..."
-for file in $(find . -name "*SPEAK_EASY*" -type f); do
-    newfile=$(echo "$file" | sed 's/SPEAK_EASY/VOICEBRIDGE/g')
+for file in $(find . -name "*VOICEBRIDGE*" -type f); do
+    newfile=$(echo "$file" | sed 's/VOICEBRIDGE/MERVYN_TALKS/g')
     if [ "$file" != "$newfile" ]; then
         mv "$file" "$newfile"
         echo "  ✅ Renamed: $(basename $file) → $(basename $newfile)"

@@ -1,8 +1,8 @@
-# 🎤 VoiceBridge - Complete Documentation
+# 🎤 Mervyn Talks - Complete Documentation
 
 ## Overview
 
-VoiceBridge is a **real-time voice translation app** that allows users to:
+Mervyn Talks is a **real-time voice translation app** that allows users to:
 1. **Press and speak** in any supported language
 2. **Automatically transcribe** speech to text
 3. **Translate** to the target language
@@ -180,7 +180,7 @@ curl -X POST https://universal-translator-api-932729595834.us-central1.run.app/v
 
 **"Microphone access denied"**
 - Go to Settings → Privacy → Microphone
-- Enable for VoiceBridge
+- Enable for Mervyn Talks
 
 **"Speech recognition failed"**
 - Check internet connection
@@ -232,7 +232,7 @@ curl -X POST https://universal-translator-api-932729595834.us-central1.run.app/v
 
 ## 🎉 Summary
 
-VoiceBridge is now a **complete voice-to-voice translation system**:
+Mervyn Talks is now a **complete voice-to-voice translation system**:
 
 - **Input**: Voice recording in any supported language
 - **Processing**: Speech → Text → Translation → Speech

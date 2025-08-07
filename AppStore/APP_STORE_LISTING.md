@@ -1,8 +1,8 @@
-# App Store Listing for VoiceBridge
+# App Store Listing for Mervyn Talks
 
 ## Basic Information
 
-**App Name:** VoiceBridge
+**App Name:** Mervyn Talks
 
 **Subtitle:** Voice Translation Made Simple
 
@@ -21,7 +21,7 @@ voice interpreter, speak easy, audio translation
 
 ## Description
 
-Break down language barriers with a single tap. VoiceBridge is the voice translation app that makes cross-language communication effortless and natural.
+Break down language barriers with a single tap. Mervyn Talks is the voice translation app that makes cross-language communication effortless and natural.
 
 **Just Speak - We'll Handle the Rest**
 Simply press the button, speak in your language, and hear the translation instantly. No typing, no complex menus - just natural conversation across 12 major languages.
@@ -50,7 +50,7 @@ Simply press the button, speak in your language, and hear the translation instan
 **Supported Languages:**
 English, Spanish (Español), French (Français), German (Deutsch), Italian (Italiano), Portuguese (Português), Russian (Русский), Chinese Simplified (简体中文), Japanese (日本語), Korean (한국어), Arabic (العربية), Hindi (हिन्दी)
 
-**Why VoiceBridge?**
+**Why Mervyn Talks?**
 • No subscription required - pay once, use forever
 • Privacy-focused - voice processing happens on your device
 • Fast and accurate - powered by advanced AI
@@ -62,7 +62,7 @@ English, Spanish (Español), French (Français), German (Deutsch), Italian (Ital
 "Used it throughout my Europe trip. Absolute lifesaver!"
 "The voice quality is amazing - sounds like a real person!"
 
-Download VoiceBridge today and start speaking the world's language.
+Download Mervyn Talks today and start speaking the world's language.
 
 **Note:** Internet connection required for translation. Speech recognition quality may vary based on ambient noise and accent. Not intended for critical or certified translations.
 
@@ -75,7 +75,7 @@ Download VoiceBridge today and start speaking the world's language.
 • Faster translation speed
 • Bug fixes and performance improvements
 
-We've listened to your feedback and made VoiceBridge even better. Thank you for your support!
+We've listened to your feedback and made Mervyn Talks even better. Thank you for your support!
 
 ## Promotional Text
 
@@ -108,7 +108,7 @@ Break language barriers instantly. Speak in your language, hear the translation.
 
 ## Additional Information
 
-**Copyright:** © 2025 VoiceBridge. All rights reserved.
+**Copyright:** © 2025 Mervyn Talks. All rights reserved.
 
 **Support URL:** https://speakeasyapp.com/support
 

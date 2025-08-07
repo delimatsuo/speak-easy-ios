@@ -1,7 +1,7 @@
-# VoiceBridge - Voice Translation iOS App
+# Mervyn Talks - Voice Translation iOS App
 
 <div align="center">
-  <img src="iOS/Assets.xcassets/AppIcon.appiconset/AppIcon-1024@1x.png" alt="VoiceBridge App Icon" width="200" height="200">
+  <img src="iOS/Assets.xcassets/AppIcon.appiconset/AppIcon-1024@1x.png" alt="Mervyn Talks App Icon" width="200" height="200">
   
   **Break language barriers with voice-to-voice translation**
   
@@ -13,7 +13,7 @@
 
 ## 🎯 Overview
 
-VoiceBridge is an intuitive iOS voice translation app that enables seamless communication across language barriers. Simply speak in your language and hear the translation instantly in your target language.
+Mervyn Talks is an intuitive iOS voice translation app that enables seamless communication across language barriers. Simply speak in your language and hear the translation instantly in your target language.
 
 ### ✨ Key Features
 
@@ -200,4 +200,4 @@ For support and questions:
 
 ---
 
-**VoiceBridge** - Breaking language barriers, one conversation at a time. 🌍🗣️
+**Mervyn Talks** - Breaking language barriers, one conversation at a time. 🌍🗣️

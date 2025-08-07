@@ -39,7 +39,7 @@ cd iOS
 1. **Go to App Store Connect**
    - https://appstoreconnect.apple.com
 
-2. **Select your app** (VoiceBridge)
+2. **Select your app** (Mervyn Talks)
 
 3. **Go to TestFlight tab**
 
@@ -63,22 +63,22 @@ cd iOS
 Send this email to your testers:
 
 ```
-Subject: You're invited to test VoiceBridge!
+Subject: You're invited to test Mervyn Talks!
 
 Hi [Name],
 
-You're invited to beta test VoiceBridge, our new voice translation app!
+You're invited to beta test Mervyn Talks, our new voice translation app!
 
 To get started:
 1. Download TestFlight from the App Store
 2. Open this link on your iPhone: [TestFlight Link]
-3. Install VoiceBridge
+3. Install Mervyn Talks
 4. Start translating!
 
 Please refer to the Beta Testing Guide for instructions and how to provide feedback.
 
 Thanks for your help!
-The VoiceBridge Team
+The Mervyn Talks Team
 ```
 
 ## 📋 Pre-Submission Checklist

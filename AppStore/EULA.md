@@ -1,10 +1,10 @@
-# End User License Agreement (EULA) for VoiceBridge
+# End User License Agreement (EULA) for Mervyn Talks
 
 **Last Updated: August 5, 2025**
 
 ## IMPORTANT - READ CAREFULLY
 
-This End User License Agreement ("EULA") is a legal agreement between you (either an individual or a single entity) and VoiceBridge ("Licensor," "we," "us," or "our") for the VoiceBridge mobile application software, including any associated media, printed materials, and electronic documentation (collectively, the "Software").
+This End User License Agreement ("EULA") is a legal agreement between you (either an individual or a single entity) and Mervyn Talks ("Licensor," "we," "us," or "our") for the Mervyn Talks mobile application software, including any associated media, printed materials, and electronic documentation (collectively, the "Software").
 
 By installing, copying, or otherwise using the Software, you agree to be bound by the terms of this EULA. If you do not agree to the terms of this EULA, do not install or use the Software.
 
@@ -134,4 +134,4 @@ BY INSTALLING OR USING THE SOFTWARE, YOU ACKNOWLEDGE THAT YOU HAVE READ THIS EUL
 
 ---
 
-© 2025 VoiceBridge. All rights reserved.
+© 2025 Mervyn Talks. All rights reserved.
