@@ -1,0 +1,5 @@
+# Google API Key patterns (AIza...)
+regex:AIza[0-9A-Za-z\-_]{35,40}==>GOOGLE_API_KEY_REDACTED
+
+# Test API Keys in security tests 
+regex:sk-[0-9a-zA-Z]{32,64}==>TEST_API_KEY_REDACTED

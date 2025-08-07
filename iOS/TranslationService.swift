@@ -9,6 +9,7 @@ import Foundation
 import Firebase
 import FirebaseFirestore
 import FirebaseStorage
+import Security
 
 class TranslationService: ObservableObject {
     static let shared = TranslationService()
@@ -39,6 +40,11 @@ class TranslationService: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = NetworkConfig.requestTimeout
+        
+        // Securely retrieve API key using KeychainManager
+        if let apiKey = KeychainManager.shared.getAPIKey(forService: "GoogleTranslateAPIKey") {
+            request.setValue(apiKey, forHTTPHeaderField: "X-API-Key")
+        }
         
         let body = TranslationAudioRequest(
             text: text,

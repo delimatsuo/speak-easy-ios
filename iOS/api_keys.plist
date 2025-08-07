@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>GoogleTranslateAPIKey</key>
+    <string>AIzaSyDftOOmdUoH5pMfiGoi4VuROetgh_gB5KQ</string>
+    <key>FirebaseAPIKey</key>
+    <string>AIzaSyD3DfQBREWOFdq7Rm3L8lDFTiKWk1RKtGY</string>
+</dict>
+</plist>

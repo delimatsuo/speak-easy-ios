@@ -9,7 +9,7 @@ import Foundation
 
 struct NetworkConfig {
     // Your Cloud Run API base URL
-    static let apiBaseURL = "https://universal-translator-api-932729595834.us-central1.run.app"
+    static let apiBaseURL = "https://universal-translator-api-jzqoowo3tq-uc.a.run.app"
     
     // API Endpoints
     enum Endpoint {

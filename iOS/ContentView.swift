@@ -10,10 +10,13 @@ import AVFoundation
 import Speech
 import Firebase
 import UIKit
+import FirebaseFirestore
+// Import local modules for usage tracking
 
 struct ContentView: View {
     @StateObject private var audioManager = AudioManager()
     @StateObject private var translationService = TranslationService.shared
+    @StateObject private var usageService = UsageTrackingService.shared
     
     @State private var sourceLanguage = "en"
     @State private var targetLanguage = "es"
@@ -48,7 +51,11 @@ struct ContentView: View {
                 )
                 .ignoresSafeArea()
                 
-                VStack(spacing: 30) {
+                VStack(spacing: 20) {
+                    // Usage Statistics
+                    UsageStatisticsView()
+                        .padding(.horizontal)
+                    
                     // Language Selection
                     HStack(spacing: 20) {
                         VStack {
@@ -291,6 +298,13 @@ struct ContentView: View {
         } else {
             startRecording()
         }
+        
+        // Track usage time for this session
+        if isRecording {
+            usageService.startTranslationSession()
+        } else {
+            usageService.endTranslationSession()
+        }
     }
     
     private func startRecording() {
@@ -360,6 +374,9 @@ struct ContentView: View {
                     self.errorMessage = error.localizedDescription
                     self.showError = true
                     self.isProcessing = false
+                    
+                    // Cancel tracking if translation fails
+                    self.usageService.cancelTranslationSession()
                 }
             }
         }
@@ -566,5 +583,6 @@ struct HistoryView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
+            .environmentObject(UsageTrackingService.shared)
     }
 }
