@@ -1,10 +1,10 @@
-# Privacy Policy for Speak Easy
+# Privacy Policy for VoiceBridge
 
 **Last Updated: August 5, 2025**
 
 ## Introduction
 
-Welcome to Speak Easy ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our voice translation application.
+Welcome to VoiceBridge ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our voice translation application.
 
 ## Information We Collect
 
@@ -67,7 +67,7 @@ We implement industry-standard security measures:
 
 ## Children's Privacy
 
-Speak Easy is not intended for children under 13. We do not knowingly collect personal information from children under 13.
+VoiceBridge is not intended for children under 13. We do not knowingly collect personal information from children under 13.
 
 ## International Data Transfers
 

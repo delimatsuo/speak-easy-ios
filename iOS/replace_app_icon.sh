@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Speak Easy - App Icon Replacement Script
+# VoiceBridge - App Icon Replacement Script
 # This script replaces all app icon assets with the user's custom icon
 
 set -e
@@ -8,7 +8,7 @@ set -e
 SOURCE_ICON="/Users/delimatsuo/Desktop/icon speak easy.png"
 ICON_DIR="Assets.xcassets/AppIcon.appiconset"
 
-echo "🎨 Replacing Speak Easy app icon with custom icon..."
+echo "🎨 Replacing VoiceBridge app icon with custom icon..."
 echo "📁 Source: $SOURCE_ICON"
 echo "📁 Target: $ICON_DIR"
 

@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Speak Easy - App Store Screenshot Generation Script
+# VoiceBridge - App Store Screenshot Generation Script
 # This script generates screenshots for all required device sizes
 
 set -e
 
-echo "🎯 Generating App Store Screenshots for Speak Easy..."
+echo "🎯 Generating App Store Screenshots for VoiceBridge..."
 
 # Create screenshots directory
 mkdir -p Screenshots/iPhone_6_9

@@ -1,4 +1,4 @@
-# Speak Easy Color Palette
+# VoiceBridge Color Palette
 
 ## Primary Brand Colors
 

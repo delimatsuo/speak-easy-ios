@@ -1,4 +1,4 @@
-# Speak Easy - App Store Submission Checklist
+# VoiceBridge - App Store Submission Checklist
 
 ## ✅ All Required Documents Created
 
@@ -47,7 +47,7 @@
 ## 📋 Pre-Submission Checklist
 
 ### App Configuration
-- [x] App name changed to "Speak Easy" in Info.plist
+- [x] App name changed to "VoiceBridge" in Info.plist
 - [x] App name updated in ContentView navigation title
 - [x] Bundle identifier set: com.universaltranslator.app
 - [x] Version number: 2.0

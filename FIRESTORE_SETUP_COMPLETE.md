@@ -32,7 +32,7 @@ Could not reach Cloud Firestore backend... The database (default) does not exist
 
 ## What This Enables
 
-The Speak Easy app can now:
+The VoiceBridge app can now:
 - ✅ Save translation history to Firestore
 - ✅ Test Firebase connectivity
 - ✅ Store user preferences

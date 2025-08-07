@@ -1,6 +1,6 @@
-# App Review Information for Speak Easy
+# App Review Information for VoiceBridge
 
-**App Name:** Speak Easy
+**App Name:** VoiceBridge
 **Version:** 2.0
 **Bundle ID:** com.universaltranslator.app
 
@@ -21,12 +21,12 @@
 ## Demo Account
 
 **Required:** No
-**Reason:** Speak Easy does not require user accounts or login. All features are available immediately upon app launch.
+**Reason:** VoiceBridge does not require user accounts or login. All features are available immediately upon app launch.
 
 ## App Review Notes
 
 ### Overview
-Speak Easy is a voice translation app that enables real-time spoken language translation between 12 major world languages. Users simply press a button, speak in their language, and hear the translation played back in the target language.
+VoiceBridge is a voice translation app that enables real-time spoken language translation between 12 major world languages. Users simply press a button, speak in their language, and hear the translation played back in the target language.
 
 ### Key Features to Test
 
@@ -189,7 +189,7 @@ None in current version 2.0
 ## Update Notes (Version 2.0)
 
 ### What's New
-- Renamed from "Voice Translator" to "Speak Easy"
+- Renamed from "Voice Translator" to "VoiceBridge"
 - Improved language swap button design
 - Enhanced speech recognition accuracy
 - Faster translation processing
@@ -228,4 +228,4 @@ If critical issues arise during review:
 
 We are committed to addressing any concerns immediately to ensure a smooth review process.
 
-Thank you for reviewing Speak Easy!
+Thank you for reviewing VoiceBridge!

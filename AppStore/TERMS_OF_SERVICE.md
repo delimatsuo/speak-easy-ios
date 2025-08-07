@@ -1,14 +1,14 @@
-# Terms of Service for Speak Easy
+# Terms of Service for VoiceBridge
 
 **Effective Date: August 5, 2025**
 
 ## 1. Acceptance of Terms
 
-By downloading, installing, or using Speak Easy ("the App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the App.
+By downloading, installing, or using VoiceBridge ("the App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the App.
 
 ## 2. Description of Service
 
-Speak Easy is a voice translation application that:
+VoiceBridge is a voice translation application that:
 - Converts spoken language into text using speech recognition
 - Translates text between supported languages
 - Converts translated text to speech for audio playback
@@ -42,7 +42,7 @@ Your use of the App is also governed by our Privacy Policy. By using the App, yo
 
 ## 6. Intellectual Property
 
-- The App and its original content, features, and functionality are owned by Speak Easy and are protected by international copyright, trademark, and other intellectual property laws
+- The App and its original content, features, and functionality are owned by VoiceBridge and are protected by international copyright, trademark, and other intellectual property laws
 - You retain ownership of any content you translate using the App
 - You grant us a limited license to process your content solely for the purpose of providing translation services
 
@@ -72,7 +72,7 @@ TO THE MAXIMUM EXTENT PERMITTED BY LAW:
 
 ## 10. Indemnification
 
-You agree to indemnify and hold harmless Speak Easy and its affiliates from any claims, damages, or expenses arising from:
+You agree to indemnify and hold harmless VoiceBridge and its affiliates from any claims, damages, or expenses arising from:
 - Your use of the App
 - Your violation of these Terms
 - Your violation of any third-party rights
@@ -112,7 +112,7 @@ If any provision of these Terms is found to be invalid or unenforceable, the rem
 
 ## 17. Entire Agreement
 
-These Terms, together with our Privacy Policy, constitute the entire agreement between you and Speak Easy regarding the use of the App.
+These Terms, together with our Privacy Policy, constitute the entire agreement between you and VoiceBridge regarding the use of the App.
 
 ## 18. Contact Information
 
@@ -124,7 +124,7 @@ For questions about these Terms, please contact us at:
 ## 19. Apple-Specific Terms
 
 If you download the App from the Apple App Store:
-- These Terms are between you and Speak Easy only, not Apple
+- These Terms are between you and VoiceBridge only, not Apple
 - Apple has no obligation to provide maintenance or support for the App
 - Apple is not responsible for any product liabilities or claims
 - Apple is a third-party beneficiary with the right to enforce these Terms
@@ -135,4 +135,4 @@ We strive to make the App accessible to users with disabilities. If you encounte
 
 ---
 
-By using Speak Easy, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+By using VoiceBridge, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.

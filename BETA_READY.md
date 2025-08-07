@@ -1,4 +1,4 @@
-# 🎉 SPEAK EASY - READY FOR BETA TESTING!
+# 🎉 VOICEBRIDGE - READY FOR BETA TESTING!
 
 ## ✅ Backend Status: LIVE AND WORKING!
 
@@ -109,6 +109,6 @@ gcloud run services update universal-translator-api \
 
 ---
 
-**Congratulations! Your Speak Easy app is ready for beta testers! 🚀**
+**Congratulations! Your VoiceBridge app is ready for beta testers! 🚀**
 
 The backend is live, the API is working, and all you need to do is build and upload to TestFlight!

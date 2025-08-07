@@ -11,7 +11,7 @@
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>Speak Easy</string>
+    <string>VoiceBridge</string>
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
@@ -21,9 +21,9 @@
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Speak Easy needs access to your microphone to record your speech for translation.</string>
+    <string>VoiceBridge needs access to your microphone to record your speech for translation.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>Speak Easy uses speech recognition to convert your spoken words to text for translation.</string>
+    <string>VoiceBridge uses speech recognition to convert your spoken words to text for translation.</string>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>

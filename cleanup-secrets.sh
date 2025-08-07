@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}${BOLD}🔒 Speak Easy Security Remediation Tool${NC}"
+echo -e "${BLUE}${BOLD}🔒 VoiceBridge Security Remediation Tool${NC}"
 echo -e "${YELLOW}This script will help clean up exposed API keys and implement secure credential management${NC}\n"
 
 # Check if BFG is installed
@@ -103,7 +103,7 @@ create_keychain_manager() {
   cat > iOS/Utilities/KeychainManager.swift << EOL
 //
 //  KeychainManager.swift
-//  Speak Easy
+//  VoiceBridge
 //
 //  Created on $(date '+%Y-%m-%d')
 //
@@ -218,7 +218,7 @@ create_security_documentation() {
   echo -e "${YELLOW}Creating security documentation...${NC}"
   
   cat > SECURITY.md << EOL
-# Security Policy for Speak Easy iOS App
+# Security Policy for VoiceBridge iOS App
 
 ## API Key Management
 

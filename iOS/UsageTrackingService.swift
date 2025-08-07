@@ -1,6 +1,6 @@
 //
 //  UsageTrackingService.swift
-//  Speak Easy
+//  VoiceBridge
 //
 //  Tracks translation usage time for the minutes-based payment model
 //

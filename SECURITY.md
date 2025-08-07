@@ -1,4 +1,4 @@
-# Security Policy for Speak Easy iOS App
+# Security Policy for VoiceBridge iOS App
 
 ## API Key Management
 

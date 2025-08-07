@@ -1,15 +1,15 @@
-# 📱 Speak Easy - App Store Submission Checklist
+# 📱 VoiceBridge - App Store Submission Checklist
 
 ## 🎯 Pre-Submission Requirements
 
 ### ✅ App Information
-- [ ] **App Name**: "Speak Easy - Voice Translator"
+- [ ] **App Name**: "VoiceBridge - Voice Translator"
 - [ ] **Bundle ID**: com.universaltranslator.app
 - [ ] **Version**: 1.0.0
 - [ ] **Build Number**: 1
 - [ ] **Category**: Productivity (Primary), Education (Secondary)
 - [ ] **Age Rating**: 4+
-- [ ] **Copyright**: © 2025 Speak Easy Team
+- [ ] **Copyright**: © 2025 VoiceBridge Team
 
 ### ✅ App Store Assets
 
@@ -40,7 +40,7 @@
 
 #### Description (4000 characters max)
 ```markdown
-**Speak Easy - Break Language Barriers Instantly**
+**VoiceBridge - Break Language Barriers Instantly**
 
 Speak naturally in your language and hear instant translations in over 100 languages. 
 Powered by advanced AI and optimized for real-world conversations.
@@ -63,7 +63,7 @@ Powered by advanced AI and optimized for real-world conversations.
 • Customer service teams
 • International students
 
-**Why Speak Easy?**
+**Why VoiceBridge?**
 • Lightning-fast translations (< 2 seconds)
 • Industry-leading accuracy
 • Privacy-focused design
@@ -104,7 +104,7 @@ Powered by advanced AI and optimized for real-world conversations.
 - [ ] Background Audio (optional)
 
 #### Info.plist Requirements
-- [ ] **NSMicrophoneUsageDescription**: "Speak Easy needs microphone access to hear your speech for translation."
+- [ ] **NSMicrophoneUsageDescription**: "VoiceBridge needs microphone access to hear your speech for translation."
 - [ ] NSSpeechRecognitionUsageDescription: "Speech recognition is used to convert your voice to text for translation."
 - [ ] ITSAppUsesNonExemptEncryption: NO (or provide encryption documentation)
 

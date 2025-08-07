@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🔧 Fixing Speak Easy App Icon..."
+echo "🔧 Fixing VoiceBridge App Icon..."
 echo "================================"
 
 # Path to the project

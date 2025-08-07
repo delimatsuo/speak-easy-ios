@@ -1,14 +1,14 @@
-# 📱 Speak Easy Beta Testing Guide
+# 📱 VoiceBridge Beta Testing Guide
 
 ## Welcome Beta Testers! 🎉
 
-Thank you for helping test Speak Easy, the revolutionary voice translation app that breaks language barriers in real-time!
+Thank you for helping test VoiceBridge, the revolutionary voice translation app that breaks language barriers in real-time!
 
 ## 🚀 Getting Started
 
-### What is Speak Easy?
+### What is VoiceBridge?
 
-Speak Easy is a voice-to-voice translation app that allows you to:
+VoiceBridge is a voice-to-voice translation app that allows you to:
 - Speak in your native language
 - Get instant translations in 12+ languages
 - Hear the translation spoken back to you
@@ -27,12 +27,12 @@ Speak Easy is a voice-to-voice translation app that allows you to:
 2. **Download TestFlight** from the App Store if you don't have it
 3. **Open the invitation link** on your iPhone/iPad
 4. **Tap "Accept"** to join the beta
-5. **Install Speak Easy** from TestFlight
+5. **Install VoiceBridge** from TestFlight
 6. **Allow permissions** when prompted:
    - Microphone access (required for voice input)
    - Speech recognition (for transcription)
 
-## 🎯 How to Use Speak Easy
+## 🎯 How to Use VoiceBridge
 
 ### Basic Translation Flow
 
@@ -95,7 +95,7 @@ Speak Easy is a voice-to-voice translation app that allows you to:
 
 3. **Report via TestFlight:**
    - Open TestFlight
-   - Go to Speak Easy
+   - Go to VoiceBridge
    - Tap "Send Beta Feedback"
    - Include your notes and screenshot
 
@@ -175,10 +175,10 @@ As a thank you for your valuable feedback:
 
 ## 🙏 Thank You!
 
-Your feedback is invaluable in making Speak Easy the best translation app possible. We're excited to have you as part of our beta testing team!
+Your feedback is invaluable in making VoiceBridge the best translation app possible. We're excited to have you as part of our beta testing team!
 
 **Happy Testing!**  
-The Speak Easy Team
+The VoiceBridge Team
 
 ---
 

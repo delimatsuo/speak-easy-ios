@@ -1,7 +1,7 @@
-# Speak Easy - Voice Translation iOS App
+# VoiceBridge - Voice Translation iOS App
 
 <div align="center">
-  <img src="iOS/Assets.xcassets/AppIcon.appiconset/AppIcon-1024@1x.png" alt="Speak Easy App Icon" width="200" height="200">
+  <img src="iOS/Assets.xcassets/AppIcon.appiconset/AppIcon-1024@1x.png" alt="VoiceBridge App Icon" width="200" height="200">
   
   **Break language barriers with voice-to-voice translation**
   
@@ -13,7 +13,7 @@
 
 ## 🎯 Overview
 
-Speak Easy is an intuitive iOS voice translation app that enables seamless communication across language barriers. Simply speak in your language and hear the translation instantly in your target language.
+VoiceBridge is an intuitive iOS voice translation app that enables seamless communication across language barriers. Simply speak in your language and hear the translation instantly in your target language.
 
 ### ✨ Key Features
 
@@ -200,4 +200,4 @@ For support and questions:
 
 ---
 
-**Speak Easy** - Breaking language barriers, one conversation at a time. 🌍🗣️
+**VoiceBridge** - Breaking language barriers, one conversation at a time. 🌍🗣️

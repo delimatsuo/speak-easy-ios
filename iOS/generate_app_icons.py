@@ -67,7 +67,7 @@ def draw_sound_waves(draw, rect, color, line_width, count=3):
         draw.arc(bbox, start=-45, end=45, fill=color, width=line_width)
 
 def create_app_icon(size):
-    """Create the Speak Easy app icon at the specified size"""
+    """Create the VoiceBridge app icon at the specified size"""
     # Create base image with gradient
     img = create_gradient(size, size)
     
@@ -138,7 +138,7 @@ icon_sizes = [
 output_dir = "/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/AppIcons"
 os.makedirs(output_dir, exist_ok=True)
 
-print("Generating Speak Easy app icons...")
+print("Generating VoiceBridge app icons...")
 for name, size in icon_sizes:
     icon = create_app_icon(size)
     filepath = os.path.join(output_dir, f"{name}.png")

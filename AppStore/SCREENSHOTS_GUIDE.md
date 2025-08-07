@@ -1,4 +1,4 @@
-# App Store Screenshots Guide for Speak Easy
+# App Store Screenshots Guide for VoiceBridge
 
 ## Required Screenshot Sizes
 
@@ -152,7 +152,7 @@ Business & Life
 
 **Scene 1** (0-3 seconds)
 - App icon animates in
-- "Speak Easy" title appears
+- "VoiceBridge" title appears
 
 **Scene 2** (3-7 seconds)
 - User taps microphone button
@@ -170,7 +170,7 @@ Business & Life
 - Display history screen
 
 **Scene 5** (14-15 seconds)
-- End card: "Speak Easy - Download Now"
+- End card: "VoiceBridge - Download Now"
 - App Store badge
 
 ---

@@ -1,6 +1,6 @@
 //
 //  StoreManager.swift
-//  Speak Easy
+//  VoiceBridge
 //
 //  Prepares for future IAP implementation with StoreKit 2 (for post-beta)
 //  This is placeholder code for the beta and will be fully implemented post-beta

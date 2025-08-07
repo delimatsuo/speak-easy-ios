@@ -55,7 +55,7 @@ def add_assets_to_pbxproj():
     print("\nNext steps:")
     print("1. Open UniversalTranslator.xcodeproj in Xcode")
     print("2. Build and run the project")
-    print("3. Your app should now display the Speak Easy icon!")
+    print("3. Your app should now display the VoiceBridge icon!")
 
 if __name__ == "__main__":
     add_assets_to_pbxproj()

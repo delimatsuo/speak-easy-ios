@@ -39,7 +39,7 @@ cd iOS
 1. **Go to App Store Connect**
    - https://appstoreconnect.apple.com
 
-2. **Select your app** (Speak Easy)
+2. **Select your app** (VoiceBridge)
 
 3. **Go to TestFlight tab**
 
@@ -63,22 +63,22 @@ cd iOS
 Send this email to your testers:
 
 ```
-Subject: You're invited to test Speak Easy!
+Subject: You're invited to test VoiceBridge!
 
 Hi [Name],
 
-You're invited to beta test Speak Easy, our new voice translation app!
+You're invited to beta test VoiceBridge, our new voice translation app!
 
 To get started:
 1. Download TestFlight from the App Store
 2. Open this link on your iPhone: [TestFlight Link]
-3. Install Speak Easy
+3. Install VoiceBridge
 4. Start translating!
 
 Please refer to the Beta Testing Guide for instructions and how to provide feedback.
 
 Thanks for your help!
-The Speak Easy Team
+The VoiceBridge Team
 ```
 
 ## 📋 Pre-Submission Checklist

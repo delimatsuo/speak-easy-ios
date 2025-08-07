@@ -1,6 +1,6 @@
 //
 //  KeychainManager.swift
-//  Speak Easy
+//  VoiceBridge
 //
 //  Created on 2025-08-05
 //

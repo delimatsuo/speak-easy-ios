@@ -2,25 +2,25 @@
 
 ## 🚀 Quick Setup Instructions
 
-Your Speak Easy iOS app is ready to be pushed to GitHub! Follow these steps:
+Your VoiceBridge iOS app is ready to be pushed to GitHub! Follow these steps:
 
 ### Option 1: Create New Repository on GitHub.com
 
 1. **Go to GitHub.com** and sign in to your account
 2. **Click "New repository"** (green button or + icon)
 3. **Repository settings**:
-   - **Repository name**: `speak-easy-ios` or `universal-translator-app`
-   - **Description**: `Speak Easy - Voice-to-voice translation iOS app with Firebase integration`
+   - **Repository name**: `voicebridge-ios` or `universal-translator-app`
+   - **Description**: `VoiceBridge - Voice-to-voice translation iOS app with Firebase integration`
    - **Visibility**: Choose Public or Private
    - **DO NOT** initialize with README, .gitignore, or license (we already have these)
 
-4. **Copy the repository URL** (will look like: `https://github.com/yourusername/speak-easy-ios.git`)
+4. **Copy the repository URL** (will look like: `https://github.com/yourusername/voicebridge-ios.git`)
 
 ### Option 2: Use GitHub CLI (if installed)
 
 ```bash
 # Create repository directly from command line
-gh repo create speak-easy-ios --public --description "Speak Easy - Voice-to-voice translation iOS app"
+gh repo create voicebridge-ios --public --description "VoiceBridge - Voice-to-voice translation iOS app"
 ```
 
 ## 📤 Push Your Code
@@ -29,13 +29,13 @@ Once you have the repository URL, run these commands:
 
 ```bash
 # Add your GitHub repository as remote origin
-git remote add origin https://github.com/yourusername/speak-easy-ios.git
+git remote add origin https://github.com/yourusername/voicebridge-ios.git
 
 # Push all commits to GitHub
 git push -u origin main
 ```
 
-Replace `yourusername/speak-easy-ios` with your actual GitHub username and repository name.
+Replace `yourusername/voicebridge-ios` with your actual GitHub username and repository name.
 
 ## ✅ What Will Be Pushed
 
@@ -106,4 +106,4 @@ All files in this project are within GitHub's size limits, but if you get warnin
 
 ---
 
-**Your Speak Easy app is ready for the world! 🌍🗣️**
+**Your VoiceBridge app is ready for the world! 🌍🗣️**

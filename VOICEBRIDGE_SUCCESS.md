@@ -1,8 +1,8 @@
-# 🎉 Speak Easy Successfully Deployed!
+# 🎉 VoiceBridge Successfully Deployed!
 
 ## ✅ Complete Voice Translation System
 
-Your Speak Easy app is now **fully operational** with voice-to-voice translation capabilities!
+Your VoiceBridge app is now **fully operational** with voice-to-voice translation capabilities!
 
 ### 🎤 What We Built
 
@@ -117,9 +117,9 @@ This is exactly what you requested - a voice-based universal translator, not a t
 
 ### 📲 App is Running Now!
 
-Speak Easy is currently running in your iOS Simulator. Try it out:
+VoiceBridge is currently running in your iOS Simulator. Try it out:
 1. Tap the microphone
 2. Speak clearly
 3. Listen to your translation!
 
-Enjoy Speak Easy! 🌍🎤🔊
+Enjoy VoiceBridge! 🌍🎤🔊

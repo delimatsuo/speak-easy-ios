@@ -251,7 +251,7 @@ struct ContentView: View {
                 }
                 .padding(.top)
             }
-            .navigationTitle("Speak Easy")
+            .navigationTitle("VoiceBridge")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showHistory = true }) {
