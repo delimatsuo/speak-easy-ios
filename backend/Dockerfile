@@ -33,5 +33,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Expose port
 EXPOSE 8080
 
-# Start the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "4"]
+# Start the voice API application (provides /v1/translate/audio)
+CMD ["uvicorn", "app.main_voice:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "4"]
