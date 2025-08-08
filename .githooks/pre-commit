@@ -1,0 +1,63 @@
+#!/bin/bash
+# Pre-commit secret scanner
+# Blocks commits containing common secret patterns (Google API keys, private keys, etc.)
+
+set -euo pipefail
+
+red()  { printf "\033[31m%s\033[0m\n" "$*"; }
+green(){ printf "\033[32m%s\033[0m\n" "$*"; }
+
+# Only scan staged changes
+FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$FILES" ]; then
+  exit 0
+fi
+
+PATTERNS=(
+  'AIza[0-9A-Za-z_-]{35}'                                   # Google style API key
+  '-----BEGIN( RSA)? PRIVATE KEY-----'                      # Private keys
+  'AWS_SECRET_ACCESS_KEY|aws_secret_access_key'             # AWS secret
+  'AWS_ACCESS_KEY_ID|aws_access_key_id'                     # AWS key id
+  'xox[pbar]-[0-9A-Za-z-]+'                                 # Slack token
+  'github_(?:pat|token|["]+ghp_[0-9A-Za-z]{36}["]?)'      # GitHub tokens
+)
+
+FAILED=0
+
+for file in $FILES; do
+  # Skip hook files and CI workflow/configs
+  case "$file" in
+    .githooks/*|.github/workflows/*|.gitleaks.toml)
+      continue;;
+  esac
+  # Skip binaries
+  if git diff --cached --numstat -- "$file" | awk '{exit $3!="-"}'; then
+    continue
+  fi
+  for pattern in "${PATTERNS[@]}"; do
+    if grep -Eqs -e "$pattern" "$file"; then
+      red "❌ Secret-like pattern detected in $file"
+      red "Pattern: $pattern"
+      FAILED=1
+    fi
+  done
+done
+
+if [ $FAILED -ne 0 ]; then
+  cat <<'EOF'
+
+Commit blocked by pre-commit secret scan.
+Please remove secrets or replace with placeholders, then commit again.
+
+If this is a false positive, you can bypass with:
+  git commit -n
+but consider adding a safer pattern exclusion instead.
+EOF
+  exit 1
+fi
+
+green "✅ Secret scan passed"
+exit 0
+
+

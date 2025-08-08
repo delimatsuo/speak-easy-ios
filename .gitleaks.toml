@@ -1,0 +1,16 @@
+# Minimal gitleaks config: allows local scripts and CI to share rules
+
+[extend]
+  # Use default rules
+
+[allowlist]
+  description = "Test fixtures and docs may contain fake keys"
+  paths = [
+    "Tests/.*",
+    "docs/.*",
+    "Specs/.*",
+    "**/*.png",
+    "**/*.svg"
+  ]
+
+

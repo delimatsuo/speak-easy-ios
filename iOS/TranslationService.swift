@@ -107,7 +107,7 @@ class TranslationService: ObservableObject {
         // Securely retrieve API key using APIKeyManager
         if let apiKey = APIKeyManager.shared.getAPIKey() {
             request.setValue(apiKey, forHTTPHeaderField: "X-API-Key")
-            print("🔑 API key configured: \(apiKey.prefix(10))...")
+            // Do not log API key
         } else {
             print("❌ No API key found")
             throw TranslationError.apiError("API key not configured")
