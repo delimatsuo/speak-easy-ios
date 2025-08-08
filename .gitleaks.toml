@@ -9,6 +9,8 @@
     "Tests/.*",
     "docs/.*",
     "Specs/.*",
+    "\.githooks/.*",
+    "\.github/workflows/.*",
     "**/*.png",
     "**/*.svg"
   ]
