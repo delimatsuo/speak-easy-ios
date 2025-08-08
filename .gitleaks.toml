@@ -11,8 +11,8 @@
     "Specs/.*",
     "\\.githooks/.*",
     "\\.github/workflows/.*",
-    "**/*.png",
-    "**/*.svg"
+    ".*\\.png$",
+    ".*\\.svg$"
   ]
 
 
