@@ -10,9 +10,9 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy requirements first for better caching (use voice stack)
+COPY requirements_voice.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements_voice.txt || pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
