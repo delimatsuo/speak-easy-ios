@@ -28,6 +28,10 @@ class AudioManager: NSObject, ObservableObject {
     var lastAudioData: Data?
     private var recordingURL: URL?
     
+    // Thread safety
+    private let audioQueue = DispatchQueue(label: "com.app.audio", qos: .userInitiated)
+    private var playbackCompletion: ((Bool) -> Void)?
+    
     override init() {
         super.init()
         setupSession()
@@ -57,6 +61,15 @@ class AudioManager: NSObject, ObservableObject {
                 } else {
                     completion(false)
                 }
+            }
+        }
+    }
+    
+    // New async version for better thread safety
+    func startRecordingAsync() async -> Bool {
+        return await withCheckedContinuation { continuation in
+            startRecording { success in
+                continuation.resume(returning: success)
             }
         }
     }
@@ -222,24 +235,35 @@ class AudioManager: NSObject, ObservableObject {
     
     func playAudio(_ audioData: Data, completion: @escaping (Bool) -> Void) {
         lastAudioData = audioData
+        playbackCompletion = completion
         
-        do {
-            // Create player from data
-            audioPlayer = try AVAudioPlayer(data: audioData)
-            audioPlayer?.delegate = self
-            audioPlayer?.prepareToPlay()
-            audioPlayer?.play()
-            isPlaying = true
-            
-            // Call completion when playback finishes
-            DispatchQueue.main.asyncAfter(deadline: .now() + (audioPlayer?.duration ?? 0)) {
-                self.isPlaying = false
-                completion(true)
+        audioQueue.async {
+            do {
+                // Create player from data
+                self.audioPlayer = try AVAudioPlayer(data: audioData)
+                self.audioPlayer?.delegate = self
+                self.audioPlayer?.prepareToPlay()
+                
+                DispatchQueue.main.async {
+                    self.isPlaying = true
+                    self.audioPlayer?.play()
+                }
+            } catch {
+                print("Failed to play audio: \(error)")
+                DispatchQueue.main.async {
+                    self.isPlaying = false
+                    completion(false)
+                }
             }
-        } catch {
-            print("Failed to play audio: \(error)")
-            isPlaying = false
-            completion(false)
+        }
+    }
+    
+    // New async version for better thread safety
+    func playAudioAsync(_ audioData: Data) async -> Bool {
+        return await withCheckedContinuation { continuation in
+            playAudio(audioData) { success in
+                continuation.resume(returning: success)
+            }
         }
     }
     
@@ -320,7 +344,12 @@ extension AudioManager: AVAudioRecorderDelegate {
 
 extension AudioManager: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        isPlaying = false
+        DispatchQueue.main.async {
+            self.isPlaying = false
+            // Call completion handler if available
+            self.playbackCompletion?(flag)
+            self.playbackCompletion = nil
+        }
     }
 }
 

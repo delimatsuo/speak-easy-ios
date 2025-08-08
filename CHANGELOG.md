@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.0.0] - 2025-08-05 - App Store Ready Release
+## [1.0.1] - 2025-08-08 - UI Header Redesign & Dark Mode Polish
+
+### Added
+- `HeroHeader` component with centered title/subtitle and two styles: `.card` and `.fullBleed`.
+- Adaptive on-primary colors (`speakEasyOnPrimary`, `speakEasyOnPrimarySecondary`) for text/icons atop gradients.
+
+### Changed
+- `ContentView` updated to use `HeroHeader(style: .card)` for consistent rounded corners and improved aesthetics.
+- `ModernLanguageSelector` sheet detents made backward-compatible with iOS 15.
+
+### Fixed
+- Large title alignment issues; header is now centered and safe-area aware.
+- Dark mode contrast for header content.
+
 
 ### 🎉 Major Milestone: App Store Submission Ready
 

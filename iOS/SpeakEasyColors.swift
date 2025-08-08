@@ -1,121 +1,190 @@
 //
 //  SpeakEasyColors.swift
-//  UniversalTranslator
+//  Mervyn Talks - Modern Color System
 //
-//  App color palette matching the icon design
+//  COMPLETELY REDESIGNED color system with proper dark/light mode support
+//  Replaces hard-coded RGB values with semantic, adaptive colors
 //
 
 import SwiftUI
 
 extension Color {
-    // MARK: - Primary Brand Colors (from icon gradient)
     
-    /// Teal color from icon gradient start
-    static let speakEasyTeal = Color(red: 0.00, green: 0.60, blue: 0.40)
+    // MARK: - Brand Colors (Adaptive to Light/Dark Mode)
     
-    /// Blue color from icon gradient end
-    static let speakEasyBlue = Color(red: 0.00, green: 0.40, blue: 0.75)
+    /// Primary brand teal - adapts automatically to system appearance
+    static let speakEasyTeal: Color = {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+            case .dark:
+                return UIColor(red: 0.0, green: 0.70, blue: 0.47, alpha: 1.0) // Lighter teal for dark mode
+            default:
+                return UIColor(red: 0.0, green: 0.60, blue: 0.40, alpha: 1.0) // Original teal for light mode
+            }
+        })
+        #else
+        return Color(red: 0.0, green: 0.60, blue: 0.40) // Fallback for macOS
+        #endif
+    }()
     
-    // MARK: - UI Colors
+    /// Secondary brand blue - adapts automatically to system appearance
+    static let speakEasyBlue: Color = {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+            case .dark:
+                return UIColor(red: 0.0, green: 0.48, blue: 1.0, alpha: 1.0) // System blue for dark mode
+            default:
+                return UIColor(red: 0.0, green: 0.40, blue: 0.75, alpha: 1.0) // Original blue for light mode
+            }
+        })
+        #else
+        return Color(red: 0.0, green: 0.40, blue: 0.75) // Fallback for macOS
+        #endif
+    }()
     
-    /// Primary accent color (teal)
-    static let speakEasyAccent = speakEasyTeal
+    // MARK: - Semantic System Colors (Auto-adapting)
     
-    /// Secondary accent color (blue)
+    /// Primary brand color - automatically adapts to system appearance
+    static let speakEasyPrimary = speakEasyTeal
+    
+    /// Secondary brand color - automatically adapts to system appearance  
     static let speakEasySecondary = speakEasyBlue
     
-    /// Background gradient start
-    static let speakEasyBackgroundLight = Color(red: 0.95, green: 0.98, blue: 0.97)
+    // MARK: - Background Colors (Semantic - Auto-adapting)
     
-    /// Background gradient end
-    static let speakEasyBackgroundDark = Color(red: 0.90, green: 0.96, blue: 0.98)
+    /// Primary background - uses system background
+    static let speakEasyBackground = Color(.systemBackground)
     
-    /// Text on colored backgrounds
-    static let speakEasyTextLight = Color.white
+    /// Secondary background for cards and elements
+    static let speakEasySecondaryBackground = Color(.secondarySystemBackground)
     
-    /// Primary text color
-    static let speakEasyTextPrimary = Color(red: 0.15, green: 0.15, blue: 0.20)
+    /// Tertiary background for nested elements
+    static let speakEasyTertiaryBackground = Color(.tertiarySystemBackground)
     
-    /// Secondary text color
-    static let speakEasyTextSecondary = Color(red: 0.45, green: 0.45, blue: 0.50)
+    // MARK: - Text Colors (Semantic - Auto-adapting)
     
-    // MARK: - Semantic Colors
+    /// Primary text color - uses system label
+    static let speakEasyTextPrimary = Color(.label)
     
-    /// Recording state color
-    static let speakEasyRecording = Color(red: 0.95, green: 0.26, blue: 0.21)
+    /// Secondary text color - uses system secondary label
+    static let speakEasyTextSecondary = Color(.secondaryLabel)
     
-    /// Success/Playing state color
-    static let speakEasySuccess = speakEasyTeal
+    /// Tertiary text color - uses system tertiary label
+    static let speakEasyTextTertiary = Color(.tertiaryLabel)
     
-    /// Processing state color
+    // MARK: - State Colors (Adaptive)
+    
+    /// Recording state color - adapts to system appearance
+    static let speakEasyRecording: Color = {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+            case .dark:
+                return UIColor(red: 1.0, green: 0.35, blue: 0.31, alpha: 1.0) // Lighter red for dark mode
+            default:
+                return UIColor(red: 0.95, green: 0.26, blue: 0.21, alpha: 1.0) // Original red for light mode
+            }
+        })
+        #else
+        return Color(red: 0.95, green: 0.26, blue: 0.21) // Fallback
+        #endif
+    }()
+    
+    /// Processing/loading state color
     static let speakEasyProcessing = speakEasyBlue
     
-    /// Error state color
-    static let speakEasyError = Color(red: 0.85, green: 0.20, blue: 0.20)
+    // MARK: - Adaptive Gradients
     
-    // MARK: - Component Colors
-    
-    /// Button background gradient
-    static var speakEasyButtonGradient: LinearGradient {
+    /// Primary button gradient - adapts to system appearance
+    static var speakEasyPrimaryGradient: LinearGradient {
         LinearGradient(
             gradient: Gradient(colors: [speakEasyTeal, speakEasyBlue]),
-            startPoint: .bottomTrailing,
-            endPoint: .topLeading
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
         )
     }
     
-    /// Subtle background gradient for cards
-    static var speakEasyCardGradient: LinearGradient {
-        LinearGradient(
-            gradient: Gradient(colors: [
-                speakEasyBackgroundLight,
-                speakEasyBackgroundDark
-            ]),
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
-    
-    /// Main app background gradient
+    /// Main app background gradient - FIXED: Now uses semantic colors
     static var speakEasyBackgroundGradient: LinearGradient {
         LinearGradient(
             gradient: Gradient(colors: [
-                Color(red: 0.98, green: 0.99, blue: 0.99),
-                Color(red: 0.94, green: 0.97, blue: 0.98)
+                speakEasyBackground,
+                speakEasySecondaryBackground
             ]),
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
     }
-}
+    
+    // MARK: - Component-Specific Colors
+    
+    /// Transcribed text background - FIXED: Now adaptive
+    static let speakEasyTranscribedBackground: Color = {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+            case .dark:
+                return UIColor.secondarySystemBackground
+            default:
+                return UIColor(red: 0.95, green: 0.98, blue: 0.97, alpha: 1.0) // Light mint green
+            }
+        })
+        #else
+        return Color(.secondarySystemBackground) // Fallback
+        #endif
+    }()
+    
+    /// Translated text background - FIXED: Now adaptive
+    static let speakEasyTranslatedBackground: Color = {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+            case .dark:
+                return UIColor(red: 0.0, green: 0.40, blue: 0.27, alpha: 0.15) // Darker teal with opacity
+            default:
+                return UIColor(red: 0.0, green: 0.60, blue: 0.40, alpha: 0.1) // Light teal with opacity
+            }
+        })
+        #else
+        return Color(red: 0.0, green: 0.60, blue: 0.40).opacity(0.1) // Fallback
+        #endif
+    }()
+    
+    /// Language picker background - FIXED: Now adaptive
+    static let speakEasyPickerBackground: Color = {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+            case .dark:
+                return UIColor.tertiarySystemBackground
+            default:
+                return UIColor(red: 0.95, green: 0.98, blue: 0.97, alpha: 1.0) // Light mint green
+            }
+        })
+        #else
+        return Color(.tertiarySystemBackground) // Fallback
+        #endif
+    }()
 
-// MARK: - View Modifiers for Consistent Styling
+    // MARK: - On-Primary Colors (for text/icons on brand gradient)
 
-struct SpeakEasyButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundColor(.speakEasyTextLight)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
-            .background(Color.speakEasyButtonGradient)
-            .cornerRadius(25)
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
-    }
-}
+    /// Primary content color for text/icons rendered on top of primary gradient or brand surfaces
+    static let speakEasyOnPrimary: Color = {
+        #if canImport(UIKit)
+        return Color(UIColor { _ in UIColor.white })
+        #else
+        return Color.white
+        #endif
+    }()
 
-struct SpeakEasyCardStyle: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .padding()
-            .background(Color.speakEasyCardGradient)
-            .cornerRadius(16)
-            .shadow(color: Color.speakEasyBlue.opacity(0.1), radius: 8, x: 0, y: 4)
-    }
-}
-
-extension View {
-    func speakEasyCard() -> some View {
-        self.modifier(SpeakEasyCardStyle())
-    }
+    /// Secondary content color (slightly muted) for text on primary surfaces
+    static let speakEasyOnPrimarySecondary: Color = {
+        #if canImport(UIKit)
+        return Color(UIColor { _ in UIColor(white: 1.0, alpha: 0.85) })
+        #else
+        return Color.white.opacity(0.85)
+        #endif
+    }()
 }

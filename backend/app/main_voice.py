@@ -26,10 +26,24 @@ import tempfile
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize clients
-secret_client = secretmanager.SecretManagerServiceClient()
-tts_client = texttospeech.TextToSpeechClient()
-stt_client = speech.SpeechClient()
+# Initialize clients with error handling
+try:
+    secret_client = secretmanager.SecretManagerServiceClient()
+except Exception as e:
+    logger.warning(f"Secret Manager client initialization failed: {e}")
+    secret_client = None
+
+try:
+    tts_client = texttospeech.TextToSpeechClient()
+except Exception as e:
+    logger.warning(f"TTS client initialization failed: {e}")
+    tts_client = None
+
+try:
+    stt_client = speech.SpeechClient()
+except Exception as e:
+    logger.warning(f"STT client initialization failed: {e}")
+    stt_client = None
 
 # Models
 class TranslationAudioRequest(BaseModel):
@@ -69,8 +83,20 @@ class HealthResponse(BaseModel):
     services: Dict[str, str]
 
 def get_secret(secret_id: str, project_id: str = None) -> Optional[str]:
-    """Retrieve secret from GCP Secret Manager"""
+    """Retrieve secret from GCP Secret Manager with fallback to environment variables"""
     try:
+        # First, try environment variable
+        env_var_name = secret_id.upper().replace('-', '_')
+        env_value = os.environ.get(env_var_name)
+        if env_value:
+            logger.info(f"Using environment variable for {secret_id}")
+            return env_value
+            
+        # If no secret client, return None
+        if not secret_client:
+            logger.error(f"No secret client available and no environment variable for {secret_id}")
+            return None
+            
         if not project_id:
             project_id = os.environ.get('GCP_PROJECT', 'universal-translator-prod')
         
@@ -79,7 +105,8 @@ def get_secret(secret_id: str, project_id: str = None) -> Optional[str]:
         return response.payload.data.decode('UTF-8')
     except Exception as e:
         logger.error(f"Failed to retrieve secret {secret_id}: {e}")
-        return None
+        # Try direct environment variable as last resort
+        return os.environ.get('GEMINI_API_KEY')
 
 class VoiceTranslationService:
     """Service for voice translation with TTS"""
@@ -125,6 +152,11 @@ class VoiceTranslationService:
     async def text_to_speech(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
         """Convert text to speech using Google Cloud TTS or gTTS"""
         try:
+            # Check if TTS client is available
+            if not tts_client:
+                logger.warning("TTS client not available, falling back to gTTS")
+                return self._gtts_fallback(text, language)
+                
             # Use Google Cloud TTS for better quality
             synthesis_input = texttospeech.SynthesisInput(text=text)
             
@@ -141,15 +173,23 @@ class VoiceTranslationService:
                 pitch=0.0
             )
             
-            # Perform text-to-speech
-            response = tts_client.synthesize_speech(
-                input=synthesis_input,
-                voice=voice,
-                audio_config=audio_config
+            # Add timeout to prevent hanging
+            import asyncio
+            loop = asyncio.get_event_loop()
+            response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: tts_client.synthesize_speech(
+                    input=synthesis_input,
+                    voice=voice,
+                    audio_config=audio_config
+                )),
+                timeout=15.0
             )
             
             return response.audio_content
             
+        except asyncio.TimeoutError:
+            logger.warning("Google Cloud TTS timed out, falling back to gTTS")
+            return self._gtts_fallback(text, language)
         except Exception as e:
             logger.warning(f"Google Cloud TTS failed, falling back to gTTS: {e}")
             # Fallback to gTTS
@@ -172,6 +212,11 @@ class VoiceTranslationService:
     async def speech_to_text(self, audio_data: bytes, language: str, encoding: str = "MP3", sample_rate: int = 44100) -> str:
         """Convert speech to text using Google Cloud Speech-to-Text"""
         try:
+            # Check if STT client is available
+            if not stt_client:
+                logger.error("STT client not available")
+                raise HTTPException(status_code=503, detail="Speech recognition service unavailable")
+                
             # Configure audio
             audio = speech.RecognitionAudio(content=audio_data)
             
@@ -184,8 +229,13 @@ class VoiceTranslationService:
                 model="latest_long"
             )
             
-            # Perform speech recognition
-            response = stt_client.recognize(config=config, audio=audio)
+            # Add timeout to prevent hanging
+            import asyncio
+            loop = asyncio.get_event_loop()
+            response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: stt_client.recognize(config=config, audio=audio)),
+                timeout=15.0
+            )
             
             # Extract transcription
             transcription = ""
@@ -194,6 +244,9 @@ class VoiceTranslationService:
             
             return transcription.strip()
             
+        except asyncio.TimeoutError:
+            logger.error("Speech-to-text timed out")
+            raise HTTPException(status_code=408, detail="Speech recognition timed out")
         except Exception as e:
             logger.error(f"Speech-to-text failed: {e}")
             raise HTTPException(status_code=500, detail="Speech recognition failed")
@@ -250,10 +303,13 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Voice Translation API")
     
     try:
-        # Load Gemini API key
+        # Load Gemini API key with multiple fallback options
         gemini_key = get_secret("gemini-api-key")
         if not gemini_key:
-            raise RuntimeError("Failed to load Gemini API key")
+            # Try direct environment variable as fallback
+            gemini_key = os.environ.get('GEMINI_API_KEY')
+            if not gemini_key:
+                raise RuntimeError("Failed to load Gemini API key from Secret Manager or environment variables")
         
         # Initialize service
         translation_service = VoiceTranslationService(gemini_key)
@@ -291,8 +347,9 @@ async def health_check():
     try:
         services_status = {
             "translation": "healthy" if translation_service else "unhealthy",
-            "tts": "healthy",
-            "stt": "healthy"
+            "tts": "healthy" if tts_client else "unavailable",
+            "stt": "healthy" if stt_client else "unavailable",
+            "secret_manager": "healthy" if secret_client else "unavailable"
         }
         
         return HealthResponse(

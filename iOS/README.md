@@ -138,7 +138,13 @@ appearance.backgroundColor = UIColor.systemBlue // Change this
 Edit `main.py` on backend to add more language codes
 
 ### Modify UI Layout
-Edit `ContentView.swift` to customize the interface
+- Use `HeroHeader` for a centered title/subtitle over the brand gradient.
+- Prefer `.card` style for rounded corners on all sides; `.fullBleed` is available.
+- Key files:
+  - `ContentView.swift`
+  - `HeroHeader.swift`
+  - `DesignConstants.swift`
+  - `SpeakEasyColors.swift` (semantic colors, including `speakEasyOnPrimary`)
 
 ## 📈 Next Steps
 

@@ -15,6 +15,16 @@
 
 Mervyn Talks is an intuitive iOS voice translation app that enables seamless communication across language barriers. Simply speak in your language and hear the translation instantly in your target language.
 
+### 🔔 Latest updates (2025-08-08)
+
+- Introduced a centered, modern hero header (`HeroHeader`) with two styles: `.card` (rounded all corners) and `.fullBleed`
+- Added adaptive on-primary text/icon colors for perfect contrast in both light and dark mode
+- Fixed layout issues with a professional design system:
+  - Microphone button fixed at 130pt
+  - Language selectors show full names with flags (≥ 140pt)
+  - Title “Mervyn Talks” is centered and safe-area aware
+- Guarded iOS 16-only APIs for iOS 15 compatibility
+
 ### ✨ Key Features
 
 - **🎤 Voice-to-Voice Translation**: Speak naturally and hear translations instantly

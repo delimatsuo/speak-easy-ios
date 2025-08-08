@@ -45,8 +45,7 @@ gcloud run deploy ${SERVICE_NAME} \
     --timeout 60s \
     --max-instances 100 \
     --min-instances 0 \
-    --set-env-vars "ENVIRONMENT=production,GCP_PROJECT=${PROJECT_ID}" \
-    --update-secrets "GEMINI_API_KEY=gemini-api-key:latest"
+    --set-env-vars "ENVIRONMENT=production,GCP_PROJECT=${PROJECT_ID},GEMINI_API_KEY=AIzaSyDftOOmdUoH5pMfiGoi4VuROetgh_gB5KQ"
 
 # 5. Get service URL
 SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} \
