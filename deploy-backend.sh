@@ -106,7 +106,8 @@ build_and_push() {
     gcloud auth configure-docker --quiet
     
     # Build the image
-    docker build -t ${IMAGE_NAME} -f backend/Dockerfile .
+    # Use backend directory as build context so Dockerfile COPY paths resolve
+    docker build -t ${IMAGE_NAME} -f backend/Dockerfile backend
     
     log_info "Pushing container to GCR..."
     docker push ${IMAGE_NAME}
@@ -167,7 +168,7 @@ test_deployment() {
     
     # Test translation endpoint
     log_info "Testing translation endpoint..."
-    RESPONSE=$(curl -s -X POST "${SERVICE_URL}/api/v1/translate" \
+    RESPONSE=$(curl -s -X POST "${SERVICE_URL}/v1/translate" \
         -H "Content-Type: application/json" \
         -d '{"text": "Hello", "source_language": "en", "target_language": "es"}' \
         -w "%{http_code}")
