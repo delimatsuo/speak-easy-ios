@@ -107,7 +107,7 @@ build_and_push() {
     
     # Build the image
     # Use backend directory as build context so Dockerfile COPY paths resolve
-    docker build -t ${IMAGE_NAME} -f backend/Dockerfile backend
+    docker build --platform linux/amd64 -t ${IMAGE_NAME} -f backend/Dockerfile backend
     
     log_info "Pushing container to GCR..."
     docker push ${IMAGE_NAME}
