@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
     <key>GoogleTranslateAPIKey</key>
-    <string>AIzaSyDftOOmdUoH5pMfiGoi4VuROetgh_gB5KQ</string>
+    <string>YOUR_APP_API_KEY</string>
     <key>FirebaseAPIKey</key>
-    <string>AIzaSyDftOOmdUoH5pMfiGoi4VuROetgh_gB5KQ</string>
+    <string>YOUR_FIREBASE_API_KEY</string>
 </dict>
 </plist>

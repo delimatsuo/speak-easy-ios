@@ -23,7 +23,7 @@ gcloud services enable generativelanguage.googleapis.com --project=universal-tra
 
 Go to: https://console.cloud.google.com/apis/credentials
 
-1. Find your API key (AIzaSyDftOOmdUoH5pMfiGoi4VuROetgh_gB5KQ)
+1. Create your API key in Google AI Studio (do not commit it)
 2. Click on it to edit
 3. Under "API restrictions":
    - Either select "Don't restrict key" (for testing)
@@ -36,7 +36,7 @@ Go to: https://console.cloud.google.com/apis/credentials
 
 ```bash
 # Test Gemini directly
-curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyDftOOmdUoH5pMfiGoi4VuROetgh_gB5KQ" \
+curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "contents": [{

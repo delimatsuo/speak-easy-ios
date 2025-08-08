@@ -12,7 +12,7 @@ Based on my investigation, here are the key findings:
 
 ### 1. File Structure Analysis
 - **api_keys.plist EXISTS**: Located at `/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/api_keys.plist`
-- **API Key Present**: The plist contains `GoogleTranslateAPIKey` with value `AIzaSyDftOOmdUoH5pMfiGoi4VuROetgh_gB5KQ`
+- **API Key Placeholder**: The plist contains `GoogleTranslateAPIKey` with value `YOUR_APP_API_KEY` (no secrets committed)
 - **Template File**: `api_keys.template.plist` also exists with placeholder values
 
 ### 2. Xcode Project Integration Status
@@ -61,7 +61,7 @@ func getAPIKey(forService service: String) -> String? {
 <plist version="1.0">
 <dict>
     <key>GoogleTranslateAPIKey</key>
-    <string>AIzaSyDftOOmdUoH5pMfiGoi4VuROetgh_gB5KQ</string>
+    <string>YOUR_APP_API_KEY</string>
     <key>FirebaseAPIKey</key>
     <string>AIzaSyD3DfQBREWOFdq7Rm3L8lDFTiKWk1RKtGY</string>
 </dict>
@@ -108,7 +108,7 @@ The error suggests the `Bundle.main.path(forResource: "api_keys", ofType: "plist
 
 ## Security Considerations
 
-⚠️ **SECURITY NOTICE**: The API key `AIzaSyDftOOmdUoH5pMfiGoi4VuROetgh_gB5KQ` is currently hardcoded in the plist file. For production:
+⚠️ **SECURITY NOTICE**: Do not hardcode real API keys in the repo. For production:
 
 1. **Use environment variables** or secure key management
 2. **Rotate the API key** since it may be exposed in version control

@@ -20,10 +20,11 @@ else
     echo "❌ GoogleTranslateAPIKey missing from plist"
 fi
 
-if grep -q "AIzaSyDftOOmdUoH5pMfiGoi4VuROetgh_gB5KQ" api_keys.plist; then
-    echo "✅ API key value found in plist"
+if grep -Eqs "AIza[0-9A-Za-z_-]{35}" api_keys.plist; then
+    echo "❌ Found hardcoded API key value in plist. Replace with placeholder."
+    exit 1
 else
-    echo "❌ API key value missing from plist"
+    echo "✅ No hardcoded API keys present in plist"
 fi
 
 # 3. Check Xcode project references
@@ -51,10 +52,10 @@ echo "🧪 Next steps to complete verification:"
 echo "1. Clean Build Folder: xcodebuild clean -project UniversalTranslator.xcodeproj"
 echo "2. Build project: xcodebuild build -project UniversalTranslator.xcodeproj -scheme UniversalTranslator"
 echo "3. Run app in simulator and check console logs"
-echo "4. Verify APIKeyManager.shared.isAPIKeyConfigured() returns true"
+echo "4. Verify APIKeyManager.shared.isAPIKeyConfigured() only after securely injecting key at runtime"
 
 echo ""
 echo "🎯 Expected behavior after fix:"
 echo "- No more '❌ API key not found' errors"
-echo "- App should successfully load Google Translate API key"
+echo "- App should securely load API key from Keychain (not from committed plist)"
 echo "- Translation functionality should work"

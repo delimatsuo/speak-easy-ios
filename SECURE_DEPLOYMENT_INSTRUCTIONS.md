@@ -264,6 +264,12 @@ struct AppConfig {
         // For local testing
         #if DEBUG
         return "http://localhost:8080"
+## Production API key handling
+
+- Do not hardcode API keys in source or plist files.
+- Use GCP Secret Manager and reference via `--set-secrets GEMINI_API_KEY=gemini-api-key:latest` on Cloud Run.
+- In iOS, store keys in the Keychain only; ship `api_keys.plist` with placeholders (no real keys).
+
         #else
         // Production URL - will be set after Cloud Run deployment
         return ProcessInfo.processInfo.environment["API_BASE_URL"] 
