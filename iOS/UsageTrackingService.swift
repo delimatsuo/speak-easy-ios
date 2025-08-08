@@ -15,7 +15,7 @@ class UsageTrackingService: ObservableObject {
     private let db = Firestore.firestore()
     
     // For beta users: unlimited minutes, but we'll track usage
-    @Published var isUnlimitedBeta = true
+    @Published var isUnlimitedBeta = false
     
     // Minutes tracking
     @Published var totalMinutesUsed: Double = 0
@@ -90,7 +90,7 @@ class UsageTrackingService: ObservableObject {
         isSessionActive = false
         currentSessionStartTime = nil
         
-        // Save usage data to Firebase
+        // Save usage metadata to Firebase (no conversation content)
         Task {
             await saveSessionToFirebase(minutes: minutesUsed, startTime: startTime, endTime: Date())
         }
@@ -154,8 +154,10 @@ class UsageTrackingService: ObservableObject {
                 "appVersion": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
             ]
             
-            // Save to the "usageSessions" collection
-            _ = try await db.collection("usageSessions").addDocument(data: sessionData)
+            // TTL: expire after 12 months
+            var sessionDataWithTTL = sessionData
+            sessionDataWithTTL["expireAt"] = Timestamp(date: Date(timeIntervalSinceNow: 60*60*24*365))
+            _ = try await db.collection("usageSessions").addDocument(data: sessionDataWithTTL)
             
             // Update the aggregated user stats
             let userRef = db.collection("users").document(userId)
@@ -164,8 +166,7 @@ class UsageTrackingService: ObservableObject {
                 "totalMinutesUsed": FieldValue.increment(Double(minutes)),
                 "sessionsCount": FieldValue.increment(Int64(1)),
                 "lastSessionTime": Timestamp(date: endTime),
-                "isBetaUser": isUnlimitedBeta,
-                "minutesRemaining": isUnlimitedBeta ? 9999 : minutesRemainingForDisplay
+                "isBetaUser": isUnlimitedBeta
             ], merge: true)
             
             print("📊 [UsageTracking] Session data saved to Firebase")

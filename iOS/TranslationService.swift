@@ -37,11 +37,7 @@ class TranslationService: ObservableObject {
     // Cancellation tracking
     @Published var isCancelling = false
     
-    private init() {
-        Task {
-            await loadTranslationHistory()
-        }
-    }
+    private init() {}
     
     // MARK: - Voice Translation API
     
@@ -120,7 +116,7 @@ class TranslationService: ObservableObject {
             target_language: targetLanguage,
             return_audio: true,
             voice_gender: "neutral",
-            speaking_rate: 1.0
+            speaking_rate: 0.85
         )
         
         request.httpBody = try JSONEncoder().encode(body)
@@ -128,13 +124,14 @@ class TranslationService: ObservableObject {
         
         do {
             // Create a more aggressive timeout with cancellation support
+            let session = secureSession
             let result = try await withThrowingTaskGroup(of: (Data, URLResponse).self) { group in
                 // Add the network request task
                 group.addTask {
                     // Check for cancellation before making request
                     try Task.checkCancellation()
                     
-                    let (data, response) = try await secureSession.data(for: request)
+                    let (data, response) = try await session.data(for: request)
                     
                     // Check for cancellation after receiving response
                     try Task.checkCancellation()
@@ -205,14 +202,7 @@ class TranslationService: ObservableObject {
                 self.lastError = nil
             }
             
-            // Save to history with audio URL
-            await saveTranslationToHistory(
-                originalText: text,
-                translatedText: audioResponse.translatedText,
-                sourceLanguage: sourceLanguage,
-                targetLanguage: targetLanguage,
-                audioURL: audioResponse.audioURL
-            )
+            // Conversation content is NOT persisted by policy
             
             // If audio is base64 encoded, decode it
             if let audioBase64 = audioResponse.audioBase64 {
@@ -471,8 +461,9 @@ class TranslationService: ObservableObject {
         request.timeoutInterval = 10.0 // Much shorter timeout for health check
         
         // Use withTimeout for aggressive timeout enforcement
+            let session = secureSession
             let result = try await withTimeout(seconds: 10) {
-                 try await secureSession.data(for: request)
+                 try await session.data(for: request)
             }
         
         let (data, response) = result
@@ -506,66 +497,7 @@ class TranslationService: ObservableObject {
     
     // MARK: - Firebase Operations
     
-    private func saveTranslationToHistory(
-        originalText: String,
-        translatedText: String,
-        sourceLanguage: String,
-        targetLanguage: String,
-        audioURL: String? = nil
-    ) async {
-        let historyData: [String: Any] = [
-            "originalText": originalText,
-            "translatedText": translatedText,
-            "sourceLanguage": sourceLanguage,
-            "targetLanguage": targetLanguage,
-            "timestamp": FieldValue.serverTimestamp(),
-            "deviceId": UIDevice.current.identifierForVendor?.uuidString ?? "unknown",
-            "hasAudio": audioURL != nil,
-            "audioURL": audioURL ?? ""
-        ]
-        
-        do {
-            try await db.collection("translations").addDocument(data: historyData)
-            await self.loadTranslationHistory()
-        } catch {
-            print("Failed to save translation history: \(error)")
-        }
-    }
-    
-    func loadTranslationHistory() async {
-        do {
-            let snapshot = try await db.collection("translations")
-                .order(by: "timestamp", descending: true)
-                .limit(to: 50)
-                .getDocuments()
-            
-            let history = snapshot.documents.compactMap { document -> TranslationHistory? in
-                try? document.data(as: TranslationHistory.self)
-            }
-            
-            await MainActor.run {
-                self.translationHistory = history
-            }
-        } catch {
-            print("Failed to load translation history: \(error)")
-        }
-    }
-    
-    func clearHistory() async {
-        do {
-            let snapshot = try await db.collection("translations").getDocuments()
-            
-            for document in snapshot.documents {
-                try await document.reference.delete()
-            }
-            
-            await MainActor.run {
-                self.translationHistory = []
-            }
-        } catch {
-            print("Failed to clear history: \(error)")
-        }
-    }
+    // History APIs removed per privacy policy: no conversation content is stored.
 }
 
 // MARK: - Models

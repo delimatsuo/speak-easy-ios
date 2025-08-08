@@ -1,22 +1,56 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access to all documents for now (development)
-    // TODO: Add proper authentication rules for production
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { return isSignedIn() && request.auth.token.admin == true; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    // Credits: per-user balance
+    match /credits/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+
+      // Enforce numeric seconds and prevent negative values
+      allow write: if (isOwner(uid) || isAdmin()) &&
+        request.resource.data.seconds is int &&
+        request.resource.data.seconds >= 0;
+    }
+
+    // Purchases: metadata only (no receipts)
+    match /purchases/{uid}/items/{purchaseId} {
+      allow read: if isOwner(uid) || isAdmin();
+      // App writes purchase docs; owner can read; no client deletes
+      allow create: if isOwner(uid);
+      allow update: if false; // immutable
+      allow delete: if false;
+    }
+
+    // Usage sessions: metadata only, no conversation content
+    match /usageSessions/{sessionId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if false;
+    }
+
+    // Starter device registry: blocks multiple UIDs on same device
+    match /starterDevices/{deviceHash} {
+      // Only the signed-in client can claim its own device hash once
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && !exists(/databases/$(database)/documents/starterDevices/$(deviceHash));
+      allow update, delete: if false;
+    }
+
+    // Users: aggregate stats; readable by owner, writable by app
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Deny all else
     match /{document=**} {
-      allow read, write: if true;
-    }
-    
-    // Specific rules for translations collection
-    match /translations/{translationId} {
-      allow read: if true;
-      allow write: if true;
-      // In production, add: if request.auth != null;
-    }
-    
-    // Test collection for connection testing
-    match /test/{testId} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

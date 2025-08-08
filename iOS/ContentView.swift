@@ -11,11 +11,14 @@ import Speech
 import Firebase
 import UIKit
 import FirebaseFirestore
+import StoreKit
 
 struct ContentView: View {
+    @StateObject private var auth = AuthViewModel.shared
     @StateObject private var audioManager = AudioManager()
     @StateObject private var translationService = TranslationService.shared
     @StateObject private var usageService = UsageTrackingService.shared
+    @ObservedObject private var credits = CreditsManager.shared
     
     @State private var sourceLanguage = "en"
     @State private var targetLanguage = "es"
@@ -32,9 +35,15 @@ struct ContentView: View {
     @State private var recordingDuration = 0
     @State private var processingStartTime: Date?
     @State private var translationTask: Task<Void, Never>?
+    @State private var showPurchaseSheet = false
+    @State private var showedSixtySecondReminder = false
     
     var body: some View {
-        NavigationView {
+        Group {
+            if !auth.isSignedIn {
+                SignInView()
+            } else {
+                NavigationView {
             ScrollView {
                 VStack(spacing: DesignConstants.Layout.contentSpacing) {
                     // Centered hero header replacing the default large nav title
@@ -44,6 +53,10 @@ struct ContentView: View {
                         onHistory: { showHistory = true },
                         style: .card
                     )
+
+                    // Credits balance display
+                    CreditsBalanceView(onBuy: { showPurchaseSheet = true })
+                        .professionalPadding()
                     
                     // Language Selection Section
                     VStack(spacing: DesignConstants.Layout.cardSpacing) {
@@ -95,6 +108,7 @@ struct ContentView: View {
                             action: toggleRecording
                         )
                         .padding(.vertical, 20)
+                        .disabled(!isRecording && !isProcessing && !isPlaying && credits.remainingSeconds == 0)
                         
                         // Status Indicator
                         if isRecording || isProcessing || isPlaying {
@@ -111,6 +125,21 @@ struct ContentView: View {
                                 .font(.system(size: DesignConstants.Typography.statusTitleSize, 
                                             weight: DesignConstants.Typography.statusTitleWeight))
                                 .foregroundColor(.speakEasyTextSecondary)
+                        }
+
+                        if credits.remainingSeconds == 60 && !showedSixtySecondReminder {
+                            VStack(spacing: 6) {
+                                Text("You have 1:00 minute left. Top up to keep translating.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.speakEasyTextPrimary)
+                                Button("Buy minutes") { showPurchaseSheet = true }
+                                    .font(.caption.weight(.semibold))
+                                    .buttonStyle(.borderedProminent)
+                            }
+                            .padding()
+                            .background(Color.speakEasySecondaryBackground)
+                            .cornerRadius(10)
+                            .onAppear { showedSixtySecondReminder = true }
                         }
                     }
                     
@@ -132,8 +161,9 @@ struct ContentView: View {
             .background(Color.speakEasyBackground.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline) // Use custom header instead
             .toolbar { ToolbarItem(placement: .principal) { EmptyView() } }
-            .sheet(isPresented: $showHistory) {
-                HistoryView()
+            // History removed to comply with no-conversation-retention policy
+            .sheet(isPresented: $showPurchaseSheet) {
+                PurchaseSheet()
             }
             .alert("Error", isPresented: $showError) {
                 Button("OK") {
@@ -146,6 +176,8 @@ struct ContentView: View {
                 }
             } message: {
                 Text(errorMessage)
+            }
+                }
             }
         }
         .onAppear {
@@ -161,6 +193,11 @@ struct ContentView: View {
         if isRecording {
             stopRecording()
         } else {
+            guard credits.canStartTranslation() else {
+                // No credits: prompt purchase
+                showPurchaseSheet = true
+                return
+            }
             startRecording()
         }
         
@@ -176,6 +213,7 @@ struct ContentView: View {
         transcribedText = ""
         translatedText = ""
         recordingDuration = 0
+        credits.setSessionStarted()
         
         Task {
             let success = await audioManager.startRecordingAsync()
@@ -192,6 +230,7 @@ struct ContentView: View {
     private func stopRecording() {
         isRecording = false
         stopRecordingTimer()
+        credits.setSessionStoppedAndRoundUp()
         
         audioManager.stopRecording { audioURL in
             if let audioURL = audioURL {
@@ -402,7 +441,18 @@ struct ContentView: View {
     
     private func startRecordingTimer() {
         recordingTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            // Deduct credits per elapsed second
+            CreditsManager.shared.deduct(seconds: 1)
             recordingDuration += 1
+            
+            // Stop if out of credits
+            if CreditsManager.shared.remainingSeconds <= 0 {
+                stopRecording()
+                showPurchaseSheet = true
+                return
+            }
+            
+            // Safety cap to 60s per recording (existing behavior)
             if recordingDuration >= 60 {
                 stopRecording()
             }

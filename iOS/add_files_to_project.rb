@@ -11,7 +11,15 @@ main_target = project.targets.first
 # Path to the files you want to add
 files_to_add = [
   '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/UsageTrackingService.swift',
-  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/UsageStatisticsView.swift'
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/UsageStatisticsView.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/CreditsManager.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/PurchaseViewModel.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/CreditsBalanceView.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/PurchaseSheet.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/SignInView.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/AuthViewModel.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/Utilities/DeviceIdentity.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/Utilities/NetworkSecurityManager.swift'
 ]
 
 # Get the main group
