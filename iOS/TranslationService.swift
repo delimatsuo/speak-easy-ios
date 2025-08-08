@@ -17,6 +17,7 @@ class TranslationService: ObservableObject {
     
     private let db = Firestore.firestore()
     private let storage = Storage.storage()
+    private let secureSession: URLSession = NetworkSecurityManager.shared.configureSession()
     
     @Published var isTranslating = false
     @Published var lastError: String?
@@ -133,7 +134,7 @@ class TranslationService: ObservableObject {
                     // Check for cancellation before making request
                     try Task.checkCancellation()
                     
-                    let (data, response) = try await URLSession.shared.data(for: request)
+                    let (data, response) = try await secureSession.data(for: request)
                     
                     // Check for cancellation after receiving response
                     try Task.checkCancellation()
@@ -267,7 +268,7 @@ class TranslationService: ObservableObject {
             throw TranslationError.invalidURL
         }
         
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await secureSession.data(from: url)
         
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200 else {
@@ -470,9 +471,9 @@ class TranslationService: ObservableObject {
         request.timeoutInterval = 10.0 // Much shorter timeout for health check
         
         // Use withTimeout for aggressive timeout enforcement
-        let result = try await withTimeout(seconds: 10) {
-            try await URLSession.shared.data(for: request)
-        }
+            let result = try await withTimeout(seconds: 10) {
+                 try await secureSession.data(for: request)
+            }
         
         let (data, response) = result
         
