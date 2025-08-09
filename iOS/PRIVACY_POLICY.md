@@ -1,6 +1,10 @@
 # Privacy Policy (v1.0)
 
-Effective date: 2025-08-09
+Effective date: August 9, 2025
+
+Controller: Electus USA LLC (Massachusetts, USA)
+Address: 175 Fox Run Rd., Bolton, MA 01740
+Contact: contact@electus.dev
 
 ## Summary
 We do not retain conversation content. Voice/text is processed in real time to provide translation, then purged. We store minimal metadata to operate the service (e.g., credits, purchases, session duration), never the conversation content.
@@ -29,10 +33,10 @@ Links to each provider’s privacy policy apply.
 - API keys/secrets stored in Google Secret Manager; clients do not need a bundled API key.
 
 ## Your Choices
-- You can sign out at any time. Contact us to request deletion of account metadata.
+- You can sign out at any time. Contact us to request deletion of account metadata. We process verified deletion requests within 30 days.
 
 ## Children
-The service is not directed to children under 13. Do not use if you are under applicable age without parental consent.
+The Service is not directed to children under 13. Do not use if you are under applicable age without verified parental consent.
 
 ## International Transfers
 Data may be processed in regions where our processors operate.

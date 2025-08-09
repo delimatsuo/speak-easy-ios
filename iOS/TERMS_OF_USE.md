@@ -1,6 +1,10 @@
 # Terms of Use (v1.0)
 
-Effective date: 2025-08-09
+Effective date: August 9, 2025
+
+Owner/Operator: Electus USA LLC (Massachusetts, USA)
+Address: 175 Fox Run Rd., Bolton, MA 01740
+Contact: contact@electus.dev
 
 ## 1. Service
 Mervyn Talks provides real‑time translation and speech services. By using the app you agree to these terms.
@@ -30,9 +34,21 @@ To the fullest extent permitted by law, we are not liable for indirect, incident
 You agree to indemnify us from claims arising from your use or violation of these terms.
 
 ## 9. Governing Law
-Specify your governing law/jurisdiction here.
+These Terms are governed by the laws of the Commonwealth of Massachusetts, USA, without regard to conflict of law principles. You consent to the exclusive jurisdiction and venue of courts located in Massachusetts.
 
-## 10. Contact
-Support: support@mervyntalks.app
+## 10. Age
+The Service is not directed to children under 13. Do not use the Service if you are under the applicable age without verified parental consent.
+
+## 11. Copyright/DMCA
+© Electus USA LLC. All rights reserved. If you believe content infringes your copyright, contact us at contact@electus.dev with: (a) your contact info, (b) a description of the work, (c) the URL or location of the material, and (d) your statement under penalty of perjury that you are the rights holder or authorized to act.
+
+## 12. Contact
+Electus USA LLC
+
+175 Fox Run Rd.
+
+Bolton, MA 01740, USA
+
+contact@electus.dev
 
 
