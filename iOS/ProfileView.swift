@@ -47,17 +47,22 @@ struct ProfileView: View {
                     }
                 }
                 
+                Section(header: Text("Legal")) {
+                    NavigationLink(destination: LegalDocumentView(resourceName: "TERMS_OF_USE", title: "Terms of Use")) {
+                        Label("Terms of Use", systemImage: "doc.text")
+                    }
+                    NavigationLink(destination: LegalDocumentView(resourceName: "PRIVACY_POLICY", title: "Privacy Policy")) {
+                        Label("Privacy Policy", systemImage: "lock.doc")
+                    }
+                }
+                
                 Section(footer: Text("We do not retain your conversations. Only purchase and session metadata (no content) are stored.")) { EmptyView() }
             }
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
             // Ensure high-contrast nav bar for this sheet regardless of global transparent nav settings
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color(.systemBackground), for: .navigationBar)
-            .toolbarColorScheme(.automatic, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) { Button("Close") { dismiss() } }
-            }
+            .modifier(NavBarBackgroundVisible())
+            .navigationBarItems(leading: Button("Close") { dismiss() })
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
         }
     }
@@ -73,6 +78,19 @@ struct ProfileView: View {
             dismiss()
         } catch {
             signOutError = error.localizedDescription
+        }
+    }
+}
+
+// iOS 16-only toolbar background, safely no-op on iOS 15
+private struct NavBarBackgroundVisible: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarBackground(Color(.systemBackground), for: .navigationBar)
+        } else {
+            content
         }
     }
 }
