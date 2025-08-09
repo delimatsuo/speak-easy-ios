@@ -23,8 +23,11 @@ struct ProfileView: View {
                         VStack(alignment: .leading) {
                             Text(displayName)
                                 .font(.headline)
+                                .foregroundColor(.primary)
                             if let email = Auth.auth().currentUser?.email {
-                                Text(email).font(.subheadline).foregroundColor(.secondary)
+                                Text(email)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
                             }
                         }
                     }
@@ -47,9 +50,15 @@ struct ProfileView: View {
                 Section(footer: Text("We do not retain your conversations. Only purchase and session metadata (no content) are stored.")) { EmptyView() }
             }
             .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.large)
+            // Ensure high-contrast nav bar for this sheet regardless of global transparent nav settings
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(Color(.systemBackground), for: .navigationBar)
+            .toolbarColorScheme(.automatic, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) { Button("Close") { dismiss() } }
             }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
         }
     }
     
