@@ -12,6 +12,7 @@ struct HeroHeader: View {
     let onHistory: (() -> Void)?
     let onProfile: (() -> Void)?
     var style: HeroHeaderStyle = .fullBleed
+    var remainingSeconds: Int? = nil
 
     var body: some View {
         Group {
@@ -46,18 +47,8 @@ struct HeroHeader: View {
             HStack(spacing: 12) {
                 Spacer()
                 if let onProfile = onProfile {
-                    Button(action: onProfile) {
-                        ProfileBadgeView()
-                    }
-                    .accessibilityLabel("Profile")
-                }
-                if let onHistory = onHistory {
-                    Button(action: onHistory) {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .foregroundColor(.speakEasyOnPrimary)
-                            .font(.system(size: 20, weight: .semibold))
-                    }
-                    .accessibilityLabel("History")
+                    Button(action: onProfile) { ProfileBadgeView() }
+                        .accessibilityLabel("Profile")
                 }
             }
             .padding(.horizontal, 20)
@@ -77,6 +68,17 @@ struct HeroHeader: View {
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                 }
+
+                if let seconds = remainingSeconds {
+                    Text("\(format(seconds: seconds)) remaining")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.speakEasyOnPrimary)
+                        .padding(.top, 4)
+                    progressLine(seconds: seconds)
+                        .frame(height: 8)
+                        .padding(.horizontal, 32)
+                        .padding(.top, 2)
+                }
             }
             .padding(.horizontal, 24)
         }
@@ -94,6 +96,25 @@ private struct ProfileBadgeView: View {
                 .foregroundColor(.speakEasyOnPrimary)
         }
         .accessibilityHidden(true)
+    }
+}
+
+private extension HeroHeader {
+    func progressLine(seconds: Int) -> some View {
+        let maxSeconds = 1800.0
+        let p = min(max(0.0, Double(seconds) / maxSeconds), 1.0)
+        return GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.18))
+                Capsule().fill(Color.white).frame(width: geo.size.width * p).opacity(0.9)
+            }
+        }
+    }
+
+    func format(seconds: Int) -> String {
+        let m = seconds / 60
+        let s = seconds % 60
+        return String(format: "%d:%02d", m, s)
     }
 }
 

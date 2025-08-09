@@ -51,53 +51,17 @@ struct ContentView: View {
                     HeroHeader(
                         title: "Mervyn Talks",
                         subtitle: "Speak to translate instantly",
-                        onHistory: { showHistory = true },
+                        onHistory: nil,
                         onProfile: { showProfile = true },
-                        style: .card
+                        style: .card,
+                        remainingSeconds: credits.remainingSeconds
                     )
 
-                    // Credits balance display (pill)
-                    CreditsBalanceView(onBuy: { showPurchaseSheet = true })
-                        .professionalPadding()
+                    // Optional: remove external credits pill since it's in hero now
                     
-                    // Language Selection Section
-                    VStack(spacing: DesignConstants.Layout.cardSpacing) {
-                        HStack(spacing: 16) {
-                            // Source Language
-                            ModernLanguageSelector(
-                                selectedLanguage: $sourceLanguage,
-                                languages: availableLanguages,
-                                title: "Speak in",
-                                isSource: true
-                            )
-                            .frame(maxWidth: .infinity)
-                            
-                            // Swap Button
-                            Button(action: swapLanguages) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.speakEasyPrimary.opacity(0.12))
-                                        .frame(width: 40, height: 40)
-                                    
-                                    Image(systemName: "arrow.2.circlepath")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(.speakEasyPrimary)
-                                }
-                            }
-                            .disabled(sourceLanguage == targetLanguage)
-                            .opacity(sourceLanguage == targetLanguage ? 0.3 : 1.0)
-                            
-                            // Target Language
-                            ModernLanguageSelector(
-                                selectedLanguage: $targetLanguage,
-                                languages: availableLanguages,
-                                title: "Translate to",
-                                isSource: false
-                            )
-                            .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .professionalPadding()
+                    // Language chips row
+                    LanguageChipsRow(source: $sourceLanguage, target: $targetLanguage, languages: availableLanguages, onSwap: swapLanguages)
+                        .professionalPadding()
                     
                     // Microphone Button Section (PROPERLY SIZED!)
                     VStack(spacing: DesignConstants.Layout.cardSpacing) {
@@ -143,17 +107,13 @@ struct ContentView: View {
                         }
                     }
                     
-                    // Text Display Section
-                    if !transcribedText.isEmpty || !translatedText.isEmpty {
-                        ModernTextDisplayCard(
-                            transcribedText: transcribedText,
-                            translatedText: translatedText,
-                            onReplay: replayTranslation,
-                            canReplay: audioManager.lastAudioData != nil && !isPlaying
-                        )
-                        .professionalPadding()
-                        .transition(.opacity)
-                    }
+                    // Conversation bubbles
+                    ConversationBubblesView(
+                        sourceText: transcribedText,
+                        targetText: translatedText,
+                        onPlay: { replayTranslation() }
+                    )
+                    .transition(.opacity)
                     
                     Spacer(minLength: 30)
                 }
