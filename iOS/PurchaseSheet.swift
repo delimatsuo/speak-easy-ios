@@ -39,7 +39,7 @@ struct PurchaseSheet: View {
                         }
                     }
                 }
-                Section(footer: Text("Minutes are deducted by the second while recording. Purchases are processed by Apple.").font(.caption)) {
+                Section(footer: Text("Purchases by Apple. Consumable credits are not restorable. See Terms of Use. Minutes are deducted by the second while recording.").font(.caption)) {
                     EmptyView()
                 }
             }

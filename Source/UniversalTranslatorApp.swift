@@ -7,10 +7,48 @@ struct UniversalTranslatorApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootGateView()
                 .onAppear {
                     AppConfig.logConfiguration()
                 }
+        }
+    }
+}
+
+private struct RootGateView: View {
+    @AppStorage("hasAcceptedPolicies") private var hasAcceptedPolicies = false
+
+    var body: some View {
+        if hasAcceptedPolicies {
+            ContentView()
+        } else {
+            FirstRunConsentView()
+        }
+    }
+}
+
+private struct FirstRunConsentView: View {
+    @AppStorage("hasAcceptedPolicies") private var hasAcceptedPolicies = false
+
+    var body: some View {
+        NavigationView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Welcome to Mervyn Talks")
+                    .font(.title.bold())
+                Text("We keep things private: we don't store conversations; only minimal purchase and session metadata for up to 12 months.")
+                HStack(spacing: 16) {
+                    NavigationLink("Terms of Use") { LegalDocumentView(resourceName: "TERMS_OF_USE", title: "Terms of Use") }
+                    NavigationLink("Privacy Policy") { LegalDocumentView(resourceName: "PRIVACY_POLICY", title: "Privacy Policy") }
+                }
+                Spacer()
+                Button(action: { hasAcceptedPolicies = true }) {
+                    Text("Agree and continue")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .padding()
+            .navigationTitle("Consent")
         }
     }
 }

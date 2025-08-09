@@ -55,6 +55,14 @@ struct ProfileView: View {
                         Label("Privacy Policy", systemImage: "lock.doc")
                     }
                 }
+
+                Section(header: Text("Data")) {
+                    Button(role: .destructive) {
+                        Task { await deleteMyData() }
+                    } label: {
+                        Label("Delete my data (30 days)", systemImage: "trash")
+                    }
+                }
                 
                 Section(footer: Text("We do not retain your conversations. Only purchase and session metadata (no content) are stored.")) { EmptyView() }
             }
@@ -78,6 +86,22 @@ struct ProfileView: View {
             dismiss()
         } catch {
             signOutError = error.localizedDescription
+        }
+    }
+
+    // Delete purchases and session metadata belonging to the current user
+    private func deleteMyData() async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let db = Firestore.firestore()
+        do {
+            // Delete purchases subcollection
+            let items = try await db.collection("purchases").document(uid).collection("items").getDocuments()
+            for doc in items.documents { try await doc.reference.delete() }
+            // Delete usageSessions with this uid
+            let sessions = try await db.collection("usageSessions").whereField("userId", isEqualTo: uid).getDocuments()
+            for doc in sessions.documents { try await doc.reference.delete() }
+        } catch {
+            signOutError = "Deletion error: \(error.localizedDescription)"
         }
     }
 }
