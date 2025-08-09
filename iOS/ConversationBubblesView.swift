@@ -33,13 +33,29 @@ struct ConversationBubblesView: View {
     }
     
     @ViewBuilder
-    private func bubble<Trailing: View>(text: String, isTarget: Bool, @ViewBuilder trailing: (() -> Trailing)? = nil) -> some View {
+    private func bubble(text: String, isTarget: Bool) -> some View {
         HStack(alignment: .center, spacing: 8) {
             Text(text)
                 .font(.system(size: 16))
                 .foregroundColor(isTarget ? .white : .speakEasyTextPrimary)
                 .multilineTextAlignment(.leading)
-            if let trailing = trailing { trailing() }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(isTarget ? Color.speakEasyPrimaryGradient : LinearGradient(gradient: Gradient(colors: [Color(.secondarySystemBackground), Color(.secondarySystemBackground)]), startPoint: .top, endPoint: .bottom))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: .black.opacity(0.06), radius: 10, y: 4)
+        .frame(maxWidth: UIScreen.main.bounds.width * 0.78, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func bubble<Trailing: View>(text: String, isTarget: Bool, @ViewBuilder trailing: () -> Trailing) -> some View {
+        HStack(alignment: .center, spacing: 8) {
+            Text(text)
+                .font(.system(size: 16))
+                .foregroundColor(isTarget ? .white : .speakEasyTextPrimary)
+                .multilineTextAlignment(.leading)
+            trailing()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
