@@ -10,6 +10,7 @@ struct HeroHeader: View {
     let title: String
     let subtitle: String?
     let onHistory: (() -> Void)?
+    let onProfile: (() -> Void)?
     var style: HeroHeaderStyle = .fullBleed
 
     var body: some View {
@@ -42,8 +43,14 @@ struct HeroHeader: View {
 
     private var headerContent: some View {
         VStack(spacing: 10) {
-            HStack {
+            HStack(spacing: 12) {
                 Spacer()
+                if let onProfile = onProfile {
+                    Button(action: onProfile) {
+                        ProfileBadgeView()
+                    }
+                    .accessibilityLabel("Profile")
+                }
                 if let onHistory = onHistory {
                     Button(action: onHistory) {
                         Image(systemName: "clock.arrow.circlepath")
@@ -76,6 +83,19 @@ struct HeroHeader: View {
     }
 }
 
+// Simple initial-based profile badge (placeholder until real photo)
+private struct ProfileBadgeView: View {
+    var body: some View {
+        ZStack {
+            Circle().fill(Color.white.opacity(0.2)).frame(width: 28, height: 28)
+            Image(systemName: "person.crop.circle")
+                .font(.system(size: 24, weight: .regular))
+                .foregroundColor(.speakEasyOnPrimary)
+        }
+        .accessibilityHidden(true)
+    }
+}
+
 // RoundedCorners helper (bottom corners only)
 private struct RoundedCorners: Shape {
     var radius: CGFloat = 16
@@ -96,19 +116,19 @@ struct HeroHeader_Previews: PreviewProvider {
     static var previews: some View {
         Group {
             VStack(spacing: 0) {
-                HeroHeader(title: "Mervyn Talks", subtitle: "Speak to translate instantly", onHistory: {}, style: .card)
+                HeroHeader(title: "Mervyn Talks", subtitle: "Speak to translate instantly", onHistory: {}, onProfile: {}, style: .card)
                 Spacer()
             }
             .previewDisplayName("Light - Card")
 
             VStack(spacing: 0) {
-                HeroHeader(title: "Mervyn Talks", subtitle: "Speak to translate instantly", onHistory: {}, style: .fullBleed)
+                HeroHeader(title: "Mervyn Talks", subtitle: "Speak to translate instantly", onHistory: {}, onProfile: {}, style: .fullBleed)
                 Spacer()
             }
             .previewDisplayName("Light - FullBleed")
 
             VStack(spacing: 0) {
-                HeroHeader(title: "Mervyn Talks", subtitle: "Speak to translate instantly", onHistory: {}, style: .card)
+                HeroHeader(title: "Mervyn Talks", subtitle: "Speak to translate instantly", onHistory: {}, onProfile: {}, style: .card)
                 Spacer()
             }
             .preferredColorScheme(.dark)

@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mervyn Talks Admin</title>
+  <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:40px;}button{padding:10px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer} .hidden{display:none}</style>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+    import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+
+    const firebaseConfig = await (await fetch('/__/firebase/init.json')).json();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const signInBtn = document.getElementById('signIn');
+    const signOutBtn = document.getElementById('signOut');
+    const status = document.getElementById('status');
+    const adjustBtn = document.getElementById('adjust');
+
+    signInBtn.onclick = async () => {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    };
+    signOutBtn.onclick = () => signOut(auth);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        status.textContent = 'Not signed in';
+        signInBtn.classList.remove('hidden');
+        signOutBtn.classList.add('hidden');
+        adjustBtn.classList.add('hidden');
+        return;
+      }
+      const token = await user.getIdTokenResult();
+      const isAdmin = !!token.claims.admin;
+      status.textContent = `Signed in: ${user.email} ${isAdmin ? '(admin)' : '(no admin claim)'}`;
+      signInBtn.classList.add('hidden');
+      signOutBtn.classList.remove('hidden');
+      adjustBtn.classList.toggle('hidden', !isAdmin);
+    });
+
+    adjustBtn.onclick = async () => {
+      const uid = prompt('User UID to adjust:');
+      const seconds = Number(prompt('Delta seconds (+/-):'));
+      if (!uid || Number.isNaN(seconds)) return;
+      const ref = doc(db, 'credits', uid);
+      const snap = await getDoc(ref);
+      const current = (snap.exists() && snap.data().seconds) ? snap.data().seconds : 0;
+      const next = Math.max(0, current + seconds);
+      await setDoc(ref, { seconds: next, updatedAt: new Date() }, { merge: true });
+      alert(`Updated. New balance: ${next}s`);
+    };
+  </script>
+</head>
+<body>
+  <h1>Mervyn Talks Admin</h1>
+  <p id="status">Loading...</p>
+  <p>
+    <button id="signIn">Sign in with Google</button>
+    <button id="signOut" class="hidden">Sign out</button>
+  </p>
+  <p><button id="adjust" class="hidden">Adjust Credits</button></p>
+  <p style="color:#888">Note: Access requires an admin custom claim. No conversation content is stored.</p>
+</body>
+</html>

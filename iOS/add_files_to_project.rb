@@ -19,7 +19,8 @@ files_to_add = [
   '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/SignInView.swift',
   '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/AuthViewModel.swift',
   '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/Utilities/DeviceIdentity.swift',
-  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/Utilities/NetworkSecurityManager.swift'
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/Utilities/NetworkSecurityManager.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/ProfileView.swift'
 ]
 
 # Get the main group

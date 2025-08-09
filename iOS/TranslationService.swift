@@ -101,13 +101,10 @@ class TranslationService: ObservableObject {
         requestStartTime = Date()
         print("⏰ [\(Date())] Request timeout set to \(requestTimeoutSeconds) seconds")
         
-        // Securely retrieve API key using APIKeyManager
+        // Optionally attach API key if configured (not required for backend using Secret Manager)
         if let apiKey = APIKeyManager.shared.getAPIKey() {
             request.setValue(apiKey, forHTTPHeaderField: "X-API-Key")
             // Do not log API key
-        } else {
-            print("❌ No API key found")
-            throw TranslationError.apiError("API key not configured")
         }
         
         let body = TranslationAudioRequest(

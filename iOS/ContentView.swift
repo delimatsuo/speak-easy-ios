@@ -37,6 +37,7 @@ struct ContentView: View {
     @State private var translationTask: Task<Void, Never>?
     @State private var showPurchaseSheet = false
     @State private var showedSixtySecondReminder = false
+    @State private var showProfile = false
     
     var body: some View {
         Group {
@@ -51,6 +52,7 @@ struct ContentView: View {
                         title: "Mervyn Talks",
                         subtitle: "Speak to translate instantly",
                         onHistory: { showHistory = true },
+                        onProfile: { showProfile = true },
                         style: .card
                     )
 
@@ -160,11 +162,18 @@ struct ContentView: View {
             }
             .background(Color.speakEasyBackground.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline) // Use custom header instead
-            .toolbar { ToolbarItem(placement: .principal) { EmptyView() } }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showProfile = true }) { Image(systemName: "person.crop.circle") }
+                        .accessibilityLabel("Profile")
+                }
+                ToolbarItem(placement: .principal) { EmptyView() }
+            }
             // History removed to comply with no-conversation-retention policy
             .sheet(isPresented: $showPurchaseSheet) {
                 PurchaseSheet()
             }
+            .sheet(isPresented: $showProfile) { ProfileView() }
             .alert("Error", isPresented: $showError) {
                 Button("OK") {
                     resetUIState()
