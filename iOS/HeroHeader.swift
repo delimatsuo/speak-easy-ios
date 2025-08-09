@@ -62,17 +62,18 @@ struct HeroHeader: View {
             }
             .padding(.horizontal, 20)
 
-            VStack(spacing: 6) {
+            VStack(spacing: 4) {
                 Text(title)
-                    .font(.system(size: 34, weight: .bold))
+                    .font(.system(size: 32, weight: .bold))
                     .foregroundColor(.speakEasyOnPrimary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
 
                 if let subtitle = subtitle, !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(.system(size: 16, weight: .regular))
+                        .font(.system(size: 15, weight: .regular))
                         .foregroundColor(.speakEasyOnPrimarySecondary)
+                        .tracking(0.5)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                 }
@@ -87,9 +88,9 @@ struct HeroHeader: View {
 private struct ProfileBadgeView: View {
     var body: some View {
         ZStack {
-            Circle().fill(Color.white.opacity(0.2)).frame(width: 28, height: 28)
-            Image(systemName: "person.crop.circle")
-                .font(.system(size: 24, weight: .regular))
+            Circle().fill(Color.white.opacity(0.22)).frame(width: 28, height: 28)
+            Image(systemName: "person.crop.circle.fill")
+                .font(.system(size: 22, weight: .regular))
                 .foregroundColor(.speakEasyOnPrimary)
         }
         .accessibilityHidden(true)

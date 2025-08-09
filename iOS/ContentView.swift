@@ -56,13 +56,13 @@ struct ContentView: View {
                         style: .card
                     )
 
-                    // Credits balance display
+                    // Credits balance display (pill)
                     CreditsBalanceView(onBuy: { showPurchaseSheet = true })
                         .professionalPadding()
                     
                     // Language Selection Section
                     VStack(spacing: DesignConstants.Layout.cardSpacing) {
-                        HStack(spacing: DesignConstants.Layout.elementSpacing) {
+                        HStack(spacing: 16) {
                             // Source Language
                             ModernLanguageSelector(
                                 selectedLanguage: $sourceLanguage,
@@ -76,13 +76,11 @@ struct ContentView: View {
                             Button(action: swapLanguages) {
                                 ZStack {
                                     Circle()
-                                        .fill(Color.speakEasyPrimary.opacity(0.1))
-                                        .frame(width: DesignConstants.Sizing.swapButtonSize, 
-                                               height: DesignConstants.Sizing.swapButtonSize)
+                                        .fill(Color.speakEasyPrimary.opacity(0.12))
+                                        .frame(width: 40, height: 40)
                                     
                                     Image(systemName: "arrow.2.circlepath")
-                                        .font(.system(size: DesignConstants.Sizing.swapIconSize, 
-                                                    weight: .medium))
+                                        .font(.system(size: 18, weight: .medium))
                                         .foregroundColor(.speakEasyPrimary)
                                 }
                             }
@@ -174,6 +172,14 @@ struct ContentView: View {
                 PurchaseSheet()
             }
             .sheet(isPresented: $showProfile) { ProfileView() }
+            .overlay(alignment: .bottom) {
+                if credits.remainingSeconds <= 60 && credits.remainingSeconds > 0 {
+                    LowBalanceToast(remainingSeconds: credits.remainingSeconds) {
+                        showPurchaseSheet = true
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
             .alert("Error", isPresented: $showError) {
                 Button("OK") {
                     resetUIState()

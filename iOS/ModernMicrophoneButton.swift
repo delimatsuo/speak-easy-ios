@@ -45,14 +45,23 @@ struct ModernMicrophoneButton: View {
             // Main Button
             Button(action: handleButtonPress) {
                 ZStack {
-                    // Button Background with Gradient
-                    Circle()
-                        .fill(buttonGradient)
-                        .frame(
-                            width: DesignConstants.Sizing.microphoneButtonSize,
-                            height: DesignConstants.Sizing.microphoneButtonSize
-                        )
-                        .applyShadow(DesignConstants.Shadows.button)
+                    // Button Background with Gradient + soft halo
+                    ZStack {
+                        Circle()
+                            .fill(buttonGradient)
+                        Circle()
+                            .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                        Circle()
+                            .fill(Color.black.opacity(0.06))
+                            .blur(radius: 20)
+                            .scaleEffect(1.12)
+                            .opacity(0.6)
+                    }
+                    .frame(
+                        width: DesignConstants.Sizing.microphoneButtonSize,
+                        height: DesignConstants.Sizing.microphoneButtonSize
+                    )
+                    .shadow(color: Color.black.opacity(0.16), radius: 18, y: 8)
                     
                     // Button Icon
                     Image(systemName: buttonIcon)

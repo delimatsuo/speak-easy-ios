@@ -12,36 +12,22 @@ struct CreditsBalanceView: View {
     var onBuy: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
-                Image(systemName: "clock.badge.exclamationmark")
-                    .foregroundColor(.speakEasyPrimary)
-                Text(formattedRemaining)
-                    .font(.headline)
-                    .foregroundColor(.speakEasyTextPrimary)
-                Spacer()
-                Button(action: onBuy) {
-                    Text("Buy minutes")
-                        .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.speakEasyPrimary)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .accessibilityIdentifier("buyMinutesButton")
-            }
-
-            if credits.remainingSeconds <= 60 && credits.remainingSeconds > 0 {
-                Text("Low balance: \(format(seconds: credits.remainingSeconds)). Consider topping up.")
-                    .font(.caption)
-                    .foregroundColor(credits.remainingSeconds <= 15 ? .red : .speakEasyTextSecondary)
-                    .transition(.opacity)
+        HStack(spacing: 10) {
+            Image(systemName: "clock")
+                .foregroundColor(.speakEasyPrimary)
+            Text(formattedRemaining)
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(.speakEasyTextPrimary)
+            progressBar
+            Spacer()
+            if credits.remainingSeconds <= 60 {
+                Button(action: onBuy) { Text("Top up").font(.subheadline.weight(.semibold)) }
+                    .buttonStyle(.borderedProminent)
             }
         }
-        .padding()
+        .padding(12)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cornerRadius(999)
     }
 
     private var formattedRemaining: String {
@@ -52,6 +38,20 @@ struct CreditsBalanceView: View {
         let mins = seconds / 60
         let secs = seconds % 60
         return String(format: "%d:%02d", mins, secs)
+    }
+}
+
+private extension CreditsBalanceView {
+    var progressBar: some View {
+        let maxSeconds = 1800.0
+        let p = min(max(0.0, Double(credits.remainingSeconds) / maxSeconds), 1.0)
+        return GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.black.opacity(0.08))
+                Capsule().fill(Color.speakEasyPrimary).frame(width: geo.size.width * p)
+            }
+        }
+        .frame(width: 80, height: 6)
     }
 }
 
