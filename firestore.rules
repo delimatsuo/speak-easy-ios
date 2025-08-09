@@ -20,17 +20,19 @@ service cloud.firestore {
     // Purchases: metadata only (no receipts)
     match /purchases/{uid}/items/{purchaseId} {
       allow read: if isOwner(uid) || isAdmin();
-      // App writes purchase docs; owner can read; no client deletes
+      // Owner can create and delete their own metadata (for privacy deletion). No updates.
       allow create: if isOwner(uid);
       allow update: if false; // immutable
-      allow delete: if false;
+      allow delete: if isOwner(uid);
     }
 
     // Usage sessions: metadata only, no conversation content
     match /usageSessions/{sessionId} {
       allow read: if isOwner(resource.data.userId) || isAdmin();
       allow create: if isOwner(request.resource.data.userId);
-      allow update, delete: if false;
+      // Allow owner to delete their own session metadata (privacy deletion)
+      allow delete: if isOwner(resource.data.userId);
+      allow update: if false;
     }
 
     // Starter device registry: blocks multiple UIDs on same device
