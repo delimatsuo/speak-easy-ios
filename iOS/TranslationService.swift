@@ -113,7 +113,7 @@ class TranslationService: ObservableObject {
             target_language: targetLanguage,
             return_audio: true,
             voice_gender: "neutral",
-            speaking_rate: 0.85
+            speaking_rate: 0.90
         )
         
         request.httpBody = try JSONEncoder().encode(body)
