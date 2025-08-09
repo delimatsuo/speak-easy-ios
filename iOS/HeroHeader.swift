@@ -19,13 +19,12 @@ struct HeroHeader: View {
             switch style {
             case .fullBleed:
                 ZStack(alignment: .bottom) {
-                    Color.clear
-                        .background(Color.speakEasyPrimaryGradient)
+                    Color.speakEasyPrimaryGradient
                         .ignoresSafeArea(edges: .top)
 
                     headerContent
-                        .padding(.top, 16)
-                        .padding(.bottom, 16)
+                        .padding(.top, 24)
+                        .padding(.bottom, 20)
                 }
             case .card:
                 ZStack(alignment: .bottom) {
@@ -38,7 +37,7 @@ struct HeroHeader: View {
                 .padding(.horizontal, 16)
             }
         }
-        .frame(height: 160)
+        .frame(height: style == .fullBleed ? 220 : 160)
         .accessibilityElement(children: .combine)
     }
 

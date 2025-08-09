@@ -38,6 +38,8 @@ struct ContentView: View {
     @State private var showPurchaseSheet = false
     @State private var showedSixtySecondReminder = false
     @State private var showProfile = false
+    @State private var showLangSheet = false
+    @State private var pickingSource = true
     
     var body: some View {
         Group {
@@ -53,14 +55,21 @@ struct ContentView: View {
                         subtitle: "Speak to translate instantly",
                         onHistory: nil,
                         onProfile: { showProfile = true },
-                        style: .card,
+                        style: .fullBleed,
                         remainingSeconds: credits.remainingSeconds
                     )
 
                     // Optional: remove external credits pill since it's in hero now
                     
                     // Language chips row
-                    LanguageChipsRow(source: $sourceLanguage, target: $targetLanguage, languages: availableLanguages, onSwap: swapLanguages)
+                    LanguageChipsRow(
+                        source: $sourceLanguage,
+                        target: $targetLanguage,
+                        languages: availableLanguages,
+                        onSwap: swapLanguages,
+                        onTapSource: { showLanguagePicker(isSource: true) },
+                        onTapTarget: { showLanguagePicker(isSource: false) }
+                    )
                         .professionalPadding()
                     
                     // Microphone Button Section (PROPERLY SIZED!)
@@ -131,6 +140,12 @@ struct ContentView: View {
             .sheet(isPresented: $showPurchaseSheet) {
                 PurchaseSheet()
             }
+            .sheet(isPresented: $showLangSheet) {
+                LanguagePickerSheet(
+                    languages: availableLanguages,
+                    selectedCode: pickingSource ? $sourceLanguage : $targetLanguage
+                )
+            }
             .sheet(isPresented: $showProfile) { ProfileView() }
             .overlay(alignment: .bottom) {
                 if credits.remainingSeconds <= 60 && credits.remainingSeconds > 0 {
@@ -160,6 +175,10 @@ struct ContentView: View {
             loadLanguages()
             requestPermissions()
         }
+    }
+    private func showLanguagePicker(isSource: Bool) {
+        pickingSource = isSource
+        showLangSheet = true
     }
     
     // MARK: - Actions
