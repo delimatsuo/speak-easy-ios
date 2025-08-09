@@ -33,7 +33,7 @@ struct ConversationBubblesView: View {
     }
     
     @ViewBuilder
-    private func bubble(text: String, isTarget: Bool, trailing: (() -> Void)? = nil) -> some View {
+    private func bubble<Trailing: View>(text: String, isTarget: Bool, @ViewBuilder trailing: (() -> Trailing)? = nil) -> some View {
         HStack(alignment: .center, spacing: 8) {
             Text(text)
                 .font(.system(size: 16))
