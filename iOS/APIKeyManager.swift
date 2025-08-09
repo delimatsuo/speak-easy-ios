@@ -24,7 +24,7 @@ class APIKeyManager {
     private func setupAPIKeyIfNeeded() {
         // Load API key from plist and store in keychain if needed
         guard let apiKey = loadAPIKeyFromPlist() else {
-            print("❌ No API key found in plist file")
+            // Silent: backend uses Secret Manager; missing plist is OK
             return
         }
         
@@ -77,10 +77,7 @@ class APIKeyManager {
         }
         
         // If not in keychain, try to load from plist and store
-        guard let apiKey = loadAPIKeyFromPlist() else {
-            print("❌ No API key available from any source")
-            return nil
-        }
+        guard let apiKey = loadAPIKeyFromPlist() else { return nil }
         
         // Store in keychain for future use
         do {
