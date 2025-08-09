@@ -48,14 +48,19 @@ class APIKeyManager {
     /// Load API key from secure plist file
     private func loadAPIKeyFromPlist() -> String? {
         guard let path = Bundle.main.path(forResource: "api_keys", ofType: "plist"),
-              let plist = NSDictionary(contentsOfFile: path),
-              let apiKey = plist[keychainService] as? String,
-              !apiKey.isEmpty,
-              !apiKey.contains("YOUR_") else {
-            print("❌ API key not found or not configured in api_keys.plist")
+              let plist = NSDictionary(contentsOfFile: path) else {
+            // Do not spam logs if file is missing; backend uses Secret Manager
             return nil
         }
-        return apiKey
+        // Accept multiple common keys for resilience
+        let possibleKeys = [keychainService, "GoogleTranslateAPIKey", "X-API-Key", "API_KEY"]
+        for k in possibleKeys {
+            if let value = plist[k] as? String, !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !value.contains("YOUR_") {
+                return value
+            }
+        }
+        // Silent if empty; not required for normal operation
+        return nil
     }
     
     /// Get the API key from secure storage

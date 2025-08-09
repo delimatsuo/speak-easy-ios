@@ -28,8 +28,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         print("📱 Bundle ID: \(Bundle.main.bundleIdentifier ?? "unknown")")
         print("🔥 Project ID: \(FirebaseApp.app()?.options.projectID ?? "unknown")")
         
-        // Initialize API Key Manager
+        // Initialize API Key Manager (non-blocking). Silence missing-key logs in prod.
+        #if DEBUG
         _ = APIKeyManager.shared
+        #endif
         
         // Configure appearance
         configureAppearance()
