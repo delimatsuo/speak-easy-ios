@@ -90,7 +90,7 @@ def get_secret(secret_id: str, project_id: str = None) -> Optional[str]:
         env_value = os.environ.get(env_var_name)
         if env_value:
             logger.info(f"Using environment variable for {secret_id}")
-            return env_value
+            return env_value.strip()
             
         # If no secret client, return None
         if not secret_client:
@@ -102,17 +102,21 @@ def get_secret(secret_id: str, project_id: str = None) -> Optional[str]:
         
         name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
         response = secret_client.access_secret_version(request={"name": name})
-        return response.payload.data.decode('UTF-8')
+        return response.payload.data.decode('UTF-8').strip()
     except Exception as e:
         logger.error(f"Failed to retrieve secret {secret_id}: {e}")
         # Try direct environment variable as last resort
-        return os.environ.get('GEMINI_API_KEY')
+        val = os.environ.get('GEMINI_API_KEY')
+        return val.strip() if val else None
 
 class VoiceTranslationService:
     """Service for voice translation with TTS"""
     
     def __init__(self, gemini_api_key: str):
         self.gemini_api_key = gemini_api_key
+        # Validate API key looks plausible to avoid invalid metadata errors
+        if not gemini_api_key or len(gemini_api_key) < 20:
+            raise RuntimeError("Invalid or missing GEMINI_API_KEY")
         genai.configure(api_key=gemini_api_key)
         self.model = genai.GenerativeModel('gemini-1.5-flash')
         
