@@ -117,9 +117,8 @@ class VoiceTranslationService:
         self.model = genai.GenerativeModel('gemini-1.5-flash')
         
     async def translate_text(self, text: str, source_lang: str, target_lang: str) -> Dict[str, Any]:
-        """Translate text using Gemini"""
+        """Translate text using Gemini with strict timeout"""
         start_time = time.time()
-        
         try:
             # Create translation prompt
             prompt = f"""
@@ -129,22 +128,24 @@ class VoiceTranslationService:
             
             Text to translate: {text}
             """
-            
-            # Generate translation
-            response = self.model.generate_content(prompt)
-            translated_text = response.text.strip()
-            
-            # Calculate confidence
+            # Run blocking generate_content off the event loop with a hard timeout
+            import asyncio
+            loop = asyncio.get_event_loop()
+            response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: self.model.generate_content(prompt)),
+                timeout=15.0
+            )
+            translated_text = (response.text or "").strip()
             confidence = 0.95 if translated_text else 0.0
-            
             processing_time = int((time.time() - start_time) * 1000)
-            
             return {
                 "translated_text": translated_text,
                 "confidence": confidence,
                 "processing_time_ms": processing_time
             }
-            
+        except asyncio.TimeoutError:
+            logger.warning("Gemini translation timed out")
+            raise HTTPException(status_code=408, detail="Translation request timed out")
         except Exception as e:
             logger.error(f"Translation failed: {e}")
             raise HTTPException(status_code=500, detail="Translation failed")
@@ -182,7 +183,7 @@ class VoiceTranslationService:
                     voice=voice,
                     audio_config=audio_config
                 )),
-                timeout=15.0
+                timeout=10.0
             )
             
             return response.audio_content
