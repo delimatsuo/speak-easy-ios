@@ -643,7 +643,7 @@ struct Language: Codable, Identifiable {
         Language(code: "fr", name: "French", flag: "🇫🇷"),
         Language(code: "de", name: "German", flag: "🇩🇪"),
         Language(code: "it", name: "Italian", flag: "🇮🇹"),
-        Language(code: "pt", name: "Portuguese", flag: "🇵🇹"),
+        Language(code: "pt", name: "Portuguese", flag: "🇧🇷"),
         Language(code: "ru", name: "Russian", flag: "🇷🇺"),
         Language(code: "ja", name: "Japanese", flag: "🇯🇵"),
         Language(code: "ko", name: "Korean", flag: "🇰🇷"),

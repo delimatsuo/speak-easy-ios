@@ -26,7 +26,7 @@ struct Language: Identifiable, Codable, Hashable {
         Language(code: "zh-TW", name: "Chinese (Traditional)", nativeName: "繁體中文", flag: "🇹🇼"),
         Language(code: "ar", name: "Arabic", nativeName: "العربية", flag: "🇸🇦"),
         Language(code: "ru", name: "Russian", nativeName: "Русский", flag: "🇷🇺"),
-        Language(code: "pt", name: "Portuguese", nativeName: "Português", flag: "🇵🇹"),
+        Language(code: "pt", name: "Portuguese", nativeName: "Português", flag: "🇧🇷"),
         Language(code: "it", name: "Italian", nativeName: "Italiano", flag: "🇮🇹"),
         Language(code: "ko", name: "Korean", nativeName: "한국어", flag: "🇰🇷"),
         Language(code: "hi", name: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳")
