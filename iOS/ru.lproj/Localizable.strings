@@ -1,0 +1,87 @@
+/* 
+  Localizable.strings
+  UniversalTranslator
+  
+  Russian localization
+*/
+
+// App Name
+"app_name" = "Mervyn Talks";
+"app_subtitle" = "Говорите для мгновенного перевода";
+
+// Main Screen
+"tap_to_speak" = "Нажмите для говорения";
+"listening" = "Слушаю...";
+"processing" = "Обрабатываю...";
+"translating" = "Перевожу...";
+"playing" = "Воспроизвожу...";
+"speak_in" = "Говорить на";
+"translate_to" = "Перевести на";
+
+// Credits
+"credits_remaining" = "Осталось %d секунд";
+"no_credits" = "Кредиты закончились";
+"purchase_credits" = "Купить кредиты";
+"low_balance_warning" = "Низкий баланс: осталось %d секунд";
+
+// Errors
+"error_title" = "Ошибка";
+"error_microphone_permission" = "Требуется доступ к микрофону. Включите его в Настройки > Конфиденциальность > Микрофон.";
+"error_network" = "Ошибка сетевого соединения. Проверьте подключение к интернету.";
+"error_translation_failed" = "Служба перевода недоступна. Попробуйте позже.";
+"error_no_audio" = "Аудио не записано. Попробуйте снова.";
+"error_api_key" = "Ошибка настройки API. Обратитесь в поддержку.";
+
+// Settings/Profile
+"profile" = "Профиль";
+"settings" = "Настройки";
+"sign_out" = "Выйти";
+"delete_account" = "Удалить аккаунт";
+"delete_account_confirm" = "Вы уверены, что хотите удалить свой аккаунт? Это действие нельзя отменить.";
+"cancel" = "Отменить";
+"delete" = "Удалить";
+"done" = "Готово";
+
+// Purchase
+"purchase_title" = "Покупка кредитов для перевода";
+"purchase_subtitle" = "Выберите пакет кредитов";
+"purchase_300s" = "5 минут - ₽75";
+"purchase_1800s" = "30 минут - ₽375";
+"purchase_3600s" = "1 час - ₽675";
+"purchase_7200s" = "2 часа - ₽1125";
+"purchase_footer" = "Кредиты списываются за каждую секунду перевода. Покупки возврату не подлежат.";
+"restore_purchases" = "Восстановить покупки";
+
+// Legal
+"terms_of_use" = "Условия использования";
+"privacy_policy" = "Политика конфиденциальности";
+"consent_title" = "Добро пожаловать в Mervyn Talks";
+"consent_message" = "Мы защищаем вашу конфиденциальность: мы не сохраняем разговоры; только минимальные метаданные о покупках и сессиях до 12 месяцев.";
+"agree_and_continue" = "Согласиться и продолжить";
+
+// Sign In
+"sign_in_title" = "Вход";
+"sign_in_subtitle" = "Войдите анонимно для начала работы";
+"sign_in_anonymous" = "Продолжить как гость";
+"signing_in" = "Выполняется вход...";
+
+// Languages
+"language_en" = "Английский";
+"language_es" = "Испанский";
+"language_fr" = "Французский";
+"language_de" = "Немецкий";
+"language_it" = "Итальянский";
+"language_pt" = "Португальский";
+"language_zh" = "Китайский";
+"language_ja" = "Японский";
+"language_ko" = "Корейский";
+"language_ru" = "Русский";
+"language_ar" = "Арабский";
+"language_hi" = "Хинди";
+
+// Common Actions
+"ok" = "ОК";
+"retry" = "Повторить";
+"close" = "Закрыть";
+"loading" = "Загрузка...";
+"copied" = "Скопировано в буфер обмена";

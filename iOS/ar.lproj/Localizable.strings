@@ -1,0 +1,87 @@
+/* 
+  Localizable.strings
+  UniversalTranslator
+  
+  Arabic localization
+*/
+
+// App Name
+"app_name" = "مرفين تحدث";
+"app_subtitle" = "تحدث للترجمة الفورية";
+
+// Main Screen
+"tap_to_speak" = "اضغط للتحدث";
+"listening" = "يستمع...";
+"processing" = "يعالج...";
+"translating" = "يترجم...";
+"playing" = "يشغل...";
+"speak_in" = "تحدث بـ";
+"translate_to" = "ترجم إلى";
+
+// Credits
+"credits_remaining" = "%d ثانية متبقية";
+"no_credits" = "لا توجد أرصدة متبقية";
+"purchase_credits" = "شراء الأرصدة";
+"low_balance_warning" = "رصيد منخفض: %d ثانية متبقية";
+
+// Errors
+"error_title" = "خطأ";
+"error_microphone_permission" = "الوصول للميكروفون مطلوب. يرجى تفعيله في الإعدادات > الخصوصية > الميكروفون.";
+"error_network" = "خطأ في الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت.";
+"error_translation_failed" = "خدمة الترجمة غير متاحة. يرجى المحاولة مرة أخرى لاحقاً.";
+"error_no_audio" = "لم يتم تسجيل صوت. يرجى المحاولة مرة أخرى.";
+"error_api_key" = "خطأ في إعدادات النظام. يرجى التواصل مع الدعم الفني.";
+
+// Settings/Profile
+"profile" = "الملف الشخصي";
+"settings" = "الإعدادات";
+"sign_out" = "تسجيل الخروج";
+"delete_account" = "حذف الحساب";
+"delete_account_confirm" = "هل أنت متأكد من حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.";
+"cancel" = "إلغاء";
+"delete" = "حذف";
+"done" = "تم";
+
+// Purchase
+"purchase_title" = "شراء أرصدة الترجمة";
+"purchase_subtitle" = "اختر باقة الأرصدة";
+"purchase_300s" = "5 دقائق - ر.س 3.75";
+"purchase_1800s" = "30 دقيقة - ر.س 18.75";
+"purchase_3600s" = "ساعة واحدة - ر.س 33.75";
+"purchase_7200s" = "ساعتان - ر.س 56.25";
+"purchase_footer" = "الأرصدة محسوبة بالثانية للترجمة. المشتريات غير قابلة للاسترداد.";
+"restore_purchases" = "استعادة المشتريات";
+
+// Legal
+"terms_of_use" = "شروط الاستخدام";
+"privacy_policy" = "سياسة الخصوصية";
+"consent_title" = "أهلاً بك في مرفين تحدث";
+"consent_message" = "نحافظ على خصوصيتك: لا نحتفظ بالمحادثات؛ فقط بيانات الشراء والجلسة الأساسية لمدة تصل إلى 12 شهراً.";
+"agree_and_continue" = "الموافقة والمتابعة";
+
+// Sign In
+"sign_in_title" = "تسجيل الدخول";
+"sign_in_subtitle" = "سجل دخولك بصفة مجهولة للبدء";
+"sign_in_anonymous" = "المتابعة كضيف";
+"signing_in" = "جاري تسجيل الدخول...";
+
+// Languages
+"language_en" = "الإنجليزية";
+"language_es" = "الإسبانية";
+"language_fr" = "الفرنسية";
+"language_de" = "الألمانية";
+"language_it" = "الإيطالية";
+"language_pt" = "البرتغالية";
+"language_zh" = "الصينية";
+"language_ja" = "اليابانية";
+"language_ko" = "الكورية";
+"language_ru" = "الروسية";
+"language_ar" = "العربية";
+"language_hi" = "الهندية";
+
+// Common Actions
+"ok" = "موافق";
+"retry" = "إعادة المحاولة";
+"close" = "إغلاق";
+"loading" = "جاري التحميل...";
+"copied" = "تم النسخ للحافظة";

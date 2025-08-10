@@ -1,0 +1,87 @@
+/* 
+  Localizable.strings
+  UniversalTranslator
+  
+  Hindi localization
+*/
+
+// App Name
+"app_name" = "मर्विन टॉक्स";
+"app_subtitle" = "तुरंत अनुवाद करने के लिए बोलें";
+
+// Main Screen
+"tap_to_speak" = "बोलने के लिए टैप करें";
+"listening" = "सुन रहा है...";
+"processing" = "प्रक्रिया में...";
+"translating" = "अनुवाद कर रहा है...";
+"playing" = "चला रहा है...";
+"speak_in" = "इसमें बोलें";
+"translate_to" = "इसमें अनुवाद करें";
+
+// Credits
+"credits_remaining" = "%d सेकंड शेष";
+"no_credits" = "कोई क्रेडिट शेष नहीं";
+"purchase_credits" = "क्रेडिट खरीदें";
+"low_balance_warning" = "कम बैलेंस: %d सेकंड बचे";
+
+// Errors
+"error_title" = "त्रुटि";
+"error_microphone_permission" = "माइक्रोफ़ोन की पहुंच आवश्यक है। कृपया इसे सेटिंग्स > प्राइवेसी > माइक्रोफ़ोन में सक्षम करें।";
+"error_network" = "नेटवर्क कनेक्शन त्रुटि। कृपया अपना इंटरनेट कनेक्शन जांचें।";
+"error_translation_failed" = "अनुवाद सेवा उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।";
+"error_no_audio" = "कोई ऑडियो रिकॉर्ड नहीं हुआ। कृपया पुनः प्रयास करें।";
+"error_api_key" = "API कॉन्फ़िगरेशन त्रुटि। कृपया सहायता से संपर्क करें।";
+
+// Settings/Profile
+"profile" = "प्रोफ़ाइल";
+"settings" = "सेटिंग्स";
+"sign_out" = "साइन आउट";
+"delete_account" = "खाता हटाएं";
+"delete_account_confirm" = "क्या आप वाकई अपना खाता हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।";
+"cancel" = "रद्द करें";
+"delete" = "हटाएं";
+"done" = "हो गया";
+
+// Purchase
+"purchase_title" = "अनुवाद क्रेडिट खरीदें";
+"purchase_subtitle" = "एक क्रेडिट पैकेज चुनें";
+"purchase_300s" = "5 मिनट - ₹80";
+"purchase_1800s" = "30 मिनट - ₹400";
+"purchase_3600s" = "1 घंटा - ₹720";
+"purchase_7200s" = "2 घंटे - ₹1200";
+"purchase_footer" = "क्रेडिट अनुवाद के प्रति-सेकंड के हिसाब से हैं। खरीदारी वापसी योग्य नहीं है।";
+"restore_purchases" = "खरीदारी पुनर्स्थापित करें";
+
+// Legal
+"terms_of_use" = "उपयोग की शर्तें";
+"privacy_policy" = "गोपनीयता नीति";
+"consent_title" = "मर्विन टॉक्स में आपका स्वागत है";
+"consent_message" = "हम चीजों को निजी रखते हैं: हम बातचीत स्टोर नहीं करते; केवल न्यूनतम खरीदारी और सत्र मेटाडेटा 12 महीनों तक के लिए।";
+"agree_and_continue" = "सहमत हैं और जारी रखें";
+
+// Sign In
+"sign_in_title" = "साइन इन";
+"sign_in_subtitle" = "शुरू करने के लिए गुमनाम रूप से साइन इन करें";
+"sign_in_anonymous" = "अतिथि के रूप में जारी रखें";
+"signing_in" = "साइन इन कर रहा है...";
+
+// Languages
+"language_en" = "अंग्रेजी";
+"language_es" = "स्पेनी";
+"language_fr" = "फ्रेंच";
+"language_de" = "जर्मन";
+"language_it" = "इतालवी";
+"language_pt" = "पुर्तगाली";
+"language_zh" = "चीनी";
+"language_ja" = "जापानी";
+"language_ko" = "कोरियाई";
+"language_ru" = "रूसी";
+"language_ar" = "अरबी";
+"language_hi" = "हिंदी";
+
+// Common Actions
+"ok" = "ठीक है";
+"retry" = "पुनः प्रयास करें";
+"close" = "बंद करें";
+"loading" = "लोड हो रहा है...";
+"copied" = "क्लिपबोर्ड पर कॉपी किया गया";
