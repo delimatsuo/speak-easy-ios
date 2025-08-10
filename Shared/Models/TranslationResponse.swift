@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TranslationResponse: Codable {
+struct TranslationResponse: Codable, Equatable {
     let requestId: UUID
     let originalText: String
     let translatedText: String
@@ -32,6 +32,15 @@ struct TranslationResponse: Codable {
         }
         
         return dict
+    }
+    
+    init(requestId: UUID, originalText: String, translatedText: String, audioData: Data?, error: String?, creditsRemaining: Int) {
+        self.requestId = requestId
+        self.originalText = originalText
+        self.translatedText = translatedText
+        self.audioData = audioData
+        self.error = error
+        self.creditsRemaining = creditsRemaining
     }
     
     init?(from dictionary: [String: Any]) {
