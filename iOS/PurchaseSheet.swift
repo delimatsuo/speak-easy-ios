@@ -11,6 +11,7 @@ import StoreKit
 struct PurchaseSheet: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = PurchaseViewModel()
+    @State private var showTerms = false
 
     var body: some View {
         NavigationView {
@@ -39,7 +40,17 @@ struct PurchaseSheet: View {
                         }
                     }
                 }
-                Section(footer: Text("Purchases by Apple. Consumable credits are not restorable. See Terms of Use. Minutes are deducted by the second while recording.").font(.caption)) {
+                Section(footer:
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Purchases by Apple. Consumable credits are not restorable. Minutes are deducted by the second while recording.")
+                                    .font(.caption)
+                                    .foregroundColor(.speakEasyTextSecondary)
+                                Button(action: { showTerms = true }) {
+                                    Text("View Terms of Use")
+                                        .font(.caption.weight(.semibold))
+                                }
+                            }
+                ) {
                     EmptyView()
                 }
             }
@@ -53,6 +64,11 @@ struct PurchaseSheet: View {
                 }
             }
             .onAppear { Task { await vm.loadProducts() } }
+            .sheet(isPresented: $showTerms) {
+                NavigationView {
+                    LegalDocumentView(resourceName: "TERMS_OF_USE", title: "Terms of Use")
+                }
+            }
             .alert(
                 "Purchase Error",
                 isPresented: Binding(

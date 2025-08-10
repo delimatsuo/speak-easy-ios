@@ -51,18 +51,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: - Private Methods
     
     private func configureAppearance() {
-        // Configure navigation bar appearance
+        // Make navigation bar transparent so our hero gradient shows full-bleed
         let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.systemBlue
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear
+        appearance.shadowColor = .clear
         appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
         appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-        
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
-        UINavigationBar.appearance().compactAppearance = appearance
+
+        let navBar = UINavigationBar.appearance()
+        navBar.standardAppearance = appearance
+        navBar.scrollEdgeAppearance = appearance
+        navBar.compactAppearance = appearance
+        navBar.tintColor = .white
         
         // Configure tab bar if needed
-        UITabBar.appearance().tintColor = UIColor.systemBlue
+        UITabBar.appearance().tintColor = UIColor.label
     }
 }

@@ -27,8 +27,8 @@ struct ContentView: View {
     @StateObject private var usageService = UsageTrackingService.shared
     @ObservedObject private var credits = CreditsManager.shared
     
-    @State private var sourceLanguage = "en"
-    @State private var targetLanguage = "es"
+    @State private var sourceLanguage = UserDefaults.standard.string(forKey: "sourceLanguage") ?? "en"
+    @State private var targetLanguage = UserDefaults.standard.string(forKey: "targetLanguage") ?? "es"
     @State private var isRecording = false
     @State private var isProcessing = false
     @State private var isPlaying = false
@@ -150,6 +150,10 @@ struct ContentView: View {
                         set: { newValue in if !newValue { activeLanguagePicker = nil } }
                     )
                 )
+                .onDisappear {
+                    // Save preferences when language picker closes
+                    saveLanguagePreferences()
+                }
             }
             .sheet(isPresented: $showProfile) { ProfileView() }
             .overlay(alignment: .bottom) {
@@ -180,6 +184,8 @@ struct ContentView: View {
             setupAudio()
             loadLanguages()
             requestPermissions()
+            // Sync initial language preferences with Watch
+            saveLanguagePreferences()
             NotificationCenter.default.addObserver(forName: .init("ShowPurchaseSheet"), object: nil, queue: .main) { _ in
                 showPurchaseSheet = true
             }
@@ -365,6 +371,9 @@ struct ContentView: View {
         let temp = sourceLanguage
         sourceLanguage = targetLanguage
         targetLanguage = temp
+        
+        // Save to UserDefaults and sync with Watch
+        saveLanguagePreferences()
     }
     
     private func setupAudio() {
@@ -434,6 +443,14 @@ struct ContentView: View {
         isProcessing = false
         processingStartTime = nil
         usageService.cancelTranslationSession()
+    }
+    
+    private func saveLanguagePreferences() {
+        UserDefaults.standard.set(sourceLanguage, forKey: "sourceLanguage")
+        UserDefaults.standard.set(targetLanguage, forKey: "targetLanguage")
+        
+        // Sync with Watch if connected
+        WatchSessionManager.shared.syncLanguages(source: sourceLanguage, target: targetLanguage)
     }
     
     private func resetUIState() {

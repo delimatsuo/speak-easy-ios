@@ -4,11 +4,23 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mervyn Talks Admin</title>
-  <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:40px;}button{padding:10px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer} .hidden{display:none}</style>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:24px 40px;}
+    button{padding:8px 12px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer}
+    .hidden{display:none}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#f2f2f2;font-size:12px}
+    .toolbar{display:flex;gap:12px;align-items:center;margin:12px 0}
+    .toolbar input{padding:8px 10px;border-radius:8px;border:1px solid #ccc;min-width:280px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
+    th{font-weight:600;color:#444}
+    .num{text-align:right;font-variant-numeric:tabular-nums}
+    .muted{color:#777}
+  </style>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
     import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
-    import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+    import { getFirestore, collection, collectionGroup, query, where, orderBy, startAfter, limit, getDocs, getDoc, setDoc, doc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 
     const firebaseConfig = await (await fetch('/__/firebase/init.json')).json();
     const app = initializeApp(firebaseConfig);
@@ -19,6 +31,23 @@
     const signOutBtn = document.getElementById('signOut');
     const status = document.getElementById('status');
     const adjustBtn = document.getElementById('adjust');
+    const dash = document.getElementById('dashboard');
+    const tableBody = document.querySelector('#users tbody');
+    const loadInfo = document.getElementById('loadInfo');
+    const searchInput = document.getElementById('search');
+    const searchBtn = document.getElementById('btnSearch');
+    const nextBtn = document.getElementById('next');
+    const prevBtn = document.getElementById('prev');
+    const revAll = document.getElementById('revAll');
+    const revMonth = document.getElementById('revMonth');
+    const unitsDiv = document.getElementById('units');
+    const price300 = document.getElementById('price300');
+    const price600 = document.getElementById('price600');
+    const savePrices = document.getElementById('savePrices');
+    let pageSize = 50;
+    let lastVisible = null;
+    let prevStack = [];
+    let lastQuery = null;
 
     signInBtn.onclick = async () => {
       const provider = new GoogleAuthProvider();
@@ -40,6 +69,13 @@
       signInBtn.classList.add('hidden');
       signOutBtn.classList.remove('hidden');
       adjustBtn.classList.toggle('hidden', !isAdmin);
+      dash.classList.toggle('hidden', !isAdmin);
+      if (isAdmin) {
+        lastQuery = null; prevStack = [];
+        await loadUsersPage();
+        restorePrices();
+        await loadRevenue();
+      }
     });
 
     adjustBtn.onclick = async () => {
@@ -53,6 +89,143 @@
       await setDoc(ref, { seconds: next, updatedAt: new Date() }, { merge: true });
       alert(`Updated. New balance: ${next}s`);
     };
+    async function loadUsersPage(direction) {
+      loadInfo.textContent = 'Loading...';
+      tableBody.innerHTML = '';
+
+      const usersCol = collection(db, 'users');
+      const orderField = 'lastSessionTime';
+      let qy;
+      if (direction === 'next' && lastVisible) {
+        qy = query(usersCol, orderBy(orderField, 'desc'), startAfter(lastVisible), limit(pageSize));
+      } else if (direction === 'prev' && prevStack.length > 0) {
+        const cursor = prevStack.pop();
+        qy = query(usersCol, orderBy(orderField, 'desc'), startAfter(cursor), limit(pageSize));
+      } else {
+        qy = query(usersCol, orderBy(orderField, 'desc'), limit(pageSize));
+        prevStack = [];
+      }
+
+      try {
+        const snap = await getDocs(qy);
+        if (snap.docs.length > 0) {
+          if (lastVisible) prevStack.push(lastVisible);
+          lastVisible = snap.docs[snap.docs.length - 1];
+        }
+
+        const rows = await Promise.all(snap.docs.map(async (ds) => {
+          const uid = ds.id; const d = ds.data();
+          const email = d.email || ''; const sessions = d.sessionsCount || 0; const totalMin = d.totalMinutesUsed || 0;
+          const last = d.lastSessionTime?.toDate?.() || null;
+          let creditsSec = '';
+          try { const credDoc = await getDoc(doc(db, 'credits', uid)); creditsSec = credDoc.exists() ? (credDoc.data().seconds || 0) : 0; } catch {}
+          return { uid, email, sessions, totalMin, last, creditsSec };
+        }));
+
+        for (const r of rows) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><code>${r.uid}</code>${r.email ? `<div class="muted">${r.email}</div>` : ''}</td>
+            <td class="num">${r.creditsSec !== '' ? formatHMS(r.creditsSec) : '-'}</td>
+            <td class="num">${r.totalMin.toFixed(2)}</td>
+            <td class="num">${r.sessions}</td>
+            <td>${r.last ? r.last.toLocaleString() : '-'}</td>
+          `;
+          tableBody.appendChild(tr);
+        }
+        loadInfo.textContent = `${rows.length} users`;
+        prevBtn.disabled = prevStack.length === 0;
+        nextBtn.disabled = rows.length < pageSize;
+      } catch (e) {
+        loadInfo.textContent = 'Load failed: ' + e;
+      }
+    }
+
+    function formatHMS(sec){const s=Math.max(0,Math.floor(sec));const m=Math.floor(s/60);const ss=s%60;return `${m}:${ss.toString().padStart(2,'0')}`}
+
+    searchBtn.onclick = async () => {
+      const qv = (searchInput.value||'').trim();
+      if (!qv) { await loadUsersPage(); return; }
+      loadInfo.textContent = 'Searching...'; tableBody.innerHTML = '';
+      try {
+        let snap = await getDocs(query(collection(db,'users'), where('email','==', qv), limit(50)));
+        if (snap.empty) { const direct = await getDoc(doc(db,'users', qv)); if (direct.exists()) { snap = { docs:[direct] }; } }
+        if (!snap.empty && snap.docs) {
+          lastVisible=null; prevStack=[];
+          const rows = await Promise.all(snap.docs.map(async (ds)=>{
+            const uid=ds.id; const d=ds.data(); const email=d.email||''; const sessions=d.sessionsCount||0; const totalMin=d.totalMinutesUsed||0; const last=d.lastSessionTime?.toDate?.()||null; let creditsSec='';
+            try{ const credDoc=await getDoc(doc(db,'credits',uid)); creditsSec = credDoc.exists() ? (credDoc.data().seconds||0):0; }catch{}
+            return {uid,email,sessions,totalMin,last,creditsSec};
+          }));
+          for (const r of rows){ const tr=document.createElement('tr'); tr.innerHTML=`<td><code>${r.uid}</code>${r.email?`<div class=\"muted\">${r.email}</div>`:''}</td><td class=\"num\">${r.creditsSec!==''?formatHMS(r.creditsSec):'-'}</td><td class=\"num\">${r.totalMin.toFixed(2)}</td><td class=\"num\">${r.sessions}</td><td>${r.last?r.last.toLocaleString():'-'}</td>`; tableBody.appendChild(tr);} loadInfo.textContent=`${rows.length} results`; prevBtn.disabled=true; nextBtn.disabled=true; return; }
+        loadInfo.textContent = 'No match';
+      } catch(e) { loadInfo.textContent = 'Search failed: '+e; }
+    };
+    nextBtn.onclick = () => loadUsersPage('next');
+    prevBtn.onclick = () => loadUsersPage('prev');
+
+    // ---- Revenue Dashboard ----
+    const SKU = {
+      s300: 'com.mervyntalks.credits.300s',
+      s600: 'com.mervyntalks.credits.600s'
+    };
+    function restorePrices(){
+      const p = JSON.parse(localStorage.getItem('skuPrices')||'{}');
+      if (p[SKU.s300] != null) price300.value = p[SKU.s300];
+      if (p[SKU.s600] != null) price600.value = p[SKU.s600];
+    }
+    function currentPrices(){
+      return {
+        [SKU.s300]: Number(price300.value||0),
+        [SKU.s600]: Number(price600.value||0)
+      };
+    }
+    savePrices.onclick = async ()=>{
+      localStorage.setItem('skuPrices', JSON.stringify(currentPrices()));
+      await loadRevenue();
+      alert('Prices saved locally in this browser.');
+    };
+
+    async function loadRevenue(){
+      const prices = currentPrices();
+      const cg = collectionGroup(db, 'items');
+      // All-time
+      const snapAll = await getDocs(query(cg));
+      const aggAll = aggregateUnits(snapAll, prices);
+      renderRevenue(aggAll, revAll, unitsDiv);
+      // This month (UTC)
+      const now = new Date();
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0,0,0));
+      const snapMonth = await getDocs(query(cg, where('purchasedAt', '>=', Timestamp.fromDate(monthStart))));
+      const aggMonth = aggregateUnits(snapMonth, prices);
+      renderRevenue(aggMonth, revMonth);
+    }
+    function aggregateUnits(snap, prices){
+      const bySku = {};
+      let total = 0; let count = 0;
+      snap.forEach(doc=>{
+        const d = doc.data();
+        const pid = d.productId; if (!pid) return;
+        bySku[pid] = (bySku[pid]||0)+1; count+=1;
+        total += (prices[pid]||0);
+      });
+      return { total, count, bySku, prices };
+    }
+    function renderRevenue(agg, target, unitsTarget){
+      target.textContent = `$${agg.total.toFixed(2)} (${agg.count} purchases)`;
+      if (unitsTarget){
+        unitsTarget.innerHTML = '';
+        const ul = document.createElement('ul');
+        ul.style.listStyle='none'; ul.style.padding='0';
+        Object.entries(agg.bySku).forEach(([sku, n])=>{
+          const li = document.createElement('li');
+          const price = agg.prices[sku]||0;
+          li.textContent = `${sku} — ${n} × $${price.toFixed(2)} = $${(n*price).toFixed(2)}`;
+          ul.appendChild(li);
+        });
+        unitsTarget.appendChild(ul);
+      }
+    }
   </script>
 </head>
 <body>
@@ -63,6 +236,36 @@
     <button id="signOut" class="hidden">Sign out</button>
   </p>
   <p><button id="adjust" class="hidden">Adjust Credits</button></p>
+
+  <div id="dashboard" class="hidden">
+    <div class="toolbar">
+      <input id="search" type="text" placeholder="Search by email or UID (exact)" />
+      <button id="btnSearch">Search</button>
+      <span id="loadInfo" class="muted"></span>
+      <span style="flex:1"></span>
+      <button id="prev" disabled>Prev</button>
+      <button id="next" disabled>Next</button>
+    </div>
+    <h3>Revenue</h3>
+    <div class="muted" style="margin:6px 0 10px">Set SKU prices (USD) for accurate totals. Saved to this browser.</div>
+    <div class="toolbar" style="gap:8px">
+      <label>300s $<input id="price300" type="number" min="0" step="0.01" style="width:90px" value="0.00"/></label>
+      <label>600s $<input id="price600" type="number" min="0" step="0.01" style="width:90px" value="0.00"/></label>
+      <button id="savePrices">Save prices</button>
+    </div>
+    <div>
+      <div><strong>Total revenue:</strong> <span id="revAll">—</span></div>
+      <div><strong>Revenue this month:</strong> <span id="revMonth">—</span></div>
+      <div style="margin-top:8px"><strong>Units by SKU (all-time):</strong><div id="units"></div></div>
+    </div>
+    <table id="users">
+      <thead>
+        <tr><th>User</th><th>Credits</th><th>Total min used</th><th>Sessions</th><th>Last session</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p class="muted">Tip: Click Adjust Credits to manually update a user’s balance using their UID.</p>
+  </div>
   <p style="color:#888">Note: Access requires an admin custom claim. No conversation content is stored.</p>
 </body>
 </html>

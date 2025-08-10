@@ -20,7 +20,10 @@ files_to_add = [
   '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/AuthViewModel.swift',
   '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/Utilities/DeviceIdentity.swift',
   '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/Utilities/NetworkSecurityManager.swift',
-  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/ProfileView.swift'
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/ProfileView.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/LowBalanceToast.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/LanguageChipsRow.swift',
+  '/Users/delimatsuo/Documents/Codingclaude/UniversalTranslatorApp/iOS/ConversationBubblesView.swift'
 ]
 
 # Get the main group

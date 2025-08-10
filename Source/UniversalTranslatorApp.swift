@@ -10,6 +10,8 @@ struct UniversalTranslatorApp: App {
             RootGateView()
                 .onAppear {
                     AppConfig.logConfiguration()
+                    // Activate Watch connectivity
+                    WatchSessionManager.shared.activate()
                 }
         }
     }
@@ -85,5 +87,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         if AppConfig.Debug.enableLogging {
             AppConfig.logConfiguration()
         }
+
+        #if DEBUG
+        // Validate certificate pinning against current backend certificate in debug builds
+        DispatchQueue.global(qos: .background).async {
+            let valid = NetworkSecurityManager.shared.validateCertificatePinning()
+            print(valid ? "✅ Cert pinning validation passed" : "❌ Cert pinning validation failed")
+        }
+        #endif
     }
 }

@@ -7,6 +7,8 @@
 
 import SwiftUI
 import FirebaseAuth
+import Firebase
+import FirebaseFirestore
 
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
@@ -56,6 +58,15 @@ struct ProfileView: View {
                     }
                 }
 
+                Section(header: Text("Minutes")) {
+                    Button {
+                        // Notify app to present the purchase sheet
+                        NotificationCenter.default.post(name: .init("ShowPurchaseSheet"), object: nil)
+                        dismiss()
+                    } label: {
+                        Label("Buy minutes", systemImage: "cart")
+                    }
+                }
                 Section(header: Text("Data")) {
                     Button(role: .destructive) {
                         Task { await deleteMyData() }
@@ -69,7 +80,7 @@ struct ProfileView: View {
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
             // Ensure high-contrast nav bar for this sheet regardless of global transparent nav settings
-            .modifier(NavBarBackgroundVisible())
+            // Simpler nav bar for iOS 15 compatibility (avoid toolbarBackground API)
             .navigationBarItems(leading: Button("Close") { dismiss() })
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
         }
@@ -107,16 +118,6 @@ struct ProfileView: View {
 }
 
 // iOS 16-only toolbar background, safely no-op on iOS 15
-private struct NavBarBackgroundVisible: ViewModifier {
-    func body(content: Content) -> some View {
-        if #available(iOS 16.0, *) {
-            content
-                .toolbarBackground(.visible, for: .navigationBar)
-                .toolbarBackground(Color(.systemBackground), for: .navigationBar)
-        } else {
-            content
-        }
-    }
-}
+// Removed toolbar background modifier to ensure clean build on iOS 15 toolchains
 
 

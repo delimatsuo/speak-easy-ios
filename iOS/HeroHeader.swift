@@ -19,6 +19,7 @@ struct HeroHeader: View {
             switch style {
             case .fullBleed:
                 ZStack(alignment: .bottom) {
+                    // Extend gradient slightly beyond safe area for a seamless top blend
                     Color.speakEasyPrimaryGradient
                         .ignoresSafeArea(edges: .top)
 

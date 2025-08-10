@@ -40,6 +40,8 @@ final class CreditsManager: ObservableObject {
             await ensureAnonymousAuth()
             await loadFromStorage()
             await syncWithCloud()
+            // Process any unfinished StoreKit transactions from previous sessions
+            await processUnfinishedTransactions()
             listenForTransactionUpdates()
         }
     }
@@ -64,6 +66,21 @@ final class CreditsManager: ObservableObject {
                 case .unverified:
                     break
                 }
+            }
+        }
+    }
+
+    /// At app launch, process any unfinished StoreKit transactions to keep credits in sync
+    private func processUnfinishedTransactions() async {
+        for await result in StoreKit.Transaction.unfinished {
+            switch result {
+            case .verified(let transaction):
+                if let mapping = CreditProduct(rawValue: transaction.productID) {
+                    await MainActor.run { self.purchaseCompletedGrant(seconds: mapping.grantSeconds) }
+                }
+                await transaction.finish()
+            case .unverified:
+                continue
             }
         }
     }
@@ -246,22 +263,26 @@ extension CreditsManager {
             let doc = try await db.collection("credits").document(uid).getDocument()
             let alreadyGrantedByUID = (doc.data()? ["starterGranted"] as? Bool) ?? false
 
-            // Check global device registry to prevent multiple UIDs on the same device
-            let deviceDoc = try? await db.collection("starterDevices").document(deviceHash).getDocument()
-            let deviceUsed = deviceDoc?.exists ?? false
+            guard !alreadyGrantedByUID && !deviceGranted else { return }
 
-            if !alreadyGrantedByUID && !deviceGranted && !deviceUsed {
+            // Attempt to CREATE the starterDevices doc without a prior read.
+            // Rules allow create only if not exists; if it already exists, this write will be denied.
+            do {
+                try await db.collection("starterDevices").document(deviceHash).setData([
+                    "claimedAt": FieldValue.serverTimestamp(),
+                    "uid": uid
+                ], merge: false)
+
+                // If the create succeeded, grant starter and mark on the user's credits doc
                 add(seconds: 300)
                 try await db.collection("credits").document(uid).setData([
                     "starterGranted": true,
                     "starterGrantedAt": FieldValue.serverTimestamp(),
                     "starterDeviceHash": deviceHash
                 ], merge: true)
-                try await db.collection("starterDevices").document(deviceHash).setData([
-                    "claimedAt": FieldValue.serverTimestamp(),
-                    "uid": uid
-                ], merge: false)
                 UserDefaults.standard.set(true, forKey: deviceKey)
+            } catch {
+                // Create failed (likely because doc exists or insufficient perms) → treat as already used; do not grant
             }
         } catch {
             // Ignore
