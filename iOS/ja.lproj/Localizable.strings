@@ -1,0 +1,87 @@
+/* 
+  Localizable.strings
+  UniversalTranslator
+  
+  Japanese localization
+*/
+
+// App Name
+"app_name" = "Mervyn Talks";
+"app_subtitle" = "話すだけで瞬時に翻訳";
+
+// Main Screen
+"tap_to_speak" = "タップして話す";
+"listening" = "聞き取り中...";
+"processing" = "処理中...";
+"translating" = "翻訳中...";
+"playing" = "再生中...";
+"speak_in" = "話す言語";
+"translate_to" = "翻訳先の言語";
+
+// Credits
+"credits_remaining" = "残り %d 秒";
+"no_credits" = "クレジット残高がありません";
+"purchase_credits" = "クレジットを購入";
+"low_balance_warning" = "残高不足: 残り %d 秒";
+
+// Errors
+"error_title" = "エラー";
+"error_microphone_permission" = "マイクへのアクセスが必要です。設定 > プライバシー > マイクから有効にしてください。";
+"error_network" = "ネットワーク接続エラーです。インターネット接続を確認してください。";
+"error_translation_failed" = "翻訳サービスが利用できません。後でもう一度お試しください。";
+"error_no_audio" = "音声が録音されませんでした。もう一度お試しください。";
+"error_api_key" = "API設定エラーです。サポートにお問い合わせください。";
+
+// Settings/Profile
+"profile" = "プロフィール";
+"settings" = "設定";
+"sign_out" = "サインアウト";
+"delete_account" = "アカウントを削除";
+"delete_account_confirm" = "本当にアカウントを削除しますか？この操作は取り消せません。";
+"cancel" = "キャンセル";
+"delete" = "削除";
+"done" = "完了";
+
+// Purchase
+"purchase_title" = "翻訳クレジットを購入";
+"purchase_subtitle" = "クレジットパッケージを選択";
+"purchase_300s" = "5分 - ¥120";
+"purchase_1800s" = "30分 - ¥600";
+"purchase_3600s" = "1時間 - ¥1,080";
+"purchase_7200s" = "2時間 - ¥1,800";
+"purchase_footer" = "クレジットは翻訳の秒数に基づきます。購入後の返金はできません。";
+"restore_purchases" = "購入履歴を復元";
+
+// Legal
+"terms_of_use" = "利用規約";
+"privacy_policy" = "プライバシーポリシー";
+"consent_title" = "Mervyn Talksへようこそ";
+"consent_message" = "プライバシーを大切にします：会話は保存しません。購入履歴とセッション情報のみ最大12ヶ月間保管します。";
+"agree_and_continue" = "同意して続行";
+
+// Sign In
+"sign_in_title" = "サインイン";
+"sign_in_subtitle" = "匿名でサインインして開始";
+"sign_in_anonymous" = "ゲストとして続行";
+"signing_in" = "サインイン中...";
+
+// Languages
+"language_en" = "英語";
+"language_es" = "スペイン語";
+"language_fr" = "フランス語";
+"language_de" = "ドイツ語";
+"language_it" = "イタリア語";
+"language_pt" = "ポルトガル語";
+"language_zh" = "中国語";
+"language_ja" = "日本語";
+"language_ko" = "韓国語";
+"language_ru" = "ロシア語";
+"language_ar" = "アラビア語";
+"language_hi" = "ヒンディー語";
+
+// Common Actions
+"ok" = "OK";
+"retry" = "再試行";
+"close" = "閉じる";
+"loading" = "読み込み中...";
+"copied" = "クリップボードにコピーしました";

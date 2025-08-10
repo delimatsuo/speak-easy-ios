@@ -1,0 +1,87 @@
+/* 
+  Localizable.strings
+  UniversalTranslator
+  
+  German localization
+*/
+
+// App Name
+"app_name" = "Mervyn Talks";
+"app_subtitle" = "Sprechen zum sofort übersetzen";
+
+// Main Screen
+"tap_to_speak" = "Tippen zum Sprechen";
+"listening" = "Zuhören...";
+"processing" = "Verarbeitung...";
+"translating" = "Übersetzung...";
+"playing" = "Wiedergabe...";
+"speak_in" = "Sprechen auf";
+"translate_to" = "Übersetzen nach";
+
+// Credits
+"credits_remaining" = "%d Sekunden verbleibend";
+"no_credits" = "Keine Credits verbleibend";
+"purchase_credits" = "Credits kaufen";
+"low_balance_warning" = "Niedriger Kontostand: %d Sekunden verbleibend";
+
+// Errors
+"error_title" = "Fehler";
+"error_microphone_permission" = "Mikrofon-Zugriff ist erforderlich. Bitte aktivieren Sie ihn unter Einstellungen > Datenschutz > Mikrofon.";
+"error_network" = "Netzwerkverbindungsfehler. Bitte überprüfen Sie Ihre Internetverbindung.";
+"error_translation_failed" = "Übersetzungsdienst nicht verfügbar. Bitte versuchen Sie es später erneut.";
+"error_no_audio" = "Keine Audioaufnahme. Bitte versuchen Sie es erneut.";
+"error_api_key" = "API-Konfigurationsfehler. Bitte wenden Sie sich an den Support.";
+
+// Settings/Profile
+"profile" = "Profil";
+"settings" = "Einstellungen";
+"sign_out" = "Abmelden";
+"delete_account" = "Konto löschen";
+"delete_account_confirm" = "Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.";
+"cancel" = "Abbrechen";
+"delete" = "Löschen";
+"done" = "Fertig";
+
+// Purchase
+"purchase_title" = "Übersetzungs-Credits kaufen";
+"purchase_subtitle" = "Wählen Sie ein Credit-Paket";
+"purchase_300s" = "5 Minuten - 0,99 €";
+"purchase_1800s" = "30 Minuten - 4,99 €";
+"purchase_3600s" = "1 Stunde - 8,99 €";
+"purchase_7200s" = "2 Stunden - 14,99 €";
+"purchase_footer" = "Credits werden pro Sekunde der Übersetzung berechnet. Käufe sind nicht erstattungsfähig.";
+"restore_purchases" = "Käufe wiederherstellen";
+
+// Legal
+"terms_of_use" = "Nutzungsbedingungen";
+"privacy_policy" = "Datenschutzerklärung";
+"consent_title" = "Willkommen bei Mervyn Talks";
+"consent_message" = "Wir wahren Ihre Privatsphäre: Wir speichern keine Gespräche; nur minimale Kauf- und Sitzungsmetadaten für bis zu 12 Monate.";
+"agree_and_continue" = "Zustimmen und fortfahren";
+
+// Sign In
+"sign_in_title" = "Anmelden";
+"sign_in_subtitle" = "Melden Sie sich anonym an, um zu beginnen";
+"sign_in_anonymous" = "Als Gast fortfahren";
+"signing_in" = "Anmeldung...";
+
+// Languages
+"language_en" = "Englisch";
+"language_es" = "Spanisch";
+"language_fr" = "Französisch";
+"language_de" = "Deutsch";
+"language_it" = "Italienisch";
+"language_pt" = "Portugiesisch";
+"language_zh" = "Chinesisch";
+"language_ja" = "Japanisch";
+"language_ko" = "Koreanisch";
+"language_ru" = "Russisch";
+"language_ar" = "Arabisch";
+"language_hi" = "Hindi";
+
+// Common Actions
+"ok" = "OK";
+"retry" = "Wiederholen";
+"close" = "Schließen";
+"loading" = "Lädt...";
+"copied" = "In Zwischenablage kopiert";

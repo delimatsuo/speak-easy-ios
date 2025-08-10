@@ -57,8 +57,8 @@ struct ContentView: View {
                 VStack(spacing: DesignConstants.Layout.contentSpacing) {
                     // Centered hero header replacing the default large nav title
                     HeroHeader(
-                        title: "Mervyn Talks",
-                        subtitle: "Speak to translate instantly",
+                        title: NSLocalizedString("app_name", comment: "App name displayed in header"),
+                        subtitle: NSLocalizedString("app_subtitle", comment: "App subtitle describing main functionality"),
                         onHistory: nil,
                         onProfile: { showProfile = true },
                         style: .fullBleed,
@@ -100,7 +100,7 @@ struct ContentView: View {
                                 onCancel: cancelTranslation
                             )
                         } else {
-                            Text("Tap to speak")
+                            Text(NSLocalizedString("tap_to_speak", comment: "Instruction text shown when app is ready for voice input"))
                                 .font(.system(size: DesignConstants.Typography.statusTitleSize, 
                                             weight: DesignConstants.Typography.statusTitleWeight))
                                 .foregroundColor(.speakEasyTextSecondary)
@@ -108,10 +108,10 @@ struct ContentView: View {
 
                         if credits.remainingSeconds == 60 && !showedSixtySecondReminder {
                             VStack(spacing: 6) {
-                                Text("You have 1:00 minute left. Top up to keep translating.")
+                                Text(NSLocalizedString("one_minute_left_warning", comment: "Warning message when user has only one minute of credits remaining"))
                                     .font(.subheadline)
                                     .foregroundColor(.speakEasyTextPrimary)
-                                Button("Buy minutes") { showPurchaseSheet = true }
+                                Button(NSLocalizedString("buy_minutes", comment: "Button text to purchase more translation minutes")) { showPurchaseSheet = true }
                                     .font(.caption.weight(.semibold))
                                     .buttonStyle(.borderedProminent)
                             }
@@ -144,7 +144,7 @@ struct ContentView: View {
                 LanguagePickerSheet(
                     selectedLanguage: kind == .source ? $sourceLanguage : $targetLanguage,
                     languages: availableLanguages,
-                    title: kind == .source ? "Speak in" : "Translate to",
+                    title: kind == .source ? NSLocalizedString("speak_in", comment: "Title for source language picker") : NSLocalizedString("translate_to", comment: "Title for target language picker"),
                     isPresented: Binding(
                         get: { activeLanguagePicker != nil },
                         set: { newValue in if !newValue { activeLanguagePicker = nil } }
@@ -164,12 +164,12 @@ struct ContentView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .alert("Error", isPresented: $showError) {
-                Button("OK") {
+            .alert(NSLocalizedString("error", comment: "Alert title for error messages"), isPresented: $showError) {
+                Button(NSLocalizedString("ok", comment: "OK button text")) {
                     resetUIState()
                 }
                 if !errorMessage.contains("✅") {
-                    Button("Retry") {
+                    Button(NSLocalizedString("retry", comment: "Retry button text")) {
                         retryLastTranslation()
                     }
                 }
@@ -226,7 +226,7 @@ struct ContentView: View {
         // First check if microphone permission is granted
         let micPermission = AVAudioSession.sharedInstance().recordPermission
         if micPermission != .granted {
-            errorMessage = "Microphone access is required. Please enable it in Settings > Privacy > Microphone."
+            errorMessage = NSLocalizedString("microphone_permission_required", comment: "Error message when microphone permission is not granted")
             showError = true
             return
         }
@@ -239,7 +239,7 @@ struct ContentView: View {
                 print("✅ Recording started successfully in UI")
             } else {
                 credits.setSessionStoppedAndRoundUp() // Refund the credits if recording failed
-                errorMessage = "Unable to start recording. Please try closing other apps and try again."
+                errorMessage = NSLocalizedString("unable_to_start_recording", comment: "Error message when recording fails to start")
                 showError = true
                 print("❌ Recording failed to start in UI")
             }
@@ -255,7 +255,7 @@ struct ContentView: View {
             if let audioURL = audioURL {
                 processRecording(audioURL)
             } else {
-                errorMessage = "Failed to save recording"
+                errorMessage = NSLocalizedString("failed_to_save_recording", comment: "Error message when recording cannot be saved")
                 showError = true
             }
         }
@@ -346,7 +346,7 @@ struct ContentView: View {
         if let translationError = error as? TranslationError {
             return translationError.localizedDescription
         }
-        return "Translation failed: \(error.localizedDescription)"
+        return String(format: NSLocalizedString("translation_failed_format", comment: "Generic translation error message format"), error.localizedDescription)
     }
     
     @MainActor
@@ -398,7 +398,7 @@ struct ContentView: View {
                 
                 await MainActor.run {
                     if !granted {
-                        self.errorMessage = "Microphone access is required for voice translation"
+                        self.errorMessage = NSLocalizedString("microphone_required_for_translation", comment: "Error message explaining microphone is needed for translation")
                         self.showError = true
                     }
                 }
@@ -413,7 +413,7 @@ struct ContentView: View {
                 
                 await MainActor.run {
                     if status != .authorized {
-                        self.errorMessage = "Speech recognition access is required"
+                        self.errorMessage = NSLocalizedString("speech_recognition_required", comment: "Error message when speech recognition permission is not granted")
                         self.showError = true
                     }
                 }
@@ -486,7 +486,7 @@ struct ContentView: View {
                     }
                 } catch {
                     await MainActor.run {
-                        self.errorMessage = "Retry failed: \(self.formatErrorMessage(error))"
+                        self.errorMessage = String(format: NSLocalizedString("retry_failed_format", comment: "Error message when retry operation fails"), self.formatErrorMessage(error))
                         self.showError = true
                         self.isProcessing = false
                         self.processingStartTime = nil
@@ -535,7 +535,7 @@ struct StatusIndicator: View {
     var body: some View {
         VStack(spacing: 8) {
             if isRecording {
-                Text("Listening...")
+                Text(NSLocalizedString("listening", comment: "Status text shown while recording user's voice"))
                     .font(.system(size: DesignConstants.Typography.statusTitleSize, 
                                 weight: DesignConstants.Typography.statusTitleWeight))
                     .foregroundColor(.speakEasyRecording)
@@ -550,20 +550,20 @@ struct StatusIndicator: View {
                     .progressViewStyle(CircularProgressViewStyle(tint: .speakEasyProcessing))
                     .scaleEffect(1.2)
                 
-                Text("Translating...")
+                Text(NSLocalizedString("translating", comment: "Status text shown while processing translation"))
                     .font(.system(size: DesignConstants.Typography.statusTitleSize, 
                                 weight: DesignConstants.Typography.statusTitleWeight))
                     .foregroundColor(.speakEasyProcessing)
                 
                 if let startTime = processingStartTime {
                     let elapsed = Date().timeIntervalSince(startTime)
-                    Text("Elapsed: \(String(format: "%.0f", elapsed))s")
+                    Text(String(format: NSLocalizedString("elapsed_seconds", comment: "Shows elapsed time during processing"), elapsed))
                         .font(.system(size: DesignConstants.Typography.statusSubtitleSize, 
                                     weight: DesignConstants.Typography.statusSubtitleWeight))
                         .foregroundColor(.speakEasyTextSecondary)
                 }
                 
-                Button("Cancel") {
+                Button(NSLocalizedString("cancel", comment: "Button text to cancel current operation")) {
                     onCancel()
                 }
                 .font(.caption)
@@ -575,7 +575,7 @@ struct StatusIndicator: View {
                     .font(.largeTitle)
                     .foregroundColor(.speakEasyPrimary)
                 
-                Text("Playing translation...")
+                Text(NSLocalizedString("playing_translation", comment: "Status text shown while playing translated audio"))
                     .font(.system(size: DesignConstants.Typography.statusTitleSize, 
                                 weight: DesignConstants.Typography.statusTitleWeight))
                     .foregroundColor(.speakEasyPrimary)
@@ -638,17 +638,17 @@ struct HistoryView: View {
                                 AudioManager.shared.playAudioFromURL(audioURL)
                             }
                         }) {
-                            Label("Play", systemImage: "play.circle")
+                            Label(NSLocalizedString("play", comment: "Button text to play audio"), systemImage: "play.circle")
                                 .font(.caption)
                         }
                     }
                 }
                 .padding(.vertical, 4)
             }
-            .navigationTitle("Translation History")
+            .navigationTitle(NSLocalizedString("translation_history", comment: "Title for translation history screen"))
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(NSLocalizedString("done", comment: "Button text to dismiss screen")) {
                         dismiss()
                     }
                 }
