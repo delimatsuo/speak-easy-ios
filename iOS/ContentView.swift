@@ -67,8 +67,8 @@ struct ContentView: View {
 
                     // Optional: remove external credits pill since it's in hero now
                     
-                    // Language chips row
-                    LanguageChipsRow(
+                    // Language selector cards
+                    LanguageCardsSelector(
                         source: $sourceLanguage,
                         target: $targetLanguage,
                         languages: availableLanguages,
@@ -76,7 +76,8 @@ struct ContentView: View {
                         onTapSource: { showLanguagePicker(isSource: true) },
                         onTapTarget: { showLanguagePicker(isSource: false) }
                     )
-                        .professionalPadding()
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
                     
                     // Microphone Button Section (PROPERLY SIZED!)
                     VStack(spacing: DesignConstants.Layout.cardSpacing) {
