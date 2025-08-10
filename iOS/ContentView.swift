@@ -13,6 +13,13 @@ import UIKit
 import FirebaseFirestore
 import StoreKit
 
+// Distinguishes which language picker is active for the sheet
+private enum LanguagePickerType: Identifiable {
+    case source
+    case target
+    var id: String { self == .source ? "source" : "target" }
+}
+
 struct ContentView: View {
     @StateObject private var auth = AuthViewModel.shared
     @StateObject private var audioManager = AudioManager()
@@ -38,11 +45,10 @@ struct ContentView: View {
     @State private var showPurchaseSheet = false
     @State private var showedSixtySecondReminder = false
     @State private var showProfile = false
-    @State private var showLangSheet = false
-    @State private var pickingSource = true
+    @State private var activeLanguagePicker: LanguagePickerType?
     
     var body: some View {
-        Group {
+        ZStack {
             if !auth.isSignedIn {
                 SignInView()
             } else {
@@ -128,22 +134,21 @@ struct ContentView: View {
                 }
             }
             .background(Color.speakEasyBackground.ignoresSafeArea())
-            .navigationBarTitleDisplayMode(.inline) // Use custom header instead
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showProfile = true }) { Image(systemName: "person.crop.circle") }
-                        .accessibilityLabel("Profile")
-                }
-                ToolbarItem(placement: .principal) { EmptyView() }
-            }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
             // History removed to comply with no-conversation-retention policy
             .sheet(isPresented: $showPurchaseSheet) {
                 PurchaseSheet()
             }
-            .sheet(isPresented: $showLangSheet) {
+            .sheet(item: $activeLanguagePicker) { kind in
                 LanguagePickerSheet(
+                    selectedLanguage: kind == .source ? $sourceLanguage : $targetLanguage,
                     languages: availableLanguages,
-                    selectedCode: pickingSource ? $sourceLanguage : $targetLanguage
+                    title: kind == .source ? "Speak in" : "Translate to",
+                    isPresented: Binding(
+                        get: { activeLanguagePicker != nil },
+                        set: { newValue in if !newValue { activeLanguagePicker = nil } }
+                    )
                 )
             }
             .sheet(isPresented: $showProfile) { ProfileView() }
@@ -166,19 +171,22 @@ struct ContentView: View {
                 }
             } message: {
                 Text(errorMessage)
-            }
                 }
+                }
+                .navigationViewStyle(StackNavigationViewStyle())
             }
         }
         .onAppear {
             setupAudio()
             loadLanguages()
             requestPermissions()
+            NotificationCenter.default.addObserver(forName: .init("ShowPurchaseSheet"), object: nil, queue: .main) { _ in
+                showPurchaseSheet = true
+            }
         }
     }
     private func showLanguagePicker(isSource: Bool) {
-        pickingSource = isSource
-        showLangSheet = true
+        activeLanguagePicker = isSource ? .source : .target
     }
     
     // MARK: - Actions
@@ -209,14 +217,25 @@ struct ContentView: View {
         recordingDuration = 0
         credits.setSessionStarted()
         
+        // First check if microphone permission is granted
+        let micPermission = AVAudioSession.sharedInstance().recordPermission
+        if micPermission != .granted {
+            errorMessage = "Microphone access is required. Please enable it in Settings > Privacy > Microphone."
+            showError = true
+            return
+        }
+        
         Task {
             let success = await audioManager.startRecordingAsync()
             if success {
                 isRecording = true
                 startRecordingTimer()
+                print("✅ Recording started successfully in UI")
             } else {
-                errorMessage = "Failed to start recording. Please check microphone permissions."
+                credits.setSessionStoppedAndRoundUp() // Refund the credits if recording failed
+                errorMessage = "Unable to start recording. Please try closing other apps and try again."
                 showError = true
+                print("❌ Recording failed to start in UI")
             }
         }
     }
@@ -242,10 +261,32 @@ struct ContentView: View {
         
         translationTask = Task {
             do {
-                let transcription = try await audioManager.transcribeAudio(
-                    audioURL,
-                    language: sourceLanguage
-                )
+                var transcription: String
+                
+                // Check if local STT is available
+                let locale = Locale(identifier: sourceLanguage)
+                let recognizer = SFSpeechRecognizer(locale: locale)
+                let authorized = SFSpeechRecognizer.authorizationStatus() == .authorized
+                let available = recognizer?.isAvailable ?? false
+                
+                print("📱 STT Status - Authorized: \(authorized), Available: \(available), Language: \(sourceLanguage)")
+                
+                if authorized && available {
+                    do {
+                        print("🎙️ Using local STT for language: \(sourceLanguage)")
+                        transcription = try await audioManager.transcribeAudio(audioURL, language: sourceLanguage)
+                        print("✅ Local STT successful: \"\(transcription.prefix(50))...\"")
+                    } catch {
+                        let nsError = error as NSError
+                        print("⚠️ Local STT failed - Domain: \(nsError.domain), Code: \(nsError.code), Error: \(error.localizedDescription)")
+                        print("📡 Falling back to server STT...")
+                        transcription = try await translationService.remoteSpeechToText(audioURL: audioURL, language: sourceLanguage)
+                        print("✅ Server STT fallback successful")
+                    }
+                } else {
+                    print("📡 Using server STT (local not available - Auth: \(authorized), Avail: \(available))")
+                    transcription = try await translationService.remoteSpeechToText(audioURL: audioURL, language: sourceLanguage)
+                }
                 
                 try Task.checkCancellation()
                 
@@ -253,11 +294,16 @@ struct ContentView: View {
                     self.transcribedText = transcription
                 }
                 
+                print("📤 Sending transcribed text for translation: \"\(transcription.prefix(50))...\"")
+                print("   From: \(sourceLanguage) To: \(targetLanguage)")
+                
                 let response = try await translationService.translateWithAudio(
                     text: transcription,
                     from: sourceLanguage,
                     to: targetLanguage
                 )
+                
+                print("✅ Translation successful!")
                 
                 try Task.checkCancellation()
                 

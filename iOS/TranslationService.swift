@@ -48,15 +48,71 @@ class TranslationService: ObservableObject {
             self.isCancelling = false
         }
         
-        // Test health endpoint first
-        let isHealthy = await checkAPIHealth()
-        if !isHealthy {
-            print("⚠️ [\(Date())] API health check failed, attempting fallback to text-only translation")
-            return try await translateTextOnly(text: text, from: sourceLanguage, to: targetLanguage)
-        }
+        // Skip health check - just try the translation directly
+        // Health checks add unnecessary latency and can fail due to network issues
+        print("🔄 Starting translation without health check")
         
         return try await performWithRetry {
             try await self.translateWithAudioInternal(text: text, from: sourceLanguage, to: targetLanguage)
+        }
+    }
+
+    // MARK: - Remote Speech-to-Text Fallback
+    func remoteSpeechToText(audioURL: URL, language: String) async throws -> String {
+        print("🎙️ Starting remote speech-to-text for language: \(language)")
+        
+        let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.speechToText)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 30.0
+
+        // Read audio file and prepare payload
+        let audioData = try Data(contentsOf: audioURL)
+        let audioBase64 = audioData.base64EncodedString()
+        
+        // Detect audio format based on file extension
+        let fileExtension = audioURL.pathExtension.lowercased()
+        let encoding = fileExtension == "m4a" ? "M4A" : "MP3"
+        
+        let payload: [String: Any] = [
+            "audio_base64": audioBase64,
+            "language_code": language,
+            "encoding": encoding,
+            "sample_rate": 44100
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        
+        print("📤 Sending audio (\(audioData.count) bytes, \(encoding) format) to server STT")
+
+        do {
+            let (responseData, response) = try await secureSession.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw TranslationError.apiError("Invalid response from speech-to-text server")
+            }
+            
+            print("📥 Server STT response: HTTP \(httpResponse.statusCode)")
+            
+            guard httpResponse.statusCode == 200 else {
+                let errorBody = String(data: responseData, encoding: .utf8) ?? "Unknown error"
+                print("❌ Server STT error: \(errorBody)")
+                throw TranslationError.apiError("Speech-to-text failed (HTTP \(httpResponse.statusCode))")
+            }
+            
+            guard let jsonResponse = try JSONSerialization.jsonObject(with: responseData) as? [String: Any],
+                  let transcription = jsonResponse["transcription"] as? String,
+                  !transcription.isEmpty else {
+                print("❌ Server STT returned empty or invalid transcription")
+                throw TranslationError.apiError("Server could not transcribe the audio - please speak clearly and try again")
+            }
+            
+            print("✅ Server STT successful: \"\(transcription.prefix(50))...\"")
+            return transcription
+            
+        } catch {
+            print("❌ Server STT failed: \(error)")
+            throw error
         }
     }
     
@@ -90,7 +146,9 @@ class TranslationService: ObservableObject {
         }
         
         let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.translateAudio)")!
+        #if DEBUG
         print("🔄 [\(Date())] Making translation request to: \(url)")
+        #endif
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -99,7 +157,9 @@ class TranslationService: ObservableObject {
         
         // Track request start time for timeout monitoring
         requestStartTime = Date()
+        #if DEBUG
         print("⏰ [\(Date())] Request timeout set to \(requestTimeoutSeconds) seconds")
+        #endif
         
         // Optionally attach API key if configured (not required for backend using Secret Manager)
         if let apiKey = APIKeyManager.shared.getAPIKey() {
@@ -117,7 +177,9 @@ class TranslationService: ObservableObject {
         )
         
         request.httpBody = try JSONEncoder().encode(body)
-        print("📤 [\(Date())] Request body: \(String(data: request.httpBody!, encoding: .utf8) ?? "invalid")")
+        #if DEBUG
+        print("📤 [\(Date())] Request body length: \(request.httpBody?.count ?? 0) bytes")
+        #endif
         
         do {
             // Create a more aggressive timeout with cancellation support
@@ -133,10 +195,14 @@ class TranslationService: ObservableObject {
                     // Check for cancellation after receiving response
                     try Task.checkCancellation()
                     
+                    #if DEBUG
                     print("📥 [\(Date())] Received response: \(data.count) bytes")
+                    #endif
                     if let startTime = self.requestStartTime {
                         let duration = Date().timeIntervalSince(startTime)
+                        #if DEBUG
                         print("⏱️ [\(Date())] Request completed in \(String(format: "%.2f", duration)) seconds")
+                        #endif
                     }
                     return (data, response)
                 }
@@ -172,16 +238,24 @@ class TranslationService: ObservableObject {
                 throw TranslationError.invalidResponse
             }
             
+            #if DEBUG
             print("📊 [\(Date())] HTTP Status: \(httpResponse.statusCode)")
-            print("📋 [\(Date())] Response headers: \(httpResponse.allHeaderFields)")
+            #endif
             
             if httpResponse.statusCode != 200 {
+                #if DEBUG
                 let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
                 print("❌ [\(Date())] API Error Response (\(httpResponse.statusCode)): \(errorBody)")
-                
+                #endif
+
                 // Store error for UI display
                 await MainActor.run {
-                    self.lastError = "Server error (\(httpResponse.statusCode)): \(errorBody)"
+                    #if DEBUG
+                    let dbg = String(data: data, encoding: .utf8) ?? ""
+                    self.lastError = "Server error (\(httpResponse.statusCode)): \(dbg)"
+                    #else
+                    self.lastError = "Server error (\(httpResponse.statusCode))"
+                    #endif
                 }
                 
                 if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
@@ -192,7 +266,9 @@ class TranslationService: ObservableObject {
             }
             
             let audioResponse = try JSONDecoder().decode(TranslationAudioResponse.self, from: data)
-            print("✅ [\(Date())] Translation successful: \(audioResponse.translatedText)")
+            #if DEBUG
+            print("✅ [\(Date())] Translation successful")
+            #endif
             
             // Clear any previous errors
             await MainActor.run {
@@ -216,6 +292,8 @@ class TranslationService: ObservableObject {
         } catch let error as URLError {
             let duration = requestStartTime.map { Date().timeIntervalSince($0) } ?? 0
             print("❌ [\(Date())] Network Error after \(String(format: "%.2f", duration))s: \(error.localizedDescription) (Code: \(error.code.rawValue))")
+            print("   URL Error Code: \(error.code)")
+            print("   Failed URL: \(error.failingURL?.absoluteString ?? "unknown")")
             
             let errorMessage: String
             if error.code == .timedOut {
@@ -224,6 +302,18 @@ class TranslationService: ObservableObject {
                     self.lastError = errorMessage
                 }
                 throw TranslationError.timeout
+            } else if error.code == .cannotConnectToHost || error.code == .networkConnectionLost {
+                errorMessage = "Cannot connect to translation server. Please check your internet connection."
+                await MainActor.run {
+                    self.lastError = errorMessage
+                }
+                throw TranslationError.networkError
+            } else if error.code == .secureConnectionFailed {
+                errorMessage = "Secure connection failed. Please try again."
+                await MainActor.run {
+                    self.lastError = errorMessage
+                }
+                throw TranslationError.networkError
             } else {
                 errorMessage = "Network error: \(error.localizedDescription)"
                 await MainActor.run {
@@ -471,7 +561,8 @@ class TranslationService: ObservableObject {
         }
         
         let healthResponse = try JSONDecoder().decode(HealthResponse.self, from: data)
-        return healthResponse.status == "healthy"
+        // Treat 'degraded' as acceptable for client use; backend may still serve translations
+        return healthResponse.status == "healthy" || healthResponse.status == "degraded"
     }
     
     // Helper function for timeout enforcement

@@ -76,15 +76,32 @@ class AudioManager: NSObject, ObservableObject {
     
     private func beginRecording() {
         do {
-            // Setup audio session
+            // Setup audio session with better error handling
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
-            try session.setActive(true)
+            
+            // First check if audio input is available
+            guard session.availableInputs?.isEmpty == false else {
+                print("❌ No audio input available")
+                isRecording = false
+                return
+            }
+            
+            // Set category with options that work better in production
+            try session.setCategory(.playAndRecord, 
+                                   mode: .measurement,  // Better for speech recording
+                                   options: [.defaultToSpeaker, .allowBluetooth])
+            
+            // Activate session with options
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+            
+            print("✅ Audio session activated successfully")
             
             // Create recording URL
             let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             let fileName = "recording_\(Date().timeIntervalSince1970).m4a"
             recordingURL = documentsPath.appendingPathComponent(fileName)
+            
+            print("📁 Recording to: \(recordingURL!.lastPathComponent)")
             
             // Configure recorder settings for high quality
             let settings: [String: Any] = [
@@ -100,13 +117,25 @@ class AudioManager: NSObject, ObservableObject {
             audioRecorder?.delegate = self
             audioRecorder?.isMeteringEnabled = true
             audioRecorder?.prepareToRecord()
-            audioRecorder?.record()
             
-            isRecording = true
+            // Actually start recording
+            let recordingStarted = audioRecorder?.record() ?? false
             
-        } catch {
-            print("Failed to start recording: \(error)")
+            if recordingStarted {
+                isRecording = true
+                print("🎙️ Recording started successfully")
+            } else {
+                print("❌ Failed to start recording - recorder.record() returned false")
+                isRecording = false
+                // Clean up session
+                try? session.setActive(false)
+            }
+            
+        } catch let error as NSError {
+            print("❌ Failed to start recording - Domain: \(error.domain), Code: \(error.code), Description: \(error.localizedDescription)")
             isRecording = false
+            // Try to clean up audio session
+            try? AVAudioSession.sharedInstance().setActive(false)
         }
     }
     
@@ -130,32 +159,70 @@ class AudioManager: NSObject, ObservableObject {
             // Create recognizer for specified language
             let locale = Locale(identifier: languageToLocale(language))
             guard let recognizer = SFSpeechRecognizer(locale: locale) else {
+                print("⚠️ No recognizer available for language: \(language) / locale: \(languageToLocale(language))")
                 continuation.resume(throwing: TranscriptionError.recognizerNotAvailable)
                 return
             }
             
-            // Check authorization
-            SFSpeechRecognizer.requestAuthorization { status in
-                guard status == .authorized else {
-                    continuation.resume(throwing: TranscriptionError.notAuthorized)
+            // Check if already authorized (don't request again)
+            let currentStatus = SFSpeechRecognizer.authorizationStatus()
+            guard currentStatus == .authorized else {
+                print("⚠️ Speech recognition not authorized. Current status: \(currentStatus.rawValue)")
+                continuation.resume(throwing: TranscriptionError.notAuthorized)
+                return
+            }
+            
+            // Check if recognizer is actually available
+            guard recognizer.isAvailable else {
+                print("⚠️ Speech recognizer reports not available for \(language)")
+                continuation.resume(throwing: TranscriptionError.recognizerNotAvailable)
+                return
+            }
+            
+            // Create recognition request
+            let request = SFSpeechURLRecognitionRequest(url: audioURL)
+            request.shouldReportPartialResults = false
+            request.requiresOnDeviceRecognition = false
+            
+            // Add timeout to prevent hanging
+            var hasCompleted = false
+            let timeoutTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { _ in
+                if !hasCompleted {
+                    hasCompleted = true
+                    print("⏰ Speech recognition timed out after 10 seconds")
+                    continuation.resume(throwing: TranscriptionError.recognizerNotAvailable)
+                }
+            }
+            
+            print("🎤 Starting speech recognition task for \(language)")
+            
+            // Perform recognition
+            recognizer.recognitionTask(with: request) { result, error in
+                guard !hasCompleted else { return }
+                
+                if let error = error {
+                    hasCompleted = true
+                    timeoutTimer.invalidate()
+                    
+                    // Check for kAFAssistantErrorDomain 1101
+                    let nsError = error as NSError
+                    print("❌ Speech recognition error - Domain: \(nsError.domain), Code: \(nsError.code), Description: \(error.localizedDescription)")
+                    
+                    if nsError.domain == "kAFAssistantErrorDomain" && nsError.code == 1101 {
+                        print("⚠️ Speech recognition error 1101 - service temporarily unavailable")
+                        continuation.resume(throwing: TranscriptionError.recognizerNotAvailable)
+                    } else {
+                        continuation.resume(throwing: error)
+                    }
                     return
                 }
                 
-                // Create recognition request
-                let request = SFSpeechURLRecognitionRequest(url: audioURL)
-                request.shouldReportPartialResults = false
-                request.requiresOnDeviceRecognition = false
-                
-                // Perform recognition
-                recognizer.recognitionTask(with: request) { result, error in
-                    if let error = error {
-                        continuation.resume(throwing: error)
-                        return
-                    }
-                    
-                    if let result = result, result.isFinal {
-                        continuation.resume(returning: result.bestTranscription.formattedString)
-                    }
+                if let result = result, result.isFinal {
+                    hasCompleted = true
+                    timeoutTimer.invalidate()
+                    let transcription = result.bestTranscription.formattedString
+                    print("✅ Speech recognition successful: \"\(transcription.prefix(50))...\"")
+                    continuation.resume(returning: transcription)
                 }
             }
         }
