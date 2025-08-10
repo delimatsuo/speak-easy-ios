@@ -38,7 +38,12 @@ struct ContentView: View {
                     HStack(spacing: 8) {
                         LanguageButton(language: sourceLanguage, isSource: true)
                             .onTapGesture {
-                                // TODO: Show language picker
+                                // Simple language toggle for testing
+                                let languages = ["en", "es", "fr", "de", "it", "pt", "zh", "ja"]
+                                if let currentIndex = languages.firstIndex(of: sourceLanguage) {
+                                    let nextIndex = (currentIndex + 1) % languages.count
+                                    sourceLanguage = languages[nextIndex]
+                                }
                             }
                         
                         Image(systemName: "arrow.right")
@@ -47,7 +52,12 @@ struct ContentView: View {
                         
                         LanguageButton(language: targetLanguage, isSource: false)
                             .onTapGesture {
-                                // TODO: Show language picker
+                                // Simple language toggle for testing
+                                let languages = ["en", "es", "fr", "de", "it", "pt", "zh", "ja"]
+                                if let currentIndex = languages.firstIndex(of: targetLanguage) {
+                                    let nextIndex = (currentIndex + 1) % languages.count
+                                    targetLanguage = languages[nextIndex]
+                                }
                             }
                     }
                     .padding(.horizontal)
@@ -107,15 +117,19 @@ struct ContentView: View {
     }
     
     private func startRecording() {
-        guard connectivityManager.creditsRemaining > 0 else {
+        // Check credits (skip if 0 means unlimited in testing)
+        if connectivityManager.creditsRemaining == 0 {
             errorMessage = "No credits remaining"
             currentState = .error
             return
         }
         
-        guard connectivityManager.isReachable else {
-            errorMessage = "iPhone not connected"
+        // Check iPhone connection
+        if !connectivityManager.isReachable {
+            errorMessage = "iPhone not connected. Make sure iPhone app is running."
             currentState = .error
+            // Try to activate again
+            connectivityManager.activate()
             return
         }
         
