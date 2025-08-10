@@ -51,14 +51,16 @@ class WatchSessionManager: NSObject, ObservableObject {
     func updateCredits() {
         guard let session = session else { return }
         
-        let credits = creditsManager.remainingSeconds
-        let context = ["credits": credits]
-        
-        do {
-            try session.updateApplicationContext(context)
-            print("💰 iPhone: Updated Watch credits: \(credits)")
-        } catch {
-            print("❌ iPhone: Failed to update credits: \(error)")
+        Task { @MainActor in
+            let credits = creditsManager.remainingSeconds
+            let context = ["credits": credits]
+            
+            do {
+                try session.updateApplicationContext(context)
+                print("💰 iPhone: Updated Watch credits: \(credits)")
+            } catch {
+                print("❌ iPhone: Failed to update credits: \(error)")
+            }
         }
     }
     
@@ -116,13 +118,14 @@ class WatchSessionManager: NSObject, ObservableObject {
                 print("🌐 iPhone: Translated: \"\(translationResult.translatedText.prefix(50))...\"")
                 
                 // 3. Create response
+                let creditsRemaining = await MainActor.run { creditsManager.remainingSeconds }
                 let response = TranslationResponse(
                     requestId: request.requestId,
                     originalText: transcription,
                     translatedText: translationResult.translatedText,
                     audioData: translationResult.audioData,
                     error: nil,
-                    creditsRemaining: creditsManager.remainingSeconds
+                    creditsRemaining: creditsRemaining
                 )
                 
                 // 4. Send back to Watch
@@ -138,13 +141,14 @@ class WatchSessionManager: NSObject, ObservableObject {
                 print("❌ iPhone: Translation failed: \(error)")
                 
                 // Send error response
+                let creditsRemaining = await MainActor.run { creditsManager.remainingSeconds }
                 let errorResponse = TranslationResponse(
                     requestId: request.requestId,
                     originalText: "",
                     translatedText: "",
                     audioData: nil,
                     error: error.localizedDescription,
-                    creditsRemaining: creditsManager.remainingSeconds
+                    creditsRemaining: creditsRemaining
                 )
                 
                 sendTranslationResponse(errorResponse)
@@ -243,9 +247,11 @@ extension WatchSessionManager: WCSessionDelegate {
         if let action = message["action"] as? String {
             switch action {
             case "requestCredits":
-                let credits = creditsManager.remainingSeconds
-                replyHandler?(["credits": credits])
-                print("💰 iPhone: Sent credits to Watch: \(credits)")
+                Task { @MainActor in
+                    let credits = creditsManager.remainingSeconds
+                    replyHandler?(["credits": credits])
+                    print("💰 iPhone: Sent credits to Watch: \(credits)")
+                }
                 
             case "syncLanguages":
                 // Get current languages from ContentView (you might need to store these in UserDefaults)
