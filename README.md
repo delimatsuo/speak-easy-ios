@@ -34,6 +34,18 @@ Mervyn Talks is an intuitive iOS voice translation app that enables seamless com
 - **🔒 Privacy-First**: Secure handling of voice data with user consent
 - **⚡ Real-Time Processing**: Fast, accurate translations powered by advanced AI
 
+## 🤖 **FOR AI CODING AGENTS**
+
+**🔥 NEW AI AGENTS START HERE:**
+
+1. **📋 [AI_AGENT_ONBOARDING.md](AI_AGENT_ONBOARDING.md)** - **REQUIRED READING**: Complete project overview, architecture, and development practices
+2. **📍 [PROJECT_NAVIGATION.md](PROJECT_NAVIGATION.md)** - Quick navigation index and file finder
+3. **🚀 [DEVELOPMENT_QUICK_START.md](DEVELOPMENT_QUICK_START.md)** - Immediate development workflow
+
+**These documents will bring you up to speed on our professional development environment, GitFlow workflow, testing strategy, and codebase architecture.**
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -43,6 +55,8 @@ Mervyn Talks is an intuitive iOS voice translation app that enables seamless com
 - **Swift 5.9+**
 - **Firebase Project** (configured)
 - **Apple Developer Account** (for device testing and App Store submission)
+- **Docker** (for backend development)
+- **Python 3.11+** (for backend development)
 
 ### Installation
 
