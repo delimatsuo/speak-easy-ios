@@ -5,6 +5,8 @@ google-cloud-secret-manager==2.16.4
 google-cloud-logging==3.8.0
 google-generativeai==0.3.0
 httpx==0.25.1
+redis==5.0.1
+aioredis==2.0.1
 python-multipart==0.0.6
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4

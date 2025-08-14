@@ -50,9 +50,15 @@ class TranslationAudioRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=10000, description="Text to translate")
     source_language: str = Field(..., min_length=2, max_length=10, description="Source language code")
     target_language: str = Field(..., min_length=2, max_length=10, description="Target language code")
-    return_audio: bool = Field(default=True, description="Return audio of translation")
-    voice_gender: str = Field(default="neutral", description="Voice gender: male, female, neutral")
-    speaking_rate: float = Field(default=1.0, ge=0.5, le=2.0, description="Speaking rate")
+    voice_config: dict = Field(
+        default={
+            "gender": "MALE",
+            "style": "NEUTRAL",
+            "speaking_rate": 1.0,
+            "pitch": 0.0
+        },
+        description="Voice configuration for TTS"
+    )
 
 class TranslationAudioResponse(BaseModel):
     translated_text: str
@@ -118,12 +124,35 @@ class VoiceTranslationService:
         if not gemini_api_key or len(gemini_api_key) < 20:
             raise RuntimeError("Invalid or missing GEMINI_API_KEY")
         genai.configure(api_key=gemini_api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        # Using Gemini 2.5 Flash Preview TTS for cost-effective translations and speech
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
         
-    async def translate_text(self, text: str, source_lang: str, target_lang: str) -> Dict[str, Any]:
+    async def translate_text(self, text: str, source_lang: str, target_lang: str, voice_config: dict = None) -> Dict[str, Any]:
         """Translate text using Gemini with strict timeout"""
         start_time = time.time()
+        logger.info(f"Starting translation: {text[:50]}... ({source_lang} -> {target_lang})")
+        logger.info(f"Voice config: {voice_config}")
         try:
+            # Create translation prompt
+            # Create safety settings and generation config
+            safety_settings = [
+                {
+                    "category": "HARM_CATEGORY_HARASSMENT",
+                    "threshold": "BLOCK_NONE"
+                },
+                {
+                    "category": "HARM_CATEGORY_HATE_SPEECH",
+                    "threshold": "BLOCK_NONE"
+                }
+            ]
+            
+            generation_config = {
+                "temperature": 0.1,  # Low temperature for accurate translations
+                "top_p": 0.8,
+                "top_k": 40,
+                "candidate_count": 1
+            }
+            
             # Create translation prompt
             prompt = f"""
             Translate the following text from {source_lang} to {target_lang}.
@@ -132,20 +161,46 @@ class VoiceTranslationService:
             
             Text to translate: {text}
             """
+            
+            # Log the request details
+            logger.info(f"Translation request: {text[:50]}... ({source_lang} -> {target_lang})")
+            logger.info(f"Using voice settings: {voice_config}")
             # Run blocking generate_content off the event loop with a hard timeout
             import asyncio
             loop = asyncio.get_event_loop()
             response = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: self.model.generate_content(prompt)),
+                loop.run_in_executor(None, lambda: self.model.generate_content(
+                    prompt,
+                    generation_config=generation_config,
+                    safety_settings=safety_settings,
+                    stream=False
+                )),
                 timeout=15.0
             )
+            
+            # Extract translated text
             translated_text = (response.text or "").strip()
+            
+            # Generate audio using Google Cloud TTS
+            audio_data = await self.text_to_speech(
+                translated_text,
+                target_lang,
+                voice_gender="neutral" if not voice_config else voice_config.get("gender", "neutral").lower(),
+                speaking_rate=voice_config.get("speaking_rate", 1.0) if voice_config else 1.0
+            )
+            
+            # Convert audio to base64 for transmission
+            audio_base64 = base64.b64encode(audio_data).decode('utf-8') if audio_data else None
+            
             confidence = 0.95 if translated_text else 0.0
             processing_time = int((time.time() - start_time) * 1000)
+            
             return {
                 "translated_text": translated_text,
+                "audio_base64": audio_base64,
                 "confidence": confidence,
-                "processing_time_ms": processing_time
+                "processing_time_ms": processing_time,
+                "audio_format": "mp3"
             }
         except asyncio.TimeoutError:
             logger.warning("Gemini translation timed out")
@@ -377,23 +432,13 @@ async def translate_with_audio(request: TranslationAudioRequest):
         if not translation_service:
             raise HTTPException(status_code=503, detail="Service unavailable")
         
-        # Translate text
+        # Translate text with audio
         translation_result = await translation_service.translate_text(
             request.text,
             request.source_language,
-            request.target_language
+            request.target_language,
+            request.voice_config
         )
-        
-        # Generate audio if requested
-        audio_base64 = None
-        if request.return_audio:
-            audio_data = await translation_service.text_to_speech(
-                translation_result["translated_text"],
-                request.target_language,
-                request.voice_gender,
-                request.speaking_rate
-            )
-            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
         
         processing_time = int((time.time() - start_time) * 1000)
         
@@ -402,15 +447,19 @@ async def translate_with_audio(request: TranslationAudioRequest):
             source_language=request.source_language,
             target_language=request.target_language,
             confidence=translation_result["confidence"],
-            audio_base64=audio_base64,
+            audio_base64=translation_result["audio_base64"],
             processing_time_ms=processing_time
         )
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Translation with audio failed: {e}")
-        raise HTTPException(status_code=500, detail="Translation failed")
+        error_msg = f"Translation with audio failed: {str(e)}"
+        logger.error(error_msg)
+        logger.error(f"Full error details: {repr(e)}")
+        import traceback
+        logger.error(f"Stack trace: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @app.post("/v1/speech-to-text")
 async def speech_to_text(request: SpeechToTextRequest):
@@ -484,7 +533,7 @@ async def get_supported_languages():
             {"code": "fr", "name": "French", "flag": "🇫🇷"},
             {"code": "de", "name": "German", "flag": "🇩🇪"},
             {"code": "it", "name": "Italian", "flag": "🇮🇹"},
-            {"code": "pt", "name": "Portuguese", "flag": "🇵🇹"},
+            {"code": "pt", "name": "Portuguese", "flag": "🇧🇷"},
             {"code": "ru", "name": "Russian", "flag": "🇷🇺"},
             {"code": "ja", "name": "Japanese", "flag": "🇯🇵"},
             {"code": "ko", "name": "Korean", "flag": "🇰🇷"},

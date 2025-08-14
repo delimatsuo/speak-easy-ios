@@ -7,6 +7,7 @@
 
 import SwiftUI
 import WatchKit
+import WatchConnectivity
 
 struct ContentView: View {
     @StateObject private var audioManager = WatchAudioManager()
@@ -76,18 +77,32 @@ struct ContentView: View {
                         errorMessage: errorMessage,
                         translatedText: translatedText,
                         originalText: originalText,
-                        creditsRemaining: connectivityManager.creditsRemaining
+                        creditsRemaining: connectivityManager.creditsRemaining,
+                        isConnected: connectivityManager.isReachable
                     )
                     
-                    // Credits Display
-                    if connectivityManager.creditsRemaining > 0 {
+                    // Connection Status & Credits Display
+                    VStack(spacing: 4) {
+                        // Connection indicator
                         HStack {
-                            Image(systemName: "clock")
+                            Image(systemName: connectivityManager.isReachable ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                                 .font(.caption2)
-                            Text("\(connectivityManager.creditsRemaining)s")
-                                .font(.caption)
+                                .foregroundColor(connectivityManager.isReachable ? .green : .orange)
+                            Text(connectivityManager.isReachable ? "Connected" : "Disconnected")
+                                .font(.caption2)
+                                .foregroundColor(connectivityManager.isReachable ? .green : .orange)
                         }
-                        .foregroundColor(connectivityManager.creditsRemaining <= 60 ? .orange : .secondary)
+                        
+                        // Credits display
+                        if connectivityManager.creditsRemaining > 0 {
+                            HStack {
+                                Image(systemName: "clock")
+                                    .font(.caption2)
+                                Text("\(connectivityManager.creditsRemaining)s")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(connectivityManager.creditsRemaining <= 60 ? .orange : .secondary)
+                        }
                     }
                 }
             }
@@ -117,19 +132,36 @@ struct ContentView: View {
     }
     
     private func startRecording() {
-        // Check credits (skip if 0 means unlimited in testing)
-        if connectivityManager.creditsRemaining == 0 {
-            errorMessage = "No credits remaining"
+        // Check WCSession activation first
+        guard let session = WCSession.default as WCSession? else {
+            errorMessage = "Watch connectivity not supported"
             currentState = .error
+            return
+        }
+        
+        if session.activationState != .activated {
+            errorMessage = "Connecting to iPhone..."
+            currentState = .error
+            connectivityManager.activate()
             return
         }
         
         // Check iPhone connection
         if !connectivityManager.isReachable {
-            errorMessage = "iPhone not connected. Make sure iPhone app is running."
+            errorMessage = "Open iPhone app first"
             currentState = .error
-            // Try to activate again
+            // Try to activate and request credits to test connection
             connectivityManager.activate()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.connectivityManager.requestCreditsUpdate()
+            }
+            return
+        }
+        
+        // Check credits (allow recording if credits > 0 or unlimited)
+        if connectivityManager.creditsRemaining == 0 {
+            errorMessage = "No credits remaining"
+            currentState = .error
             return
         }
         
@@ -349,6 +381,7 @@ struct StatusView: View {
     let translatedText: String
     let originalText: String
     let creditsRemaining: Int
+    let isConnected: Bool
     
     var body: some View {
         VStack(spacing: 8) {
@@ -396,7 +429,13 @@ struct StatusView: View {
         case .error:
             return errorMessage
         default:
-            return creditsRemaining > 0 ? "Tap to translate" : "No credits remaining"
+            if creditsRemaining <= 0 {
+                return "No credits remaining"
+            } else if !isConnected {
+                return "Open Mervyn Talks on iPhone"
+            } else {
+                return "Tap to translate"
+            }
         }
     }
     

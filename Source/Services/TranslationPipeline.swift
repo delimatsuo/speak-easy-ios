@@ -388,7 +388,7 @@ class AudioPlayerManager: NSObject {
     }
     
     private func configureAudioSession() throws {
-        try audioSession.setCategory(.playback, mode: .default, options: [.duckOthers])
+        try audioSession.setCategory(.playback, mode: .default, options: [.defaultToSpeaker, .duckOthers])
         try audioSession.setActive(true)
     }
     

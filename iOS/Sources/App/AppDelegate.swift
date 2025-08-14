@@ -1,0 +1,70 @@
+//
+//  AppDelegate.swift
+//  UniversalTranslator
+//
+//  Universal Translator App - Real-time language translation
+//
+
+import UIKit
+import Firebase
+import FirebaseFirestore
+
+class AppDelegate: UIResponder, UIApplicationDelegate {
+
+    func application(_ application: UIApplication,
+                    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        
+        // Initialize Firebase
+        FirebaseApp.configure()
+        
+        // Configure Firestore settings for offline support
+        let settings = FirestoreSettings()
+        settings.cacheSettings = PersistentCacheSettings()
+        Firestore.firestore().settings = settings
+        
+        // Log successful initialization
+        print("✅ Firebase initialized successfully")
+        print("📱 Bundle ID: \(Bundle.main.bundleIdentifier ?? "unknown")")
+        print("🔥 Project ID: \(FirebaseApp.app()?.options.projectID ?? "unknown")")
+        
+        // Initialize API Key Manager (non-blocking). Silence missing-key logs in prod.
+        #if DEBUG
+        _ = APIKeyManager.shared
+        #endif
+        
+        // Configure appearance
+        configureAppearance()
+        
+        return true
+    }
+
+    // MARK: UISceneSession Lifecycle
+
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
+    }
+
+    func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
+    }
+    
+    // MARK: - Private Methods
+    
+    private func configureAppearance() {
+        // Make navigation bar transparent so our hero gradient shows full-bleed
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear
+        appearance.shadowColor = .clear
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+
+        let navBar = UINavigationBar.appearance()
+        navBar.standardAppearance = appearance
+        navBar.scrollEdgeAppearance = appearance
+        navBar.compactAppearance = appearance
+        navBar.tintColor = .white
+        
+        // Configure tab bar if needed
+        UITabBar.appearance().tintColor = UIColor.label
+    }
+}

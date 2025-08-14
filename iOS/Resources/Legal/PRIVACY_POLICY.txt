@@ -1,0 +1,69 @@
+Privacy Policy
+
+Version 1.0  
+Effective Date: August 9, 2025  
+Owner/Operator: Electus USA LLC (Massachusetts, USA)  
+Contact: contact@electus.dev
+
+---
+
+What We Collect
+
+Minimal Data Collection
+- Purchase metadata (transaction IDs, amounts, timestamps)
+- Session metadata (usage duration, language pairs, timestamps)
+- Account information (Apple/Google sign-in details)
+
+What We DON'T Collect
+-  Your conversations or translations
+-  Audio recordings
+-  Personal content or messages
+-  Location data
+-  Contacts or photos
+
+How We Use Data
+
+- Credits management - Track your translation minutes
+- Service improvement - Understand usage patterns
+- Support - Help with account issues
+- Legal compliance - Meet regulatory requirements
+
+Data Retention
+
+- Purchase records: Up to 12 months
+- Session metadata: Up to 12 months
+- Conversations/Audio: Immediately deleted after translation
+
+Data Sharing
+
+We DO NOT sell, rent, or share your personal data with third parties, except:
+- Apple/Google for payment processing
+- Legal requirements if compelled by law
+
+Your Rights
+
+- Access your data
+- Delete your account and data
+- Opt-out of data collection (by not using the service)
+
+Security
+
+- Data encrypted in transit and at rest
+- Secure cloud infrastructure
+- Regular security audits
+
+Children's Privacy
+
+This service is not intended for children under 13. We do not knowingly collect data from children.
+
+Changes to Policy
+
+We may update this policy. Continued use constitutes acceptance of changes.
+
+Contact Us
+
+Questions about privacy? Contact us at contact@electus.dev
+
+---
+
+*Last updated: August 9, 2025*

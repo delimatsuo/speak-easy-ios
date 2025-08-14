@@ -39,7 +39,7 @@ class AudioSessionManager {
         try audioSession.setCategory(
             .playback,
             mode: .default,
-            options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
+            options: [.defaultToSpeaker, .duckOthers, .allowBluetooth, .allowBluetoothA2DP]
         )
         
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)

@@ -30,7 +30,17 @@ class WatchConnectivityManager: NSObject, ObservableObject {
     }
     
     func activate() {
-        session?.activate()
+        guard let session = session else {
+            print("❌ Watch: WCSession not supported")
+            return
+        }
+        
+        if session.activationState == .notActivated {
+            print("🔄 Watch: Activating WCSession...")
+            session.activate()
+        } else {
+            print("✅ Watch: WCSession already activated with state: \(session.activationState.rawValue)")
+        }
     }
     
     // MARK: - Sending Requests
