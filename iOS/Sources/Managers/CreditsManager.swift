@@ -198,9 +198,26 @@ final class CreditsManager: ObservableObject {
             let docRef = db.collection("credits").document(uid)
             let snapshot = try await docRef.getDocument()
             let remoteSeconds = (snapshot.data()? ["seconds"] as? Int) ?? 0
-
-            // Merge: take max for basic fraud resistance
-            let merged = max(remoteSeconds, remainingSeconds)
+            let remoteUpdatedAt = snapshot.data()?["updatedAt"] as? Timestamp
+            
+            // Get local update time
+            let localUpdatedAtString = try? KeychainManager.shared.retrieveAPIKey(forService: keychainUpdatedAtKey)
+            let localUpdatedAt = localUpdatedAtString.flatMap { Double($0) }.map { Date(timeIntervalSince1970: $0) }
+            
+            // Smart merge: use the most recently updated value, not just max
+            let shouldUseRemote: Bool
+            if let remoteTime = remoteUpdatedAt?.dateValue(), let localTime = localUpdatedAt {
+                // Use the more recent update
+                shouldUseRemote = remoteTime > localTime
+            } else if remoteUpdatedAt != nil {
+                // Remote has timestamp, local doesn't - use remote
+                shouldUseRemote = true
+            } else {
+                // No remote timestamp - use max for basic fraud resistance
+                shouldUseRemote = remoteSeconds > remainingSeconds
+            }
+            
+            let merged = shouldUseRemote ? remoteSeconds : remainingSeconds
             if merged != remainingSeconds {
                 remainingSeconds = merged
                 saveToStorage()

@@ -165,7 +165,7 @@ class VoiceTranslationService:
             # Log the request details
             logger.info(f"Translation request: {text[:50]}... ({source_lang} -> {target_lang})")
             logger.info(f"Using voice settings: {voice_config}")
-            # Run blocking generate_content off the event loop with a hard timeout
+            # Run blocking generate_content off the event loop with optimized timeout
             import asyncio
             loop = asyncio.get_event_loop()
             response = await asyncio.wait_for(
@@ -175,7 +175,7 @@ class VoiceTranslationService:
                     safety_settings=safety_settings,
                     stream=False
                 )),
-                timeout=15.0
+                timeout=10.0  # Reduced from 15s to 10s for faster user experience
             )
             
             # Extract translated text
@@ -233,7 +233,7 @@ class VoiceTranslationService:
                 pitch=0.0
             )
             
-            # Add timeout to prevent hanging
+            # Add timeout to prevent hanging - optimized for faster response
             import asyncio
             loop = asyncio.get_event_loop()
             response = await asyncio.wait_for(
@@ -242,7 +242,7 @@ class VoiceTranslationService:
                     voice=voice,
                     audio_config=audio_config
                 )),
-                timeout=10.0
+                timeout=8.0  # Reduced from 10s to 8s for faster TTS
             )
             
             return response.audio_content

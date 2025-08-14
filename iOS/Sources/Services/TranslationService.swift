@@ -23,11 +23,11 @@ class TranslationService: ObservableObject {
     @Published var lastError: String?
     @Published var translationHistory: [TranslationHistory] = []
     
-    // Network retry configuration
+    // Network retry configuration - optimized for faster user experience
     private let maxRetryAttempts = 2
-    private let baseRetryDelay: TimeInterval = 1.0
-    private let maxRetryDelay: TimeInterval = 5.0
-    private let requestTimeoutSeconds: TimeInterval = 30.0
+    private let baseRetryDelay: TimeInterval = 0.5  // Reduced from 1.0s
+    private let maxRetryDelay: TimeInterval = 3.0   // Reduced from 5.0s
+    private let requestTimeoutSeconds: TimeInterval = 20.0  // Reduced from 30.0s
     
     // Current request tracking for cancellation
     private var currentTask: URLSessionDataTask?
@@ -545,11 +545,11 @@ class TranslationService: ObservableObject {
         let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.health)")!
         
         var request = URLRequest(url: url)
-        request.timeoutInterval = 10.0 // Much shorter timeout for health check
+        request.timeoutInterval = 5.0 // Optimized timeout for health check
         
         // Use withTimeout for aggressive timeout enforcement
             let session = secureSession
-            let result = try await withTimeout(seconds: 10) {
+            let result = try await withTimeout(seconds: 5) {
                  try await session.data(for: request)
             }
         
