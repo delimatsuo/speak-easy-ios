@@ -1,0 +1,478 @@
+# Mervyn Talks - Development CI/CD Pipeline
+name: Development CI/CD
+
+on:
+  push:
+    branches: [develop, feature/*]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:  # Allow manual triggering
+
+env:
+  GCP_PROJECT_DEV: universal-translator-dev
+  GCP_PROJECT_PROD: universal-translator-prod
+  REGISTRY: gcr.io
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+# Cancel previous workflow runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Security and dependency scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    name: 🔒 Security Scan
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements_voice.txt -r requirements-dev.txt
+        
+    - name: Run security checks
+      run: |
+        cd backend
+        # Security linting
+        bandit -r . -ll -f json -o bandit-report.json || true
+        
+        # Dependency vulnerability scanning
+        safety check --json --output safety-report.json || true
+        
+        # Check for secrets in code
+        detect-secrets scan --all-files --force-use-all-plugins
+        
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          backend/bandit-report.json
+          backend/safety-report.json
+
+  # Code quality and linting
+  code-quality:
+    runs-on: ubuntu-latest
+    name: 📝 Code Quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements_voice.txt -r requirements-dev.txt
+        
+    - name: Code formatting check
+      run: |
+        cd backend
+        black --check --diff .
+        
+    - name: Import sorting check
+      run: |
+        cd backend
+        isort --check-only --diff .
+        
+    - name: Linting
+      run: |
+        cd backend
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+        
+    - name: Type checking
+      run: |
+        cd backend
+        mypy . --ignore-missing-imports
+
+  # Unit and integration tests
+  test:
+    runs-on: ubuntu-latest
+    name: 🧪 Tests
+    
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: mervyn_talks_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements_voice.txt -r requirements-dev.txt
+        
+    - name: Set up test environment
+      run: |
+        cd backend
+        export DATABASE_URL="postgresql://test_user:test_password@localhost:5432/mervyn_talks_test"
+        export REDIS_URL="redis://localhost:6379"
+        export ENVIRONMENT="testing"
+        export GEMINI_API_KEY="test_api_key"
+        
+    - name: Run unit tests
+      run: |
+        cd backend
+        pytest tests/unit/ -v \
+          --cov=app \
+          --cov-report=xml \
+          --cov-report=html \
+          --cov-report=term-missing \
+          --junit-xml=test-results/unit-tests.xml
+        
+    - name: Run integration tests
+      run: |
+        cd backend
+        pytest tests/integration/ -v \
+          --junit-xml=test-results/integration-tests.xml
+          
+    - name: Run security tests
+      run: |
+        cd backend
+        pytest tests/security/ -v \
+          --junit-xml=test-results/security-tests.xml
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: |
+          backend/test-results/
+          backend/htmlcov/
+          backend/coverage.xml
+          
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        fail_ci_if_error: false
+
+  # Performance and load testing
+  performance-test:
+    runs-on: ubuntu-latest
+    name: ⚡ Performance Tests
+    needs: [test]
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'performance-test')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements_voice.txt -r requirements-dev.txt
+        
+    - name: Start test server
+      run: |
+        cd backend
+        export ENVIRONMENT="testing"
+        export GEMINI_API_KEY="test_api_key"
+        uvicorn app.main_voice:app --host 0.0.0.0 --port 8080 &
+        sleep 10  # Wait for server to start
+        
+    - name: Run performance tests
+      run: |
+        cd backend
+        pytest tests/performance/ -v \
+          --benchmark-only \
+          --benchmark-json=performance-results.json
+          
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: backend/performance-results.json
+
+  # Build and containerize
+  build:
+    runs-on: ubuntu-latest
+    name: 🐳 Build & Container
+    needs: [security-scan, code-quality, test]
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+          
+    - name: Build development image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: backend/Dockerfile.dev
+        platforms: linux/amd64
+        push: false
+        tags: |
+          mervyn-talks:latest
+          mervyn-talks:${{ github.sha }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+        
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  # Deploy to staging (develop branch only)
+  deploy-staging:
+    runs-on: ubuntu-latest
+    name: 🚀 Deploy to Staging
+    needs: [build]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.GCP_PROJECT_DEV }}
+        service_account_key: ${{ secrets.GCP_SA_KEY_DEV }}
+        export_default_credentials: true
+        
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+      
+    - name: Build and push to GCR
+      run: |
+        docker build -f backend/Dockerfile.dev -t $REGISTRY/$GCP_PROJECT_DEV/mervyn-talks-staging:$GITHUB_SHA .
+        docker push $REGISTRY/$GCP_PROJECT_DEV/mervyn-talks-staging:$GITHUB_SHA
+        
+    - name: Deploy to Cloud Run Staging
+      run: |
+        gcloud run deploy mervyn-talks-staging \
+          --image $REGISTRY/$GCP_PROJECT_DEV/mervyn-talks-staging:$GITHUB_SHA \
+          --platform managed \
+          --region us-central1 \
+          --allow-unauthenticated \
+          --memory 1Gi \
+          --cpu 1 \
+          --concurrency 80 \
+          --max-instances 10 \
+          --set-env-vars ENVIRONMENT=staging,GCP_PROJECT=$GCP_PROJECT_DEV \
+          --set-secrets GEMINI_API_KEY=gemini-api-key:latest
+          
+    - name: Get staging URL
+      id: staging-url
+      run: |
+        URL=$(gcloud run services describe mervyn-talks-staging --region us-central1 --format 'value(status.url)')
+        echo "STAGING_URL=$URL" >> $GITHUB_OUTPUT
+        
+    - name: Run smoke tests against staging
+      run: |
+        # Wait for deployment to be ready
+        sleep 30
+        
+        # Health check
+        curl -f ${{ steps.staging-url.outputs.STAGING_URL }}/health
+        
+        # API test
+        curl -f -X POST ${{ steps.staging-url.outputs.STAGING_URL }}/v1/translate \
+          -H "Content-Type: application/json" \
+          -d '{"text": "Hello", "source_language": "en", "target_language": "es"}'
+          
+    - name: Comment PR with staging URL
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `🚀 **Staging Deployment Ready!**
+            
+            **URL:** ${{ steps.staging-url.outputs.STAGING_URL }}
+            **Commit:** ${{ github.sha }}
+            **Environment:** Staging
+            
+            The staging environment is ready for testing. The deployment will be automatically cleaned up when this PR is closed.`
+          })
+
+  # E2E Testing against staging
+  e2e-test:
+    runs-on: ubuntu-latest
+    name: 🔄 E2E Tests
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements-dev.txt
+        
+    - name: Get staging URL
+      id: staging-url
+      run: |
+        URL=$(gcloud run services describe mervyn-talks-staging --region us-central1 --format 'value(status.url)')
+        echo "STAGING_URL=$URL" >> $GITHUB_OUTPUT
+        
+    - name: Run E2E tests
+      run: |
+        cd backend
+        export API_BASE_URL="${{ steps.staging-url.outputs.STAGING_URL }}"
+        pytest tests/e2e/ -v --junit-xml=test-results/e2e-tests.xml
+        
+    - name: Upload E2E results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: e2e-test-results
+        path: backend/test-results/e2e-tests.xml
+
+  # Cleanup staging resources
+  cleanup-staging:
+    runs-on: ubuntu-latest
+    name: 🧹 Cleanup Staging
+    needs: [e2e-test]
+    if: always() && github.event_name == 'pull_request' && github.event.action == 'closed'
+    
+    steps:
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.GCP_PROJECT_DEV }}
+        service_account_key: ${{ secrets.GCP_SA_KEY_DEV }}
+        
+    - name: Delete staging service
+      run: |
+        gcloud run services delete mervyn-talks-staging-pr-${{ github.event.number }} \
+          --region us-central1 \
+          --quiet || true
+
+  # Notification and reporting
+  notify:
+    runs-on: ubuntu-latest
+    name: 📢 Notify
+    needs: [security-scan, code-quality, test, build]
+    if: always()
+    
+    steps:
+    - name: Determine overall result
+      id: result
+      run: |
+        if [[ "${{ needs.security-scan.result }}" == "success" && \
+              "${{ needs.code-quality.result }}" == "success" && \
+              "${{ needs.test.result }}" == "success" && \
+              "${{ needs.build.result }}" == "success" ]]; then
+          echo "STATUS=success" >> $GITHUB_OUTPUT
+          echo "MESSAGE=✅ All checks passed!" >> $GITHUB_OUTPUT
+        else
+          echo "STATUS=failure" >> $GITHUB_OUTPUT
+          echo "MESSAGE=❌ Some checks failed" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Post status to PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const status = '${{ steps.result.outputs.STATUS }}';
+          const message = '${{ steps.result.outputs.MESSAGE }}';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## CI/CD Pipeline Results
+            
+            ${message}
+            
+            **Details:**
+            - 🔒 Security Scan: ${{ needs.security-scan.result }}
+            - 📝 Code Quality: ${{ needs.code-quality.result }}
+            - 🧪 Tests: ${{ needs.test.result }}
+            - 🐳 Build: ${{ needs.build.result }}
+            
+            **Branch:** \`${{ github.head_ref }}\`
+            **Commit:** \`${{ github.sha }}\``
+          })

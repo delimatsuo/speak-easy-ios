@@ -1,25 +1,35 @@
-# Docker Compose for local development and testing
+# Enhanced Docker Compose for Mervyn Talks Development Environment
 version: '3.8'
 
 services:
-  # Backend API service
-  universal-translator-api:
+  # Main Backend API Service
+  mervyn-talks-api:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: backend/Dockerfile.dev
     ports:
       - "8080:8080"
+      - "5678:5678"  # Debugger port
     environment:
       - ENVIRONMENT=development
       - GCP_PROJECT=universal-translator-dev
-      # For local development, you can use a local API key file
-      # DO NOT commit actual API keys to version control
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/service-account.json
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://dev_user:dev_password@postgres:5432/mervyn_talks_dev
+      - LOG_LEVEL=DEBUG
+      - ENABLE_CORS=true
+      - ENABLE_DEBUG_ENDPOINTS=true
+      - RUN_MIGRATIONS=true
+      - LOAD_DEV_DATA=false
     volumes:
-      # Mount secrets directory (create this locally)
-      - ./secrets:/app/secrets:ro
-      # Mount source code for development hot reloading
+      # Mount source code for hot reload
       - ./backend:/app
+      # Mount secrets directory (create locally)
+      - ./secrets:/app/secrets:ro
+      # Mount test results
+      - ./test-results:/app/test-results
+    depends_on:
+      - redis
+      - postgres
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -28,26 +38,187 @@ services:
       start_period: 40s
     restart: unless-stopped
     networks:
-      - translator-network
+      - mervyn-network
 
-  # Optional: Add a simple nginx proxy for CORS handling
-  nginx-proxy:
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.dev.conf:/usr/local/etc/redis/redis.conf:ro
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - mervyn-network
+
+  # PostgreSQL for development database
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: mervyn_talks_dev
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./config/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d mervyn_talks_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - mervyn-network
+
+  # nginx reverse proxy for development
+  nginx-dev:
     image: nginx:alpine
     ports:
       - "8000:80"
+      - "8443:443"
     volumes:
-      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./config/ssl-dev:/etc/nginx/ssl:ro
     depends_on:
-      - universal-translator-api
-    networks:
-      - translator-network
+      - mervyn-talks-api
     restart: unless-stopped
+    networks:
+      - mervyn-network
+
+  # Monitoring and Observability Stack
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.dev.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - mervyn-network
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - mervyn-network
+    profiles:
+      - monitoring
+
+  # Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # HTTP collector
+      - "6831:6831/udp"  # Agent compact
+      - "6832:6832/udp"  # Agent binary
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    restart: unless-stopped
+    networks:
+      - mervyn-network
+    profiles:
+      - monitoring
+
+  # Test Runner Service
+  test-runner:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.dev
+    environment:
+      - ENVIRONMENT=testing
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://dev_user:dev_password@postgres:5432/mervyn_talks_test
+    volumes:
+      - ./backend:/app
+      - ./test-results:/app/test-results
+    depends_on:
+      - redis
+      - postgres
+    command: ["pytest", "-v", "--cov=app", "--cov-report=html:/app/test-results/coverage"]
+    networks:
+      - mervyn-network
+    profiles:
+      - testing
+
+  # Load Testing Service
+  load-tester:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.dev
+    environment:
+      - TARGET_URL=http://mervyn-talks-api:8080
+    volumes:
+      - ./backend:/app
+      - ./test-results:/app/test-results
+    depends_on:
+      - mervyn-talks-api
+    command: ["locust", "-f", "tests/performance/locustfile.py", "--host", "http://mervyn-talks-api:8080"]
+    ports:
+      - "8089:8089"  # Locust web UI
+    networks:
+      - mervyn-network
+    profiles:
+      - load-testing
+
+  # Documentation Server
+  docs:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.dev
+    ports:
+      - "8888:8000"
+    volumes:
+      - ./:/app
+    command: ["mkdocs", "serve", "--dev-addr", "0.0.0.0:8000"]
+    restart: unless-stopped
+    networks:
+      - mervyn-network
+    profiles:
+      - docs
 
 networks:
-  translator-network:
+  mervyn-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
-# Development volumes
 volumes:
-  secrets:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
     driver: local

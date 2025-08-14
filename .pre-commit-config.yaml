@@ -1,0 +1,172 @@
+# Pre-commit hooks configuration for Mervyn Talks
+# Install with: pre-commit install
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.md$|\.txt$'
+      - id: end-of-file-fixer
+        exclude: '\.md$|\.txt$'
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000']  # 1MB max
+      - id: check-case-conflict
+      - id: check-json
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-toml
+      - id: check-xml
+      - id: mixed-line-ending
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+
+  # Python code formatting
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+      - id: black
+        language_version: python3
+        files: ^backend/
+        args: [--line-length=88]
+
+  # Python import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        files: ^backend/
+        args: [--profile=black, --line-length=88]
+
+  # Python linting
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        files: ^backend/
+        args: 
+          - --max-line-length=88
+          - --extend-ignore=E203,W503
+          - --exclude=.venv,__pycache__,migrations
+
+  # Python type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.5.0
+    hooks:
+      - id: mypy
+        files: ^backend/
+        args: [--ignore-missing-imports, --no-strict-optional]
+        additional_dependencies: [types-requests, types-redis]
+
+  # Security scanning
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        files: ^backend/
+        args: [-ll, -x, 'tests/']
+
+  # Secret detection
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: |
+          (?x)^(
+            .*\.template$|
+            .*\.example$|
+            backend/test.*|
+            .*test.*\.py$|
+            secrets/.*\.template$
+          )$
+
+  # Python docstring formatting
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        files: ^backend/app/
+        args: [--convention=google]
+
+  # YAML/JSON formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.0
+    hooks:
+      - id: prettier
+        types_or: [yaml, json]
+        exclude: |
+          (?x)^(
+            \.github/workflows/.*\.yml$|
+            backend/.*\.json$
+          )$
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        files: backend/Dockerfile.*
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.5
+    hooks:
+      - id: shellcheck
+        files: \.(sh|bash)$
+
+  # Commit message formatting
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.6.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  # Python dependency checking
+  - repo: local
+    hooks:
+      - id: safety-check
+        name: Safety vulnerability check
+        entry: bash -c 'cd backend && safety check'
+        language: system
+        files: ^backend/requirements.*\.txt$
+        pass_filenames: false
+
+  # Custom hooks for project-specific checks
+  - repo: local
+    hooks:
+      - id: check-api-keys
+        name: Check for exposed API keys
+        entry: bash -c 'if grep -r "AIza[0-9A-Za-z_-]\{35\}" --exclude-dir=.git --exclude="*.template" --exclude="*.example" .; then echo "❌ Exposed API key detected"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        
+      - id: check-env-files
+        name: Check environment files
+        entry: bash -c 'find . -name ".env*" -not -name "*.template" -not -name "*.example" -exec echo "⚠️  Environment file found: {}" \;'
+        language: system
+        pass_filenames: false
+        verbose: true
+
+      - id: python-tests-required
+        name: Ensure tests exist for Python modules
+        entry: bash -c 'cd backend && python scripts/check_test_coverage.py'
+        language: system
+        files: ^backend/app/.*\.py$
+        pass_filenames: false
+
+# CI/CD specific configuration
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+    
+    for more information, see https://pre-commit.ci
+  
+  autofix_prs: true
+  autoupdate_branch: develop
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [safety-check, python-tests-required]  # Skip these in CI
+  submodules: false

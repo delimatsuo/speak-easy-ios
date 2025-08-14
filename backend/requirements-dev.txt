@@ -1,0 +1,71 @@
+# Development and testing dependencies for Mervyn Talks Backend
+# Install with: pip install -r requirements-dev.txt
+
+# Testing Framework
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+pytest-xdist>=3.3.0  # Parallel test execution
+pytest-benchmark>=4.0.0  # Performance benchmarking
+pytest-timeout>=2.1.0  # Test timeouts
+
+# HTTP Testing
+httpx>=0.24.0
+requests-mock>=1.11.0
+responses>=0.23.0
+
+# Database Testing
+pytest-postgresql>=5.0.0
+fakeredis>=2.16.0
+factory-boy>=3.3.0
+
+# Time and Data Mocking
+freezegun>=1.2.2
+faker>=19.0.0
+
+# Code Quality and Formatting
+black>=23.7.0
+flake8>=6.0.0
+isort>=5.12.0
+mypy>=1.5.0
+bandit>=1.7.5  # Security linting
+safety>=2.3.0  # Dependency vulnerability scanning
+
+# Pre-commit Hooks
+pre-commit>=3.3.0
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.1.0
+mkdocs-swagger-ui-tag>=0.6.0
+
+# Debugging and Development
+debugpy>=1.6.7  # Python debugger
+ipython>=8.14.0  # Enhanced REPL
+ipdb>=0.13.13  # IPython debugger
+
+# Load Testing
+locust>=2.15.0
+aiohttp>=3.8.0  # For async HTTP client testing
+
+# Monitoring and Profiling
+prometheus-client>=0.17.0
+py-spy>=0.3.14  # Python profiler
+memory-profiler>=0.61.0
+
+# Environment Management
+python-dotenv>=1.0.0
+
+# Type Checking Extensions
+types-requests>=2.31.0
+types-redis>=4.6.0
+types-setuptools>=68.0.0
+
+# Development Utilities
+watchdog>=3.0.0  # File watching for auto-reload
+rich>=13.4.0  # Rich terminal output
+click>=8.1.0  # CLI tool development
+
+# API Documentation
+fastapi[all]>=0.103.0  # Includes testing dependencies
