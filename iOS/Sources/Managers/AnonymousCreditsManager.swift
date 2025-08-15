@@ -40,6 +40,9 @@ final class AnonymousCreditsManager: ObservableObject {
     
     // MARK: - Weekly Reset Logic
     private func checkMondayReset() {
+        print("🔍 Monday reset check:")
+        print("  - Current remaining seconds: \(remainingSeconds)")
+        print("  - Weekly free limit: \(weeklyFreeLimit)")
         let now = Date()
         let calendar = Calendar.current
         
@@ -51,11 +54,15 @@ final class AnonymousCreditsManager: ObservableObject {
         let lastResetWeek = UserDefaults.standard.integer(forKey: lastResetWeekKey)
         let lastResetYear = UserDefaults.standard.integer(forKey: lastResetYearKey)
         
-        // Check if it's Monday (weekday 2) and we haven't reset this week
-        let isMonday = calendar.component(.weekday, from: now) == 2
+        // Check if we haven't reset this week and user has less than 1 minute
         let isNewWeek = (currentYear != lastResetYear) || (currentWeek != lastResetWeek)
         
-        if isMonday && isNewWeek && remainingSeconds < weeklyFreeLimit {
+        print("  - Current week: \(currentWeek)/\(currentYear)")
+        print("  - Last reset week: \(lastResetWeek)/\(lastResetYear)")
+        print("  - Is new week: \(isNewWeek)")
+        print("  - Should reset (< 1 min): \(remainingSeconds < weeklyFreeLimit)")
+        
+        if isNewWeek && remainingSeconds < weeklyFreeLimit {
             // Reset to exactly 1 minute (not additive)
             weeklyFreeSeconds = weeklyFreeLimit
             remainingSeconds = max(remainingSeconds, weeklyFreeLimit)
@@ -67,8 +74,9 @@ final class AnonymousCreditsManager: ObservableObject {
             saveCredits()
             calculateNextResetDate()
             
-            print("🔄 Monday reset: Free minute restored (Week \(currentWeek), Year \(currentYear))")
+            print("🔄 Weekly reset: Free minute restored (Week \(currentWeek), Year \(currentYear))")
         } else {
+            print("🚫 Weekly reset not applied - conditions not met")
             calculateNextResetDate()
         }
     }
@@ -121,6 +129,14 @@ final class AnonymousCreditsManager: ObservableObject {
         guard seconds > 0 else { return }
         remainingSeconds += seconds
         saveCredits()
+    }
+    
+    func setCredits(to seconds: Int) {
+        guard seconds >= 0 else { return }
+        remainingSeconds = seconds
+        // Don't modify weeklyFreeSeconds when setting credits directly
+        saveCredits()
+        print("🔄 Anonymous credits set to \(seconds) seconds")
     }
     
     // MARK: - Anonymous Purchases
@@ -194,22 +210,18 @@ final class AnonymousCreditsManager: ObservableObject {
         UserDefaults.standard.set(weeklyFreeSeconds, forKey: weeklyFreeSecondsKey)
     }
     
-    // MARK: - Account Migration Support
-    func migrateToAccount() -> Int {
-        let creditsToMigrate = remainingSeconds
-        // Keep credits for now - actual migration happens in CreditsManager
-        return creditsToMigrate
-    }
-    
-    func clearAfterMigration() {
-        remainingSeconds = 0
-        weeklyFreeSeconds = 0
-        saveCredits()
-    }
+    // MARK: - Account Separation (No Migration)
+    // Note: Anonymous and authenticated credits are completely separate
+    // No transfer between accounts - each maintains its own balance
     
     // MARK: - First Time User Bonus
     private func grantFirstTimeUserBonus() {
         let hasReceivedBonus = UserDefaults.standard.bool(forKey: "anonymous.credits.firstTimeBonus")
+        
+        print("🔍 First-time bonus check:")
+        print("  - Has received bonus: \(hasReceivedBonus)")
+        print("  - Remaining seconds: \(remainingSeconds)")
+        print("  - Weekly free seconds: \(weeklyFreeSeconds)")
         
         // Grant 1 minute to brand new users
         if !hasReceivedBonus && remainingSeconds == 0 && weeklyFreeSeconds == 0 {
@@ -218,7 +230,24 @@ final class AnonymousCreditsManager: ObservableObject {
             UserDefaults.standard.set(true, forKey: "anonymous.credits.firstTimeBonus")
             saveCredits()
             print("🎁 First-time user bonus: 1 minute granted")
+        } else {
+            print("🚫 First-time bonus not granted - conditions not met")
         }
+    }
+    
+    // MARK: - Debug Methods
+    func resetFirstTimeBonus() {
+        UserDefaults.standard.removeObject(forKey: "anonymous.credits.firstTimeBonus")
+        UserDefaults.standard.removeObject(forKey: remainingSecondsKey)
+        UserDefaults.standard.removeObject(forKey: weeklyFreeSecondsKey)
+        UserDefaults.standard.removeObject(forKey: lastResetWeekKey)
+        UserDefaults.standard.removeObject(forKey: lastResetYearKey)
+        
+        remainingSeconds = 0
+        weeklyFreeSeconds = 0
+        
+        grantFirstTimeUserBonus()
+        print("🔄 Reset first-time bonus and re-granted")
     }
     
     // MARK: - Debug Info

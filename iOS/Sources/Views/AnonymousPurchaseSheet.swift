@@ -190,13 +190,13 @@ struct StorageChoiceCard: View {
                     Spacer()
                 }
                 
-                Text("Credits stored on this device only. If you lose, sell, or replace this device, credits will be lost.")
+                Text("Credits stored on this device only. These are separate from your cloud account credits.")
                     .font(.body)
                     .foregroundColor(.secondary)
                 
-                Text("⚠️ Multi-device users: If you buy credits on multiple devices, only the first device you sign in on will transfer its credits to your account.")
+                Text("💡 Two separate accounts: Device credits and cloud credits are independent. You can use both!")
                     .font(.caption)
-                    .foregroundColor(.orange)
+                    .foregroundColor(.blue)
                     .padding(.top, 4)
             }
             
@@ -213,7 +213,7 @@ struct StorageChoiceCard: View {
                     Spacer()
                 }
                 
-                Text("Credits saved to your Apple account. Keep your credits even if you lose, sell, or replace your device. Sync across all your devices.")
+                Text("Separate cloud account with credits that sync across all your devices. Your device credits will remain on this device.")
                     .font(.body)
                     .foregroundColor(.secondary)
                 
