@@ -33,8 +33,20 @@ final class AnonymousCreditsManager: ObservableObject {
     
     private init() {
         loadCredits()
+        print("🚀 AnonymousCreditsManager init - after loadCredits: \(remainingSeconds)s")
         checkMondayReset()
+        print("🚀 AnonymousCreditsManager init - after checkMondayReset: \(remainingSeconds)s")
         grantFirstTimeUserBonus() // Grant 1 minute to new users
+        print("🚀 AnonymousCreditsManager init - after grantFirstTimeUserBonus: \(remainingSeconds)s")
+        
+        // Final safety check: ensure user always has at least 1 minute
+        if remainingSeconds == 0 {
+            print("⚠️ User has 0 credits after initialization - granting emergency minute")
+            remainingSeconds = weeklyFreeLimit
+            weeklyFreeSeconds = weeklyFreeLimit
+            saveCredits()
+        }
+        
         listenForTransactionUpdates()
     }
     
@@ -223,15 +235,22 @@ final class AnonymousCreditsManager: ObservableObject {
         print("  - Remaining seconds: \(remainingSeconds)")
         print("  - Weekly free seconds: \(weeklyFreeSeconds)")
         
-        // Grant 1 minute to brand new users
-        if !hasReceivedBonus && remainingSeconds == 0 && weeklyFreeSeconds == 0 {
-            remainingSeconds = weeklyFreeLimit // Grant 1 minute
-            weeklyFreeSeconds = weeklyFreeLimit
-            UserDefaults.standard.set(true, forKey: "anonymous.credits.firstTimeBonus")
-            saveCredits()
-            print("🎁 First-time user bonus: 1 minute granted")
+        // Grant 1 minute to brand new users (more lenient conditions)
+        if !hasReceivedBonus {
+            // If user has no credits at all, grant the first-time bonus
+            if remainingSeconds == 0 {
+                remainingSeconds = weeklyFreeLimit // Grant 1 minute
+                weeklyFreeSeconds = weeklyFreeLimit
+                UserDefaults.standard.set(true, forKey: "anonymous.credits.firstTimeBonus")
+                saveCredits()
+                print("🎁 First-time user bonus: 1 minute granted")
+            } else {
+                // User has credits but hasn't been marked as receiving bonus - mark them
+                UserDefaults.standard.set(true, forKey: "anonymous.credits.firstTimeBonus")
+                print("✅ First-time bonus flag set (user already has credits)")
+            }
         } else {
-            print("🚫 First-time bonus not granted - conditions not met")
+            print("🚫 First-time bonus not granted - already received")
         }
     }
     
