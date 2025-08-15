@@ -49,6 +49,23 @@ final class AuthViewModel: NSObject, ObservableObject {
         controller.presentationContextProvider = self
         controller.performRequests()
     }
+    
+    // MARK: - SignInWithAppleButton Support
+    func configureAppleSignInRequest(_ request: ASAuthorizationAppleIDRequest) {
+        let nonce = randomNonceString()
+        currentNonce = nonce
+        request.requestedScopes = [.fullName, .email]
+        request.nonce = sha256(nonce)
+    }
+    
+    func handleAppleSignInResult(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            authorizationController(controller: ASAuthorizationController(authorizationRequests: []), didCompleteWithAuthorization: authorization)
+        case .failure(let error):
+            authorizationController(controller: ASAuthorizationController(authorizationRequests: []), didCompleteWithError: error)
+        }
+    }
 
     private func sha256(_ input: String) -> String {
         let inputData = Data(input.utf8)
