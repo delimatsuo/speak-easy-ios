@@ -61,9 +61,39 @@ final class AuthViewModel: NSObject, ObservableObject {
     func handleAppleSignInResult(_ result: Result<ASAuthorization, Error>) {
         switch result {
         case .success(let authorization):
-            authorizationController(controller: ASAuthorizationController(authorizationRequests: []), didCompleteWithAuthorization: authorization)
+            // Handle success directly without creating a controller
+            if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+                processAppleSignIn(credential: appleIDCredential)
+            } else {
+                self.lastError = "Invalid Apple ID credential"
+            }
         case .failure(let error):
-            authorizationController(controller: ASAuthorizationController(authorizationRequests: []), didCompleteWithError: error)
+            self.lastError = error.localizedDescription
+        }
+    }
+    
+    private func processAppleSignIn(credential: ASAuthorizationAppleIDCredential) {
+        guard let nonce = currentNonce, 
+              let appleToken = credential.identityToken, 
+              let idTokenString = String(data: appleToken, encoding: .utf8) else {
+            self.lastError = "Apple sign-in failed"
+            return
+        }
+        
+        let firebaseCredential = OAuthProvider.credential(withProviderID: "apple.com", idToken: idTokenString, rawNonce: nonce)
+
+        Task {
+            do {
+                if let user = Auth.auth().currentUser, user.isAnonymous {
+                    _ = try await user.link(with: firebaseCredential)
+                } else {
+                    _ = try await Auth.auth().signIn(with: firebaseCredential)
+                }
+                // Starter grant after first sign-in
+                await CreditsManager.shared.grantStarterIfNeededWithDeviceThrottle()
+            } catch {
+                await MainActor.run { self.lastError = error.localizedDescription }
+            }
         }
     }
 

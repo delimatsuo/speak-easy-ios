@@ -147,9 +147,9 @@ class VoiceTranslationService:
             ]
             
             generation_config = {
-                "temperature": 0.1,  # Low temperature for accurate translations
-                "top_p": 0.8,
-                "top_k": 40,
+                "temperature": 0.0,  # Minimal temperature for fastest processing
+                "top_p": 0.9,        # Higher top_p for faster token selection
+                "top_k": 20,         # Lower top_k for faster processing
                 "candidate_count": 1
             }
             
@@ -175,7 +175,7 @@ class VoiceTranslationService:
                     safety_settings=safety_settings,
                     stream=False
                 )),
-                timeout=10.0  # Reduced from 15s to 10s for faster user experience
+                timeout=8.0  # Balanced timeout for reliable translations
             )
             
             # Extract translated text

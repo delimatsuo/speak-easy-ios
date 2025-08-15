@@ -148,6 +148,12 @@ class AudioManager: NSObject, ObservableObject {
         audioRecorder?.stop()
         isRecording = false
         
+        // Clean up audio recorder
+        audioRecorder?.delegate = nil
+        audioRecorder = nil
+        
+        print("🛑 Recording stopped, session cleaned up")
+        
         // Return the recording URL
         completion(recordingURL)
     }
@@ -242,10 +248,15 @@ class AudioManager: NSObject, ObservableObject {
             throw TranscriptionError.recognizerNotAvailable
         }
         
-        // Configure audio session
+        // Use consistent audio session configuration (same as recording)
         let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+        try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
+        
+        // Set preferred sample rate to match what the hardware will provide
+        try audioSession.setPreferredSampleRate(48000.0)
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        
+        print("🎵 Audio session configured - Sample rate: \(audioSession.sampleRate)Hz")
         
         // Create recognition request
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
@@ -256,9 +267,16 @@ class AudioManager: NSObject, ObservableObject {
         recognitionRequest.shouldReportPartialResults = true
         recognitionRequest.requiresOnDeviceRecognition = false
         
-        // Configure audio engine
+        // Configure audio engine with hardware's exact format
         let inputNode = audioEngine.inputNode
+        
+        // Remove any existing tap first (removeTap doesn't throw)
+        inputNode.removeTap(onBus: 0)
+        print("🔧 Existing audio tap removed")
+        
+        // Use the hardware's exact native format to avoid any conversion
         let recordingFormat = inputNode.outputFormat(forBus: 0)
+        print("🎵 Using hardware format: \(recordingFormat)")
         
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
             self.recognitionRequest?.append(buffer)
@@ -285,17 +303,83 @@ class AudioManager: NSObject, ObservableObject {
     }
     
     func stopLiveTranscription() {
-        audioEngine.stop()
-        audioEngine.inputNode.removeTap(onBus: 0)
+        // Clean up recognition components first
         recognitionRequest?.endAudio()
         recognitionTask?.cancel()
+        
+        // Stop audio engine with proper cleanup
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        
+        // Remove tap and reset input node (safely)
+        let inputNode = audioEngine.inputNode
+        inputNode.removeTap(onBus: 0)
+        print("🔧 Audio engine tap removed successfully")
+        
+        // Reset audio engine completely for next use
+        audioEngine.reset()
+        
         resetTranscription()
+        
+        // Reset audio session for next recording
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setActive(false, options: .notifyOthersOnDeactivation)
+            // Brief delay to ensure session state change
+            Thread.sleep(forTimeInterval: 0.1)
+            // Reactivate with recording configuration
+            try session.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
+            try session.setPreferredSampleRate(48000.0)  // Maintain consistent sample rate
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+            print("✅ Audio session reset for next recording - Sample rate: \(session.sampleRate)Hz")
+        } catch {
+            print("⚠️ Failed to reset audio session: \(error)")
+        }
     }
     
     private func resetTranscription() {
         recognitionTask?.cancel()
         recognitionTask = nil
         recognitionRequest = nil
+        
+        // Clear transcribed text for fresh start
+        DispatchQueue.main.async {
+            self.transcribedText = ""
+        }
+    }
+    
+    // MARK: - Lifecycle Management
+    
+    func forceCleanupAllSessions() {
+        print("🧹 Force cleanup all audio sessions (auth change)")
+        
+        // Stop any active recording
+        if isRecording {
+            audioRecorder?.stop()
+            audioRecorder?.delegate = nil
+            audioRecorder = nil
+            isRecording = false
+        }
+        
+        // Stop any active playback
+        if isPlaying {
+            audioPlayer?.stop()
+            audioPlayer = nil
+            isPlaying = false
+        }
+        
+        // Stop live transcription
+        stopLiveTranscription()
+        
+        // Reset audio session
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setActive(false, options: .notifyOthersOnDeactivation)
+            print("✅ Audio session deactivated for auth change")
+        } catch {
+            print("⚠️ Failed to deactivate audio session: \(error)")
+        }
     }
     
     // MARK: - Playback

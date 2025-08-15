@@ -20,7 +20,7 @@ struct CreditsBalanceView: View {
                 .foregroundColor(.speakEasyTextPrimary)
             progressBar
             Spacer()
-            if credits.remainingSeconds <= 60 {
+            if credits.remainingSeconds <= 30 {
                 Button(action: onBuy) { Text("Top up").font(.subheadline.weight(.semibold)) }
                     .buttonStyle(.borderedProminent)
             }

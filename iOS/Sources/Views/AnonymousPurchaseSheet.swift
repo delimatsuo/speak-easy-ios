@@ -11,7 +11,7 @@ import AuthenticationServices
 
 struct AnonymousPurchaseSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var storeManager = StoreManager()
+    @StateObject private var storeManager = PurchaseViewModel()
     @ObservedObject private var anonymousCredits = AnonymousCreditsManager.shared
     @ObservedObject private var auth = AuthViewModel.shared
     @State private var showAppleSignIn = false
@@ -41,10 +41,10 @@ struct AnonymousPurchaseSheet: View {
                             ForEach(storeManager.products, id: \.id) { product in
                                 PurchaseOptionCard(
                                     product: product,
-                                    isLoading: anonymousCredits.isPurchasing,
+                                    isLoading: storeManager.isPurchasing,
                                     action: { 
                                         Task { 
-                                            await anonymousCredits.purchaseCredits(productId: product.id) 
+                                            await storeManager.purchase(product: product)
                                         }
                                     }
                                 )
@@ -87,9 +87,14 @@ struct AnonymousPurchaseSheet: View {
             .sheet(isPresented: $showAppleSignIn) {
                 AppleSignInSheet(
                     onSignInComplete: {
-                        // After sign-in, migrate credits and close
-                        migrateCreditsToAccount()
-                        dismiss()
+                        // After sign-in, user should be taken to the regular purchase sheet
+                        // The AnonymousPurchaseSheet should close and regular PurchaseSheet should open
+                        dismiss() // Close anonymous purchase sheet
+                        
+                        // Post notification to show regular purchase sheet after migration
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            NotificationCenter.default.post(name: .init("ShowPurchaseSheet"), object: nil)
+                        }
                     }
                 )
             }
@@ -101,13 +106,13 @@ struct AnonymousPurchaseSheet: View {
             .alert(
                 "Purchase Error",
                 isPresented: Binding(
-                    get: { anonymousCredits.lastError != nil },
-                    set: { newValue in if !newValue { anonymousCredits.lastError = nil } }
+                    get: { storeManager.lastError != nil },
+                    set: { newValue in if !newValue { storeManager.lastError = nil } }
                 )
             ) {
-                Button("OK") { anonymousCredits.lastError = nil }
+                Button("OK") { storeManager.lastError = nil }
             } message: {
-                Text(anonymousCredits.lastError ?? "")
+                Text(storeManager.lastError ?? "")
             }
         }
     }
@@ -255,8 +260,14 @@ struct AppleSignInSheet: View {
                         },
                         onCompletion: { result in
                             auth.handleAppleSignInResult(result)
-                            if auth.isSignedIn {
-                                onSignInComplete()
+                            
+                            // Wait a moment for auth state to update, then handle success
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                if auth.isSignedIn {
+                                    // Dismiss the sign-in sheet and trigger completion
+                                    dismiss()
+                                    onSignInComplete()
+                                }
                             }
                         }
                     )

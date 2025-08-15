@@ -32,8 +32,9 @@ final class AnonymousCreditsManager: ObservableObject {
     private var updatesTask: Task<Void, Never>?
     
     private init() {
-        checkMondayReset()
         loadCredits()
+        checkMondayReset()
+        grantFirstTimeUserBonus() // Grant 1 minute to new users
         listenForTransactionUpdates()
     }
     
@@ -206,6 +207,20 @@ final class AnonymousCreditsManager: ObservableObject {
         saveCredits()
     }
     
+    // MARK: - First Time User Bonus
+    private func grantFirstTimeUserBonus() {
+        let hasReceivedBonus = UserDefaults.standard.bool(forKey: "anonymous.credits.firstTimeBonus")
+        
+        // Grant 1 minute to brand new users
+        if !hasReceivedBonus && remainingSeconds == 0 && weeklyFreeSeconds == 0 {
+            remainingSeconds = weeklyFreeLimit // Grant 1 minute
+            weeklyFreeSeconds = weeklyFreeLimit
+            UserDefaults.standard.set(true, forKey: "anonymous.credits.firstTimeBonus")
+            saveCredits()
+            print("🎁 First-time user bonus: 1 minute granted")
+        }
+    }
+    
     // MARK: - Debug Info
     var debugInfo: String {
         let calendar = Calendar.current
@@ -226,22 +241,5 @@ final class AnonymousCreditsManager: ObservableObject {
     }
 }
 
-// MARK: - Credit Products (shared with CreditsManager)
-enum CreditProduct: String, CaseIterable {
-    case seconds300 = "com.mervyntalks.credits.300s" // 5 minutes
-    case seconds600 = "com.mervyntalks.credits.600s" // 10 minutes
-    
-    var grantSeconds: Int {
-        switch self {
-        case .seconds300: return 300
-        case .seconds600: return 600
-        }
-    }
-    
-    var displayName: String {
-        switch self {
-        case .seconds300: return "5 minutes"
-        case .seconds600: return "10 minutes"
-        }
-    }
-}
+// MARK: - Credit Products
+// Note: CreditProduct enum is defined in CreditsManager.swift and shared across the app

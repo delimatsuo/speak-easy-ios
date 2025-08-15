@@ -60,7 +60,15 @@ struct PurchaseSheet: View {
                     Button("Close") { dismiss() }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Sync") { Task { await CreditsManager.shared.syncWithCloud() } }
+                    // Sync status indicator
+                    if CreditsManager.shared.isSyncing {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .opacity(0.7)
+                    }
                 }
             }
             .onAppear { Task { await vm.loadProducts() } }

@@ -13,42 +13,85 @@ import FirebaseFirestore
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var signOutError: String?
+    @State private var showSignOutConfirmation = false
+    
+    private var isSignedIn: Bool {
+        guard let user = Auth.auth().currentUser else { return false }
+        return !user.isAnonymous
+    }
+    
+    private var authStatusInfo: (title: String, subtitle: String, systemImage: String, color: Color) {
+        if isSignedIn {
+            return ("Signed In", displayName, "checkmark.circle.fill", .green)
+        } else {
+            return ("Anonymous Mode", "Credits saved locally only", "questionmark.circle.fill", .orange)
+        }
+    }
     
     var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Account")) {
-                    HStack {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 26))
-                            .foregroundColor(.speakEasyPrimary)
-                        VStack(alignment: .leading) {
-                            Text(displayName)
+                // MARK: - Account Status Section (New)
+                Section {
+                    HStack(spacing: 12) {
+                        Image(systemName: authStatusInfo.systemImage)
+                            .font(.system(size: 24))
+                            .foregroundColor(authStatusInfo.color)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(authStatusInfo.title)
                                 .font(.headline)
                                 .foregroundColor(.primary)
-                            if let email = Auth.auth().currentUser?.email {
+                            Text(authStatusInfo.subtitle)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            
+                            if isSignedIn, let email = Auth.auth().currentUser?.email {
                                 Text(email)
-                                    .font(.subheadline)
+                                    .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+                        }
+                        
+                        Spacer()
+                        
+                        if isSignedIn {
+                            Image(systemName: "icloud.fill")
+                                .font(.system(size: 16))
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                
+                // MARK: - Error Display
+                if let err = signOutError {
+                    Section {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.red)
+                            Text(err)
+                                .font(.footnote)
+                                .foregroundColor(.red)
                         }
                     }
                 }
                 
-                Section {
-                    Button(role: .destructive) {
-                        signOut()
+                // MARK: - Credits & Purchase Section
+                Section(header: Text("Credits")) {
+                    Button {
+                        // First dismiss the profile sheet
+                        dismiss()
+                        // Then post notification to show purchase sheet after a brief delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            NotificationCenter.default.post(name: .init("ShowPurchaseSheet"), object: nil)
+                        }
                     } label: {
-                        Text("Sign out")
+                        Label("Buy Minutes", systemImage: "cart")
                     }
                 }
                 
-                if let err = signOutError {
-                    Section {
-                        Text(err).foregroundColor(.red).font(.footnote)
-                    }
-                }
-                
+                // MARK: - Legal Section
                 Section(header: Text("Legal")) {
                     NavigationLink(destination: LegalDocumentView(resourceName: "TERMS_OF_USE", title: "Terms of Use")) {
                         Label("Terms of Use", systemImage: "doc.text")
@@ -57,32 +100,45 @@ struct ProfileView: View {
                         Label("Privacy Policy", systemImage: "lock.doc")
                     }
                 }
-
-                Section(header: Text("Minutes")) {
-                    Button {
-                        // Notify app to present the purchase sheet
-                        NotificationCenter.default.post(name: .init("ShowPurchaseSheet"), object: nil)
-                        dismiss()
-                    } label: {
-                        Label("Buy minutes", systemImage: "cart")
-                    }
-                }
-                Section(header: Text("Data")) {
-                    Button(role: .destructive) {
-                        Task { await deleteMyData() }
-                    } label: {
-                        Label("Delete my data (30 days)", systemImage: "trash")
+                
+                // MARK: - Account Actions Section (Bottom)
+                if isSignedIn {
+                    Section(header: Text("Account Actions")) {
+                        Button(role: .destructive) {
+                            Task { await deleteMyData() }
+                        } label: {
+                            Label("Delete My Data", systemImage: "trash")
+                        }
+                        
+                        Button(role: .destructive) {
+                            showSignOutConfirmation = true
+                        } label: {
+                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
                     }
                 }
                 
-                Section(footer: Text("We do not retain your conversations. Only purchase and session metadata (no content) are stored.")) { EmptyView() }
+                // MARK: - Privacy Notice
+                Section(footer: Text("We do not retain your conversations. Only purchase and session metadata (no content) are stored.")) { 
+                    EmptyView() 
+                }
             }
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
-            // Ensure high-contrast nav bar for this sheet regardless of global transparent nav settings
-            // Simpler nav bar for iOS 15 compatibility (avoid toolbarBackground API)
-            .navigationBarItems(leading: Button("Close") { dismiss() })
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Close") { dismiss() }
+                }
+            }
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .confirmationDialog("Sign Out", isPresented: $showSignOutConfirmation) {
+                Button("Sign Out", role: .destructive) {
+                    signOut()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Are you sure you want to sign out? Your credits will remain in your account.")
+            }
         }
     }
     
@@ -92,10 +148,18 @@ struct ProfileView: View {
     }
     
     private func signOut() {
+        signOutError = nil // Clear any previous errors
+        
         do {
             try Auth.auth().signOut()
-            dismiss()
+            print("✅ Successfully signed out")
+            
+            // Dismiss the profile sheet
+            DispatchQueue.main.async {
+                self.dismiss()
+            }
         } catch {
+            print("❌ Sign out failed: \(error.localizedDescription)")
             signOutError = error.localizedDescription
         }
     }
