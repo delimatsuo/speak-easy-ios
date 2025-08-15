@@ -210,14 +210,88 @@ class VoiceTranslationService:
             raise HTTPException(status_code=500, detail="Translation failed")
     
     async def text_to_speech(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
-        """Convert text to speech using Google Cloud TTS or gTTS"""
+        """Convert text to speech using Gemini TTS primary, Google Cloud TTS fallback"""
+        # Try Gemini TTS first (primary method)
+        try:
+            return await self._gemini_tts(text, language, voice_gender, speaking_rate)
+        except Exception as e:
+            logger.warning(f"Gemini TTS failed, falling back to Google Cloud TTS: {e}")
+            return await self._google_cloud_tts(text, language, voice_gender, speaking_rate)
+    
+    async def _gemini_tts(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
+        """Primary TTS using Gemini 2.5 Flash with enhanced voice control"""
+        try:
+            # Map voice gender to style descriptions
+            voice_style_map = {
+                "neutral": "professional and clear",
+                "male": "confident and warm male voice", 
+                "female": "friendly and articulate female voice"
+            }
+            voice_style = voice_style_map.get(voice_gender, "professional and clear")
+            
+            # Map language codes to full language names for better Gemini understanding
+            language_name_map = {
+                "en": "English", "es": "Spanish", "fr": "French", "de": "German",
+                "it": "Italian", "pt": "Portuguese", "ru": "Russian", "ja": "Japanese",
+                "ko": "Korean", "zh": "Chinese", "ar": "Arabic", "hi": "Hindi"
+            }
+            language_name = language_name_map.get(language, language)
+            
+            # Create enhanced prompt for Gemini TTS
+            prompt = f"""Convert this text to natural speech in {language_name} with a {voice_style} tone.
+            
+            Text to convert: {text}
+            
+            Please generate clear, natural-sounding speech with appropriate pacing and intonation."""
+            
+            # Configure generation for audio output
+            generation_config = {
+                "temperature": 0.1,  # Low temperature for consistent voice
+                "top_p": 0.8,
+                "candidate_count": 1
+            }
+            
+            # Add timeout for Gemini TTS
+            import asyncio
+            loop = asyncio.get_event_loop()
+            response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: self.model.generate_content(
+                    prompt,
+                    generation_config=generation_config
+                )),
+                timeout=6.0  # Optimized timeout for TTS
+            )
+            
+            # Check if response contains audio content
+            if hasattr(response, 'audio_content') and response.audio_content:
+                logger.info(f"✅ Gemini TTS successful for {language}")
+                return response.audio_content
+            elif hasattr(response, 'parts') and response.parts:
+                # Check if any part contains audio data
+                for part in response.parts:
+                    if hasattr(part, 'inline_data') and part.inline_data.mime_type.startswith('audio/'):
+                        logger.info(f"✅ Gemini TTS successful for {language} (inline data)")
+                        return part.inline_data.data
+            
+            # If no audio content found, raise exception to trigger fallback
+            raise Exception("No audio content in Gemini response")
+            
+        except asyncio.TimeoutError:
+            logger.warning(f"Gemini TTS timed out for {language}")
+            raise Exception("Gemini TTS timeout")
+        except Exception as e:
+            logger.warning(f"Gemini TTS failed for {language}: {e}")
+            raise e
+    
+    async def _google_cloud_tts(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
+        """Fallback TTS using Google Cloud TTS"""
         try:
             # Check if TTS client is available
             if not tts_client:
-                logger.warning("TTS client not available, falling back to gTTS")
+                logger.warning("Google Cloud TTS client not available, falling back to gTTS")
                 return self._gtts_fallback(text, language)
                 
-            # Use Google Cloud TTS for better quality
+            # Use Google Cloud TTS for reliable fallback
             synthesis_input = texttospeech.SynthesisInput(text=text)
             
             # Select voice parameters
@@ -233,7 +307,7 @@ class VoiceTranslationService:
                 pitch=0.0
             )
             
-            # Add timeout to prevent hanging - optimized for faster response
+            # Add timeout to prevent hanging
             import asyncio
             loop = asyncio.get_event_loop()
             response = await asyncio.wait_for(
@@ -242,9 +316,10 @@ class VoiceTranslationService:
                     voice=voice,
                     audio_config=audio_config
                 )),
-                timeout=8.0  # Reduced from 10s to 8s for faster TTS
+                timeout=8.0
             )
             
+            logger.info(f"✅ Google Cloud TTS fallback successful for {language}")
             return response.audio_content
             
         except asyncio.TimeoutError:
@@ -252,7 +327,7 @@ class VoiceTranslationService:
             return self._gtts_fallback(text, language)
         except Exception as e:
             logger.warning(f"Google Cloud TTS failed, falling back to gTTS: {e}")
-            # Fallback to gTTS
+            # Final fallback to gTTS
             return self._gtts_fallback(text, language)
     
     def _gtts_fallback(self, text: str, language: str) -> bytes:

@@ -26,6 +26,10 @@ struct ContentView: View {
     @StateObject private var translationService = TranslationService.shared
     @StateObject private var usageService = UsageTrackingService.shared
     @ObservedObject private var credits = CreditsManager.shared
+    @ObservedObject private var anonymousCredits = AnonymousCreditsManager.shared
+    
+    // Anonymous mode state
+    @State private var isAnonymousMode = true
     
     @State private var sourceLanguage = UserDefaults.standard.string(forKey: "sourceLanguage") ?? "en"
     @State private var targetLanguage = UserDefaults.standard.string(forKey: "targetLanguage") ?? "es"
@@ -47,12 +51,19 @@ struct ContentView: View {
     @State private var showProfile = false
     @State private var activeLanguagePicker: LanguagePickerType?
     
+    // Computed properties for anonymous/authenticated mode
+    private var currentCredits: Int {
+        isAnonymousMode ? anonymousCredits.remainingSeconds : credits.remainingSeconds
+    }
+    
+    private var canStartTranslation: Bool {
+        isAnonymousMode ? anonymousCredits.canStartTranslation() : credits.canStartTranslation()
+    }
+    
     var body: some View {
         ZStack {
-            if !auth.isSignedIn {
-                SignInView()
-            } else {
-                NavigationView {
+            // Always show main interface - no forced sign-in (Apple compliant)
+            NavigationView {
             ScrollView {
                 VStack(spacing: DesignConstants.Layout.contentSpacing) {
                     // Centered hero header replacing the default large nav title
@@ -62,7 +73,7 @@ struct ContentView: View {
                         onHistory: nil,
                         onProfile: { showProfile = true },
                         style: .fullBleed,
-                        remainingSeconds: credits.remainingSeconds
+                        remainingSeconds: isAnonymousMode ? anonymousCredits.remainingSeconds : credits.remainingSeconds
                     )
 
                     // Optional: remove external credits pill since it's in hero now
@@ -88,7 +99,7 @@ struct ContentView: View {
                             action: toggleRecording
                         )
                         .padding(.vertical, 20)
-                        .disabled(!isRecording && !isProcessing && !isPlaying && credits.remainingSeconds == 0)
+                        .disabled(!isRecording && !isProcessing && !isPlaying && currentCredits == 0)
                         
                         // Status Indicator
                         if isRecording || isProcessing || isPlaying {
@@ -139,7 +150,11 @@ struct ContentView: View {
             .navigationBarHidden(true)
             // History removed to comply with no-conversation-retention policy
             .sheet(isPresented: $showPurchaseSheet) {
-                PurchaseSheet()
+                if isAnonymousMode {
+                    AnonymousPurchaseSheet()
+                } else {
+                    PurchaseSheet()
+                }
             }
             .sheet(item: $activeLanguagePicker) { kind in
                 LanguagePickerSheet(
@@ -192,6 +207,9 @@ struct ContentView: View {
             // Sync initial language preferences with Watch
             saveLanguagePreferences()
             
+            // Check if user is already signed in
+            updateModeBasedOnAuth()
+            
             NotificationCenter.default.addObserver(forName: .init("ShowPurchaseSheet"), object: nil, queue: .main) { _ in
                 showPurchaseSheet = true
             }
@@ -199,6 +217,15 @@ struct ContentView: View {
             // Clear conversation text when app goes to background for privacy
             NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { _ in
                 clearConversationText()
+            }
+        }
+        .onChange(of: auth.isSignedIn) { isSignedIn in
+            if isSignedIn && isAnonymousMode {
+                // User just signed in - migrate from anonymous to authenticated
+                migrateFromAnonymousMode()
+            } else if !isSignedIn && !isAnonymousMode {
+                // User signed out - switch to anonymous mode
+                isAnonymousMode = true
             }
         }
         .onDisappear {
@@ -216,7 +243,7 @@ struct ContentView: View {
         if isRecording {
             stopRecording()
         } else {
-            guard credits.canStartTranslation() else {
+            guard canStartTranslation else {
                 // No credits: prompt purchase
                 showPurchaseSheet = true
                 return
@@ -527,12 +554,16 @@ struct ContentView: View {
     
     private func startRecordingTimer() {
         recordingTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            // Deduct credits per elapsed second
-            CreditsManager.shared.deduct(seconds: 1)
+            // Deduct credits per elapsed second from appropriate manager
+            if isAnonymousMode {
+                anonymousCredits.deduct(seconds: 1)
+            } else {
+                credits.deduct(seconds: 1)
+            }
             recordingDuration += 1
             
             // Stop if out of credits
-            if CreditsManager.shared.remainingSeconds <= 0 {
+            if currentCredits <= 0 {
                 stopRecording()
                 showPurchaseSheet = true
                 return
@@ -548,6 +579,35 @@ struct ContentView: View {
     private func stopRecordingTimer() {
         recordingTimer?.invalidate()
         recordingTimer = nil
+    }
+    
+    // MARK: - Anonymous/Authenticated Mode Management
+    
+    private func updateModeBasedOnAuth() {
+        isAnonymousMode = !auth.isSignedIn
+    }
+    
+    private func migrateFromAnonymousMode() {
+        // Migrate credits from anonymous to authenticated storage
+        let creditsToMigrate = anonymousCredits.migrateToAccount()
+        
+        if creditsToMigrate > 0 {
+            // Add credits to authenticated account
+            credits.add(seconds: creditsToMigrate)
+            
+            // Clear anonymous credits after successful migration
+            anonymousCredits.clearAfterMigration()
+            
+            print("✅ Migrated \(creditsToMigrate) seconds from anonymous to authenticated account")
+        }
+        
+        // Switch to authenticated mode
+        isAnonymousMode = false
+        
+        // Grant starter credits if needed (for new authenticated users)
+        Task {
+            await credits.grantStarterIfNeededWithDeviceThrottle()
+        }
     }
 }
 
