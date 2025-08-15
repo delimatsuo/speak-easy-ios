@@ -102,6 +102,13 @@ final class CreditsManager: ObservableObject {
         remainingSeconds &+= seconds
         Task { await saveToStorageAndCloud() }
     }
+    
+    func setCredits(to seconds: Int) {
+        guard seconds >= 0 else { return }
+        remainingSeconds = seconds
+        saveToStorage() // Save locally immediately
+        // Note: Cloud sync will be called separately to ensure proper sequencing
+    }
 
     func deduct(seconds: Int) {
         guard seconds > 0 else { return }

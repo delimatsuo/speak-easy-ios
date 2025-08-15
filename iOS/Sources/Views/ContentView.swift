@@ -244,8 +244,8 @@ struct ContentView: View {
             // User just signed in - migrate from anonymous to authenticated
             migrateFromAnonymousMode()
         } else if !isSignedIn && !isAnonymousMode {
-            // User signed out - switch to anonymous mode
-            isAnonymousMode = true
+            // User signed out - migrate credits back to device and switch to anonymous mode
+            migrateToAnonymousMode()
         }
         
         // Clear any UI state that might be stale
@@ -501,16 +501,33 @@ struct ContentView: View {
     }
     
     private func migrateFromAnonymousMode() {
-        let creditsToMigrate = anonymousCredits.migrateToAccount()
-        if creditsToMigrate > 0 {
-            credits.add(seconds: creditsToMigrate)
+        let deviceCredits = anonymousCredits.migrateToAccount()
+        
+        if deviceCredits > 0 {
+            // First-time sign-in: Transfer device credits to cloud account
+            Task {
+                credits.setCredits(to: deviceCredits)
+                await credits.syncWithCloud()
+                anonymousCredits.clearAfterMigration()
+                print("✅ Transferred \(deviceCredits) seconds from device to cloud account")
+            }
+        } else {
+            // No device credits: Just use whatever is in the cloud account
             anonymousCredits.clearAfterMigration()
-            print("✅ Migrated \(creditsToMigrate) seconds from anonymous to authenticated account")
+            print("✅ Signed in - using cloud account credits")
         }
+        
         isAnonymousMode = false
         Task {
             await credits.grantStarterIfNeededWithDeviceThrottle()
         }
+    }
+    
+    private func migrateToAnonymousMode() {
+        // Simple: just switch to anonymous mode, no credit transfer
+        // Cloud credits stay in cloud, anonymous credits are device-specific
+        isAnonymousMode = true
+        print("✅ Switched to anonymous mode - using device credits only")
     }
 }
 

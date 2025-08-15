@@ -193,6 +193,11 @@ struct StorageChoiceCard: View {
                 Text("Credits stored on this device only. If you lose, sell, or replace this device, credits will be lost.")
                     .font(.body)
                     .foregroundColor(.secondary)
+                
+                Text("⚠️ Multi-device users: If you buy credits on multiple devices, only the first device you sign in on will transfer its credits to your account.")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                    .padding(.top, 4)
             }
             
             Divider()
