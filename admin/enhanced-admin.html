@@ -446,8 +446,38 @@
             <!-- Users Tab -->
             <div id="usersTab" class="tab-content active">
                 <div class="section-title">User Management</div>
+                
+                <!-- Quick Credit Actions Section -->
+                <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #0ea5e9;">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary);">⚡ Quick Credit Management</h3>
+                    <div style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
+                        <div class="form-group" style="margin: 0; min-width: 200px;">
+                            <label class="form-label">User Email or UID</label>
+                            <input type="text" id="quickUserInput" class="form-input" placeholder="user@example.com or UID">
+                        </div>
+                        <div class="form-group" style="margin: 0; width: 120px;">
+                            <label class="form-label">Minutes</label>
+                            <input type="number" id="quickCreditsInput" class="form-input" placeholder="5" min="0" step="0.5">
+                        </div>
+                        <div class="form-group" style="margin: 0; width: 100px;">
+                            <label class="form-label">Action</label>
+                            <select id="quickActionSelect" class="form-input">
+                                <option value="add">Add</option>
+                                <option value="set">Set to</option>
+                                <option value="subtract">Subtract</option>
+                            </select>
+                        </div>
+                        <button id="quickCreditBtn" class="btn btn-primary" style="height: fit-content;">
+                            💰 Update Credits
+                        </button>
+                    </div>
+                    <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--gray-600);">
+                        💡 Quick way to add minutes to user accounts. Enter minutes (e.g., 5.5 for 5 minutes 30 seconds)
+                    </div>
+                </div>
+
                 <div class="toolbar">
-                    <input type="text" id="userSearch" class="search-input" placeholder="Search by email or UID...">
+                    <input type="text" id="userSearch" class="search-input" placeholder="Filter by email or UID... (shows all users by default)">
                     <button id="searchBtn" class="btn btn-secondary">🔍 Search</button>
                     <select id="userFilter" class="filter-select">
                         <option value="">All Users</option>
@@ -637,8 +667,11 @@
                     <input type="email" id="modalEmail" class="form-input" readonly>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Credits (seconds)</label>
-                    <input type="number" id="modalCredits" class="form-input" min="0">
+                    <label class="form-label">Credits (minutes)</label>
+                    <input type="number" id="modalCredits" class="form-input" min="0" step="0.1" placeholder="5.5">
+                    <small style="color: var(--gray-500); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                        Enter minutes (e.g., 5.5 for 5 minutes 30 seconds)
+                    </small>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Action</label>
@@ -698,6 +731,7 @@
 
                 // User management
                 document.getElementById('searchBtn').onclick = () => this.searchUsers();
+                document.getElementById('userSearch').oninput = () => this.filterUsersRealtime();
                 document.getElementById('userSearch').onkeyup = (e) => {
                     if (e.key === 'Enter') this.searchUsers();
                 };
@@ -715,6 +749,15 @@
 
                 // System config
                 document.getElementById('savePricesBtn').onclick = () => this.savePrices();
+
+                // Quick credit management
+                document.getElementById('quickCreditBtn').onclick = () => this.quickUpdateCredits();
+                document.getElementById('quickUserInput').onkeyup = (e) => {
+                    if (e.key === 'Enter') this.quickUpdateCredits();
+                };
+                document.getElementById('quickCreditsInput').onkeyup = (e) => {
+                    if (e.key === 'Enter') this.quickUpdateCredits();
+                };
 
                 // Select all checkbox
                 document.getElementById('selectAll').onchange = (e) => this.toggleSelectAll(e.target.checked);
@@ -818,13 +861,15 @@
 
             async loadDashboardData() {
                 try {
+                    console.log('🔄 Loading dashboard data...');
                     await Promise.all([
                         this.loadMetrics(),
                         this.loadUsers(),
                         this.loadPrices()
                     ]);
+                    console.log('✅ Dashboard data loaded successfully');
                 } catch (error) {
-                    console.error('Failed to load dashboard data:', error);
+                    console.error('❌ Failed to load dashboard data:', error);
                 }
             }
 
@@ -879,8 +924,14 @@
             }
 
             async loadUsers(direction = null) {
+                console.log('🔄 Loading users...', direction ? `(${direction})` : '(initial)');
                 const tableBody = document.getElementById('usersTableBody');
                 tableBody.innerHTML = '<tr><td colspan="8" class="loading">Loading users...</td></tr>';
+
+                // Clear search input when loading fresh data (unless it's pagination)
+                if (!direction) {
+                    document.getElementById('userSearch').value = '';
+                }
 
                 try {
                     const usersCol = collection(db, 'users');
@@ -942,11 +993,12 @@
                         };
                     }));
 
+                    console.log(`✅ Loaded ${users.length} users`);
                     this.renderUsersTable(users);
                     this.updatePagination();
 
                 } catch (error) {
-                    console.error('Failed to load users:', error);
+                    console.error('❌ Failed to load users:', error);
                     tableBody.innerHTML = '<tr><td colspan="8" class="error">Failed to load users</td></tr>';
                 }
             }
@@ -972,9 +1024,14 @@
                         <td>${user.lastActive ? user.lastActive.toLocaleDateString() : '-'}</td>
                         <td class="num">$${user.revenue.toFixed(2)}</td>
                         <td>
-                            <button class="btn btn-sm btn-secondary" onclick="dashboard.editUser('${user.uid}', '${user.email}', ${user.credits})">
-                                ✏️ Edit
-                            </button>
+                            <div style="display: flex; gap: 0.25rem;">
+                                <button class="btn btn-sm btn-primary" onclick="dashboard.quickAddCredits('${user.uid}', '${user.email}', ${user.credits})" title="Quick Add Credits">
+                                    💰
+                                </button>
+                                <button class="btn btn-sm btn-secondary" onclick="dashboard.editUser('${user.uid}', '${user.email}', ${user.credits})" title="Edit User">
+                                    ✏️
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `).join('');
@@ -989,7 +1046,8 @@
             async searchUsers() {
                 const searchTerm = document.getElementById('userSearch').value.trim();
                 if (!searchTerm) {
-                    await this.loadUsers();
+                    // Show all current rows if search is cleared
+                    this.filterUsersRealtime();
                     return;
                 }
 
@@ -1063,9 +1121,87 @@
                 this.loadUsers();
             }
 
+            filterUsersRealtime() {
+                const searchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
+                const tableBody = document.getElementById('usersTableBody');
+                const rows = tableBody.querySelectorAll('tr');
+                
+                rows.forEach(row => {
+                    if (row.querySelector('.loading') || row.querySelector('.error')) {
+                        // Skip loading/error rows
+                        return;
+                    }
+                    
+                    if (!searchTerm) {
+                        // Show all rows if no search term
+                        row.style.display = '';
+                        return;
+                    }
+                    
+                    // Get email and UID from the row
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 2) {
+                        const email = cells[0].textContent.toLowerCase();
+                        const uid = cells[7].textContent.toLowerCase(); // UID is in the last visible column
+                        
+                        // Show row if email or UID contains search term
+                        if (email.includes(searchTerm) || uid.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+            }
+
+            quickAddCredits(uid, email, currentCredits) {
+                const minutes = prompt(`💰 Add minutes to ${email || uid}\n\nCurrent balance: ${this.formatTime(currentCredits)}\n\nEnter minutes to add (e.g., 5.5 for 5 minutes 30 seconds):`);
+                
+                if (minutes !== null && minutes.trim() !== '') {
+                    const minutesFloat = parseFloat(minutes);
+                    if (isNaN(minutesFloat) || minutesFloat <= 0) {
+                        alert('Please enter a valid positive number of minutes');
+                        return;
+                    }
+                    
+                    const seconds = Math.round(minutesFloat * 60);
+                    this.updateUserCreditsDirectly(uid, email, currentCredits, 'add', seconds);
+                }
+            }
+
+            async updateUserCreditsDirectly(uid, email, currentCredits, action, seconds) {
+                try {
+                    let finalCredits;
+                    switch (action) {
+                        case 'set':
+                            finalCredits = seconds;
+                            break;
+                        case 'add':
+                            finalCredits = currentCredits + seconds;
+                            break;
+                        case 'subtract':
+                            finalCredits = Math.max(0, currentCredits - seconds);
+                            break;
+                    }
+
+                    const creditsRef = doc(db, 'credits', uid);
+                    await setDoc(creditsRef, { 
+                        seconds: finalCredits, 
+                        updatedAt: new Date() 
+                    }, { merge: true });
+
+                    await this.loadUsers(); // Reload users table
+                    
+                    alert(`✅ Credits updated successfully!\n\nUser: ${email || uid}\nPrevious: ${this.formatTime(currentCredits)}\nNew Balance: ${this.formatTime(finalCredits)}`);
+                } catch (error) {
+                    console.error('Failed to update credits:', error);
+                    alert('❌ Failed to update credits: ' + error.message);
+                }
+            }
+
             editUser(uid, email, currentCredits) {
                 document.getElementById('modalEmail').value = email;
-                document.getElementById('modalCredits').value = currentCredits;
+                document.getElementById('modalCredits').value = Math.round(currentCredits / 60 * 10) / 10; // Convert to minutes with 1 decimal
                 document.getElementById('modalAction').value = 'set';
                 document.getElementById('userModal').classList.remove('hidden');
                 
@@ -1078,24 +1214,135 @@
                 this.editingUser = null;
             }
 
+            async quickUpdateCredits() {
+                const userInput = document.getElementById('quickUserInput').value.trim();
+                const minutesInput = parseFloat(document.getElementById('quickCreditsInput').value);
+                const action = document.getElementById('quickActionSelect').value;
+
+                if (!userInput) {
+                    alert('Please enter a user email or UID');
+                    return;
+                }
+
+                if (isNaN(minutesInput) || minutesInput < 0) {
+                    alert('Please enter a valid number of minutes');
+                    return;
+                }
+
+                const seconds = Math.round(minutesInput * 60); // Convert minutes to seconds
+
+                try {
+                    // Show loading state
+                    const btn = document.getElementById('quickCreditBtn');
+                    const originalText = btn.textContent;
+                    btn.textContent = '⏳ Processing...';
+                    btn.disabled = true;
+
+                    // First, search for the user
+                    let targetUser = null;
+                    let searchResults = [];
+
+                    // Try email search first
+                    if (userInput.includes('@')) {
+                        const usersQuery = query(collection(db, 'users'), where('email', '==', userInput), limit(1));
+                        const snapshot = await getDocs(usersQuery);
+                        if (!snapshot.empty) {
+                            targetUser = snapshot.docs[0];
+                        }
+                    } else {
+                        // Try UID lookup
+                        const userDoc = await getDoc(doc(db, 'users', userInput));
+                        if (userDoc.exists()) {
+                            targetUser = userDoc;
+                        }
+                    }
+
+                    if (!targetUser) {
+                        alert(`User not found: ${userInput}`);
+                        return;
+                    }
+
+                    const uid = targetUser.id;
+                    const userData = targetUser.data();
+
+                    // Get current credits
+                    let currentCredits = 0;
+                    try {
+                        const creditsDoc = await getDoc(doc(db, 'credits', uid));
+                        if (creditsDoc.exists()) {
+                            currentCredits = creditsDoc.data().seconds || 0;
+                        }
+                    } catch (e) {}
+
+                    // Calculate final credits
+                    let finalCredits;
+                    switch (action) {
+                        case 'set':
+                            finalCredits = seconds;
+                            break;
+                        case 'add':
+                            finalCredits = currentCredits + seconds;
+                            break;
+                        case 'subtract':
+                            finalCredits = Math.max(0, currentCredits - seconds);
+                            break;
+                    }
+
+                    // Update credits in Firebase
+                    const creditsRef = doc(db, 'credits', uid);
+                    await setDoc(creditsRef, { 
+                        seconds: finalCredits, 
+                        updatedAt: new Date() 
+                    }, { merge: true });
+
+                    // Clear form and show success
+                    document.getElementById('quickUserInput').value = '';
+                    document.getElementById('quickCreditsInput').value = '';
+                    
+                    alert(`✅ Success! 
+User: ${userData.email || uid}
+Action: ${action} ${minutesInput} minutes (${seconds} seconds)
+Previous: ${this.formatTime(currentCredits)}
+New Balance: ${this.formatTime(finalCredits)}`);
+
+                    // Reload users table if visible
+                    await this.loadUsers();
+
+                } catch (error) {
+                    console.error('Failed to update credits:', error);
+                    alert('❌ Failed to update credits: ' + error.message);
+                } finally {
+                    // Reset button
+                    const btn = document.getElementById('quickCreditBtn');
+                    btn.textContent = '💰 Update Credits';
+                    btn.disabled = false;
+                }
+            }
+
             async saveUserChanges(e) {
                 e.preventDefault();
                 
                 if (!this.editingUser) return;
 
-                const newCredits = parseInt(document.getElementById('modalCredits').value);
+                const minutesInput = parseFloat(document.getElementById('modalCredits').value);
+                if (isNaN(minutesInput) || minutesInput < 0) {
+                    alert('Please enter a valid number of minutes');
+                    return;
+                }
+
+                const newCreditsSeconds = Math.round(minutesInput * 60); // Convert to seconds
                 const action = document.getElementById('modalAction').value;
                 
                 let finalCredits;
                 switch (action) {
                     case 'set':
-                        finalCredits = newCredits;
+                        finalCredits = newCreditsSeconds;
                         break;
                     case 'add':
-                        finalCredits = this.editingUser.currentCredits + newCredits;
+                        finalCredits = this.editingUser.currentCredits + newCreditsSeconds;
                         break;
                     case 'subtract':
-                        finalCredits = Math.max(0, this.editingUser.currentCredits - newCredits);
+                        finalCredits = Math.max(0, this.editingUser.currentCredits - newCreditsSeconds);
                         break;
                 }
 
@@ -1109,10 +1356,10 @@
                     this.hideUserModal();
                     await this.loadUsers(); // Reload users table
                     
-                    alert(`Credits updated successfully! New balance: ${this.formatTime(finalCredits)}`);
+                    alert(`✅ Credits updated successfully!\n\nUser: ${this.editingUser.email || this.editingUser.uid}\nAction: ${action} ${minutesInput} minutes\nPrevious: ${this.formatTime(this.editingUser.currentCredits)}\nNew Balance: ${this.formatTime(finalCredits)}`);
                 } catch (error) {
                     console.error('Failed to update credits:', error);
-                    alert('Failed to update credits: ' + error.message);
+                    alert('❌ Failed to update credits: ' + error.message);
                 }
             }
 

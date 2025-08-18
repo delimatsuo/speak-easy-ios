@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import FirebaseAuth
+import FirebaseFirestore
 import AuthenticationServices
 import CryptoKit
 
@@ -84,11 +85,16 @@ final class AuthViewModel: NSObject, ObservableObject {
 
         Task {
             do {
+                let authResult: AuthDataResult
                 if let user = Auth.auth().currentUser, user.isAnonymous {
-                    _ = try await user.link(with: firebaseCredential)
+                    authResult = try await user.link(with: firebaseCredential)
                 } else {
-                    _ = try await Auth.auth().signIn(with: firebaseCredential)
+                    authResult = try await Auth.auth().signIn(with: firebaseCredential)
                 }
+                
+                // Create user profile in Firestore for admin dashboard visibility
+                await createUserProfile(user: authResult.user, appleCredential: credential)
+                
                 // Starter grant after first sign-in
                 await CreditsManager.shared.grantStarterIfNeededWithDeviceThrottle()
             } catch {
@@ -121,6 +127,46 @@ final class AuthViewModel: NSObject, ObservableObject {
         }
         return result
     }
+    
+    // MARK: - User Profile Management
+    
+    private func createUserProfile(user: User, appleCredential: ASAuthorizationAppleIDCredential) async {
+        let db = Firestore.firestore()
+        let uid = user.uid
+        
+        do {
+            // Check if user profile already exists
+            let userRef = db.collection("users").document(uid)
+            let doc = try await userRef.getDocument()
+            
+            if doc.exists {
+                // User profile exists, just update last sign-in time
+                try await userRef.updateData([
+                    "lastSignInTime": FieldValue.serverTimestamp()
+                ])
+                print("👤 [AuthViewModel] Updated existing user profile for: \(user.email ?? uid)")
+            } else {
+                // Create new user profile
+                let userData: [String: Any] = [
+                    "uid": uid,
+                    "email": user.email ?? "",
+                    "displayName": user.displayName ?? appleCredential.fullName?.formatted() ?? "",
+                    "createdAt": FieldValue.serverTimestamp(),
+                    "lastSignInTime": FieldValue.serverTimestamp(),
+                    "provider": "apple.com",
+                    "totalMinutesUsed": 0.0,
+                    "sessionsCount": 0,
+                    "isBetaUser": false,
+                    "isActive": true
+                ]
+                
+                try await userRef.setData(userData)
+                print("👤 [AuthViewModel] Created new user profile for: \(user.email ?? uid)")
+            }
+        } catch {
+            print("❌ [AuthViewModel] Failed to create/update user profile: \(error.localizedDescription)")
+        }
+    }
 }
 
 // MARK: - ASAuthorizationControllerDelegate
@@ -135,11 +181,16 @@ extension AuthViewModel: ASAuthorizationControllerDelegate {
 
         Task {
             do {
+                let authResult: AuthDataResult
                 if let user = Auth.auth().currentUser, user.isAnonymous {
-                    _ = try await user.link(with: credential)
+                    authResult = try await user.link(with: credential)
                 } else {
-                    _ = try await Auth.auth().signIn(with: credential)
+                    authResult = try await Auth.auth().signIn(with: credential)
                 }
+                
+                // Create user profile in Firestore for admin dashboard visibility
+                await createUserProfile(user: authResult.user, appleCredential: appleIDCredential)
+                
                 // Starter grant after first sign-in
                 await CreditsManager.shared.grantStarterIfNeededWithDeviceThrottle()
             } catch {

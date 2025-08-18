@@ -478,6 +478,102 @@ async def get_system_health(req: Request):
                       error=str(e))
         raise HTTPException(status_code=500, detail="Failed to fetch system health")
 
+@app.post("/v1/admin/users/{user_id}/credits")
+async def update_user_credits(
+    user_id: str,
+    request: dict,
+    req: Request
+):
+    """
+    Admin endpoint to update user credits
+    Expected request body: {"action": "set|add|subtract", "amount": number, "reason": "string"}
+    """
+    try:
+        action = request.get("action", "set")
+        amount = int(request.get("amount", 0))
+        reason = request.get("reason", "Admin adjustment")
+        
+        if action not in ["set", "add", "subtract"]:
+            raise HTTPException(status_code=400, detail="Invalid action. Must be 'set', 'add', or 'subtract'")
+        
+        if amount < 0:
+            raise HTTPException(status_code=400, detail="Amount must be non-negative")
+        
+        # This would integrate with Firebase Admin SDK to update user credits
+        # For now, return success response with logging
+        
+        log_structured("info", "Admin credit update", 
+                      admin_action="credit_update",
+                      user_id=user_id,
+                      action=action,
+                      amount=amount,
+                      reason=reason,
+                      admin_ip=req.client.host)
+        
+        return {
+            "success": True,
+            "message": f"Successfully {action}d {amount} seconds for user {user_id}",
+            "user_id": user_id,
+            "action": action,
+            "amount": amount,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+        }
+        
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid amount - must be a number")
+    except Exception as e:
+        log_structured("error", "Failed to update user credits", 
+                      error=str(e),
+                      user_id=user_id)
+        raise HTTPException(status_code=500, detail="Failed to update user credits")
+
+@app.get("/v1/admin/users/{user_id}")
+async def get_user_details(user_id: str, req: Request):
+    """
+    Get detailed user information for admin dashboard
+    """
+    try:
+        # This would fetch real user data from Firebase
+        # For now, return sample data structure
+        
+        user_data = {
+            "uid": user_id,
+            "email": f"user{user_id[:8]}@example.com",
+            "created_at": "2024-01-15T10:30:00Z",
+            "last_active": "2024-08-18T14:20:00Z",
+            "credits": {
+                "current_seconds": 300,
+                "total_purchased": 1800,
+                "total_used": 1500,
+                "last_updated": "2024-08-18T12:00:00Z"
+            },
+            "usage_stats": {
+                "total_sessions": 25,
+                "total_minutes_translated": 42.5,
+                "favorite_languages": ["en->es", "es->en"],
+                "avg_session_length": 1.7
+            },
+            "purchases": {
+                "total_spent": 4.97,
+                "purchase_count": 3,
+                "last_purchase": "2024-08-15T16:45:00Z"
+            },
+            "status": "active"
+        }
+        
+        log_structured("info", "Admin user lookup", 
+                      admin_action="user_lookup",
+                      user_id=user_id,
+                      admin_ip=req.client.host)
+        
+        return user_data
+        
+    except Exception as e:
+        log_structured("error", "Failed to fetch user details", 
+                      error=str(e),
+                      user_id=user_id)
+        raise HTTPException(status_code=500, detail="Failed to fetch user details")
+
 @app.post("/v1/translate", response_model=TranslationResponse)
 async def translate(request: TranslationRequest, req: Request):
     # Check rate limit

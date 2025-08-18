@@ -9,12 +9,15 @@ import SwiftUI
 import FirebaseAuth
 import Firebase
 import FirebaseFirestore
+import AuthenticationServices
+import CryptoKit
 
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var signOutError: String?
     @State private var showSignOutConfirmation = false
     @State private var showDeleteAccountConfirmation = false
+    @ObservedObject private var authViewModel = AuthViewModel.shared
     
     private var isSignedIn: Bool {
         guard let user = Auth.auth().currentUser else { return false }
@@ -32,109 +35,12 @@ struct ProfileView: View {
     var body: some View {
         NavigationView {
             List {
-                // MARK: - Account Status Section (New)
-                Section {
-                    HStack(spacing: 12) {
-                        Image(systemName: authStatusInfo.systemImage)
-                            .font(.system(size: 24))
-                            .foregroundColor(authStatusInfo.color)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(authStatusInfo.title)
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            Text(authStatusInfo.subtitle)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            
-                            if isSignedIn, let email = Auth.auth().currentUser?.email {
-                                Text(email)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        
-                        Spacer()
-                        
-                        if isSignedIn {
-                            Image(systemName: "icloud.fill")
-                                .font(.system(size: 16))
-                                .foregroundColor(.blue)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-                
-                // MARK: - Error Display
-                if let err = signOutError {
-                    Section {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.red)
-                            Text(err)
-                                .font(.footnote)
-                                .foregroundColor(.red)
-                        }
-                    }
-                }
-                
-                // MARK: - Credits & Purchase Section
-                Section(header: Text("Credits")) {
-                    Button {
-                        print("🔘 ADD MINUTES button tapped - iPad compatibility fix")
-                        // First dismiss the profile sheet
-                        dismiss()
-                        // Then post notification to show purchase sheet after a brief delay
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            print("🔘 Posting ShowPurchaseSheet notification")
-                            NotificationCenter.default.post(name: .init("ShowPurchaseSheet"), object: nil)
-                        }
-                    } label: {
-                        Label("Buy Minutes", systemImage: "cart")
-                    }
-                    .frame(minHeight: 44) // Ensure minimum touch target size for iPad
-                    .contentShape(Rectangle()) // Expand touch area
-                }
-                
-                // MARK: - Legal Section
-                Section(header: Text("Legal")) {
-                    NavigationLink(destination: LegalDocumentView(resourceName: "TERMS_OF_USE", title: "Terms of Use")) {
-                        Label("Terms of Use", systemImage: "doc.text")
-                    }
-                    NavigationLink(destination: LegalDocumentView(resourceName: "PRIVACY_POLICY", title: "Privacy Policy")) {
-                        Label("Privacy Policy", systemImage: "lock.doc")
-                    }
-                }
-                
-                // MARK: - Account Actions Section (Bottom)
-                if isSignedIn {
-                    Section(header: Text("Account Management"), 
-                           footer: Text("Account deletion permanently removes all your data including purchase history and usage statistics. This action cannot be undone.")) {
-                        
-                        Button(role: .destructive) {
-                            print("🔘 DELETE MY DATA button tapped - iPad compatibility fix")
-                            showDeleteAccountConfirmation = true
-                        } label: {
-                            Label("Delete Account & Data", systemImage: "trash.fill")
-                        }
-                        .frame(minHeight: 44) // Ensure minimum touch target size for iPad
-                        .contentShape(Rectangle()) // Expand touch area
-                        
-                        Button(role: .destructive) {
-                            print("🔘 SIGN OUT button tapped")
-                            showSignOutConfirmation = true
-                        } label: {
-                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                        }
-                        .frame(minHeight: 44) // Ensure minimum touch target size for iPad
-                        .contentShape(Rectangle()) // Expand touch area
-                    }
-                }
-                
-                // MARK: - Privacy Notice
-                Section(footer: Text("We do not retain your conversations. Only purchase and session metadata (no content) are stored.")) { 
-                    EmptyView() 
-                }
+                accountStatusSection
+                errorSection
+                creditsSection
+                legalSection
+                accountActionsSection
+                privacySection
             }
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
@@ -265,6 +171,136 @@ struct ProfileView: View {
                 signOutError = "Deletion error: \(error.localizedDescription)"
             }
         }
+    }
+    
+    // MARK: - Computed Views
+    
+    private var accountStatusSection: some View {
+        Section {
+            HStack(spacing: 12) {
+                Image(systemName: authStatusInfo.systemImage)
+                    .font(.system(size: 24))
+                    .foregroundColor(authStatusInfo.color)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(authStatusInfo.title)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Text(authStatusInfo.subtitle)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    if isSignedIn, let email = Auth.auth().currentUser?.email {
+                        Text(email)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Spacer()
+                
+                if isSignedIn {
+                    Image(systemName: "icloud.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+    
+    @ViewBuilder
+    private var errorSection: some View {
+        if let err = signOutError {
+            Section {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.red)
+                    Text(err)
+                        .font(.footnote)
+                        .foregroundColor(.red)
+                }
+            }
+        }
+    }
+    
+    private var creditsSection: some View {
+        Section(header: Text("Credits")) {
+            Button {
+                print("🔘 ADD MINUTES button tapped - iPad compatibility fix")
+                dismiss()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    print("🔘 Posting ShowPurchaseSheet notification")
+                    NotificationCenter.default.post(name: .init("ShowPurchaseSheet"), object: nil)
+                }
+            } label: {
+                Label("Buy Minutes", systemImage: "cart")
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+    }
+    
+    private var legalSection: some View {
+        Section(header: Text("Legal")) {
+            NavigationLink(destination: LegalDocumentView(resourceName: "TERMS_OF_USE", title: "Terms of Use")) {
+                Label("Terms of Use", systemImage: "doc.text")
+            }
+            NavigationLink(destination: LegalDocumentView(resourceName: "PRIVACY_POLICY", title: "Privacy Policy")) {
+                Label("Privacy Policy", systemImage: "lock.doc")
+            }
+        }
+    }
+    
+    private var accountActionsSection: some View {
+        Section {
+            if isSignedIn {
+                Button(role: .destructive) {
+                    print("🔘 DELETE MY DATA button tapped - iPad compatibility fix")
+                    showDeleteAccountConfirmation = true
+                } label: {
+                    Label("Delete Account & Data", systemImage: "trash.fill")
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+                
+                Button(role: .destructive) {
+                    print("🔘 SIGN OUT button tapped")
+                    showSignOutConfirmation = true
+                } label: {
+                    Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            } else {
+                Button {
+                    print("🔘 SIGN IN button tapped from profile")
+                    signInWithApple()
+                } label: {
+                    Label("Sign In with Apple", systemImage: "applelogo")
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+        } header: {
+            Text("Account Management")
+        } footer: {
+            if isSignedIn {
+                Text("Account deletion permanently removes all your data including purchase history and usage statistics. This action cannot be undone.")
+            } else {
+                Text("Sign in to sync your credits across all your devices and keep them safe in the cloud.")
+            }
+        }
+    }
+    
+    private var privacySection: some View {
+        Section(footer: Text("We do not retain your conversations. Only purchase and session metadata (no content) are stored.")) { 
+            EmptyView() 
+        }
+    }
+    
+    private func signInWithApple() {
+        authViewModel.startSignInWithApple()
     }
 }
 
