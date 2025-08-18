@@ -19,7 +19,7 @@ struct HeroHeader: View {
     private var adaptiveHeight: CGFloat {
         #if os(iOS)
         let isIPad = UIDevice.current.userInterfaceIdiom == .pad
-        let baseHeight: CGFloat = style == .fullBleed ? (isIPad ? 160 : 180) : (isIPad ? 120 : 140)
+        let baseHeight: CGFloat = style == .fullBleed ? (isIPad ? 120 : 180) : (isIPad ? 90 : 140)
         return baseHeight
         #else
         return style == .fullBleed ? 180 : 140
@@ -44,8 +44,8 @@ struct HeroHeader: View {
                         .ignoresSafeArea(edges: .top)
 
                     headerContent
-                        .padding(.top, isIPadDevice ? 16 : 20)
-                        .padding(.bottom, isIPadDevice ? 12 : 16)
+                        .padding(.top, isIPadDevice ? 8 : 20)
+                        .padding(.bottom, isIPadDevice ? 6 : 16)
                 }
             case .card:
                 ZStack(alignment: .bottom) {
@@ -53,7 +53,7 @@ struct HeroHeader: View {
                         .fill(Color.speakEasyPrimaryGradient)
                         .applyShadow(DesignConstants.Shadows.subtle)
                     headerContent
-                        .padding(.vertical, isIPadDevice ? 12 : 14)
+                        .padding(.vertical, isIPadDevice ? 6 : 14)
                 }
                 .padding(.horizontal, 16)
             }
@@ -63,7 +63,7 @@ struct HeroHeader: View {
     }
 
     private var headerContent: some View {
-        VStack(spacing: isIPadDevice ? 6 : 8) {
+        VStack(spacing: isIPadDevice ? 3 : 8) {
             HStack(spacing: 12) {
                 Spacer()
                 if let onProfile = onProfile {
@@ -73,16 +73,16 @@ struct HeroHeader: View {
             }
             .padding(.horizontal, 20)
 
-            VStack(spacing: isIPadDevice ? 2 : 3) {
+            VStack(spacing: isIPadDevice ? 1 : 3) {
                 Text(title)
-                    .font(.system(size: isIPadDevice ? 26 : 30, weight: .bold))
+                    .font(.system(size: isIPadDevice ? 22 : 30, weight: .bold))
                     .foregroundColor(.speakEasyOnPrimary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
 
                 if let subtitle = subtitle, !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(.system(size: isIPadDevice ? 13 : 14, weight: .regular))
+                        .font(.system(size: isIPadDevice ? 11 : 14, weight: .regular))
                         .foregroundColor(.speakEasyOnPrimarySecondary)
                         .tracking(0.5)
                         .multilineTextAlignment(.center)
@@ -91,13 +91,13 @@ struct HeroHeader: View {
 
                 if let seconds = remainingSeconds {
                     Text("\(format(seconds: seconds)) remaining")
-                        .font(.system(size: isIPadDevice ? 13 : 14, weight: .semibold))
+                        .font(.system(size: isIPadDevice ? 11 : 14, weight: .semibold))
                         .foregroundColor(.speakEasyOnPrimary)
-                        .padding(.top, isIPadDevice ? 2 : 3)
+                        .padding(.top, isIPadDevice ? 1 : 3)
                     progressLine(seconds: seconds)
-                        .frame(height: isIPadDevice ? 6 : 7)
+                        .frame(height: isIPadDevice ? 4 : 7)
                         .padding(.horizontal, isIPadDevice ? 40 : 32)
-                        .padding(.top, 1)
+                        .padding(.top, isIPadDevice ? 0 : 1)
                 }
             }
             .padding(.horizontal, isIPadDevice ? 20 : 22)

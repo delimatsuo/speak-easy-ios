@@ -16,7 +16,7 @@ struct LanguageCardsSelector: View {
     let onTapTarget: () -> Void
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: UIDevice.current.userInterfaceIdiom == .pad ? 8 : 12) {
             // Source Language Card
             LanguageCard(
                 label: NSLocalizedString("speak_in", comment: "Source language label"),
@@ -73,24 +73,24 @@ struct LanguageCard: View {
             HStack(spacing: 12) {
                 // Icon
                 Image(systemName: systemImage)
-                    .font(.system(size: 18))
+                    .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 16 : 18))
                     .foregroundColor(.secondary)
-                    .frame(width: 24)
+                    .frame(width: UIDevice.current.userInterfaceIdiom == .pad ? 20 : 24)
                 
                 // Language Info
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: UIDevice.current.userInterfaceIdiom == .pad ? 1 : 2) {
                     Text(label.uppercased())
-                        .font(.caption)
+                        .font(UIDevice.current.userInterfaceIdiom == .pad ? .caption2 : .caption)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     
                     HStack(spacing: 8) {
                         if let language = currentLanguage {
                             Text(language.flag)
-                                .font(.title2)
+                                .font(UIDevice.current.userInterfaceIdiom == .pad ? .title3 : .title2)
                             
                             Text(NSLocalizedString("language_\(languageCode)", comment: "Language name"))
-                                .font(.system(size: 18, weight: .medium))
+                                .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 16 : 18, weight: .medium))
                                 .foregroundColor(.primary)
                         }
                     }
@@ -104,7 +104,7 @@ struct LanguageCard: View {
                     .foregroundColor(.secondary)
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.vertical, UIDevice.current.userInterfaceIdiom == .pad ? 10 : 14)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color(UIColor.secondarySystemBackground))

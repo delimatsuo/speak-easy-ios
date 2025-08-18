@@ -88,7 +88,7 @@ struct ContentView: View {
     private var mainContent: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: DesignConstants.Layout.contentSpacing) {
+                VStack(spacing: UIDevice.current.userInterfaceIdiom == .pad ? 16 : DesignConstants.Layout.contentSpacing) {
                     headerSection
                     languageSection
                     microphoneSection
