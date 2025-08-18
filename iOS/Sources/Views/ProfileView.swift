@@ -14,6 +14,7 @@ struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var signOutError: String?
     @State private var showSignOutConfirmation = false
+    @State private var showDeleteAccountConfirmation = false
     
     private var isSignedIn: Bool {
         guard let user = Auth.auth().currentUser else { return false }
@@ -80,15 +81,19 @@ struct ProfileView: View {
                 // MARK: - Credits & Purchase Section
                 Section(header: Text("Credits")) {
                     Button {
+                        print("🔘 ADD MINUTES button tapped - iPad compatibility fix")
                         // First dismiss the profile sheet
                         dismiss()
                         // Then post notification to show purchase sheet after a brief delay
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            print("🔘 Posting ShowPurchaseSheet notification")
                             NotificationCenter.default.post(name: .init("ShowPurchaseSheet"), object: nil)
                         }
                     } label: {
                         Label("Buy Minutes", systemImage: "cart")
                     }
+                    .frame(minHeight: 44) // Ensure minimum touch target size for iPad
+                    .contentShape(Rectangle()) // Expand touch area
                 }
                 
                 // MARK: - Legal Section
@@ -103,18 +108,26 @@ struct ProfileView: View {
                 
                 // MARK: - Account Actions Section (Bottom)
                 if isSignedIn {
-                    Section(header: Text("Account Actions")) {
-                        Button(role: .destructive) {
-                            Task { await deleteMyData() }
-                        } label: {
-                            Label("Delete My Data", systemImage: "trash")
-                        }
+                    Section(header: Text("Account Management"), 
+                           footer: Text("Account deletion permanently removes all your data including purchase history and usage statistics. This action cannot be undone.")) {
                         
                         Button(role: .destructive) {
+                            print("🔘 DELETE MY DATA button tapped - iPad compatibility fix")
+                            showDeleteAccountConfirmation = true
+                        } label: {
+                            Label("Delete Account & Data", systemImage: "trash.fill")
+                        }
+                        .frame(minHeight: 44) // Ensure minimum touch target size for iPad
+                        .contentShape(Rectangle()) // Expand touch area
+                        
+                        Button(role: .destructive) {
+                            print("🔘 SIGN OUT button tapped")
                             showSignOutConfirmation = true
                         } label: {
                             Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                         }
+                        .frame(minHeight: 44) // Ensure minimum touch target size for iPad
+                        .contentShape(Rectangle()) // Expand touch area
                     }
                 }
                 
@@ -138,6 +151,18 @@ struct ProfileView: View {
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("Are you sure you want to sign out? Your credits will remain in your account.")
+            }
+            .confirmationDialog("Delete Account", isPresented: $showDeleteAccountConfirmation) {
+                Button("Delete Account & Data", role: .destructive) {
+                    Task { 
+                        print("🔘 Starting deleteMyData task from confirmation")
+                        await deleteMyData() 
+                        print("🔘 Completed deleteMyData task from confirmation")
+                    }
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will permanently delete all your account data including purchase history and usage statistics. This action cannot be undone.")
             }
         }
     }
@@ -166,17 +191,47 @@ struct ProfileView: View {
 
     // Delete purchases and session metadata belonging to the current user
     private func deleteMyData() async {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+        print("🗑️ Starting account deletion process")
+        guard let uid = Auth.auth().currentUser?.uid else { 
+            print("❌ No authenticated user found")
+            await MainActor.run {
+                signOutError = "No authenticated user found"
+            }
+            return 
+        }
+        
         let db = Firestore.firestore()
         do {
+            print("🗑️ Deleting user data for UID: \(uid)")
+            
             // Delete purchases subcollection
+            print("🗑️ Deleting purchases...")
             let items = try await db.collection("purchases").document(uid).collection("items").getDocuments()
-            for doc in items.documents { try await doc.reference.delete() }
+            for doc in items.documents { 
+                try await doc.reference.delete() 
+                print("🗑️ Deleted purchase: \(doc.documentID)")
+            }
+            
             // Delete usageSessions with this uid
+            print("🗑️ Deleting usage sessions...")
             let sessions = try await db.collection("usageSessions").whereField("userId", isEqualTo: uid).getDocuments()
-            for doc in sessions.documents { try await doc.reference.delete() }
+            for doc in sessions.documents { 
+                try await doc.reference.delete() 
+                print("🗑️ Deleted session: \(doc.documentID)")
+            }
+            
+            print("✅ Account deletion completed successfully")
+            
+            // Provide user feedback
+            await MainActor.run {
+                signOutError = "✅ Account data deleted successfully"
+            }
+            
         } catch {
-            signOutError = "Deletion error: \(error.localizedDescription)"
+            print("❌ Account deletion failed: \(error.localizedDescription)")
+            await MainActor.run {
+                signOutError = "Deletion error: \(error.localizedDescription)"
+            }
         }
     }
 }

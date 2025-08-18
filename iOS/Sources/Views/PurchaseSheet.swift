@@ -30,13 +30,24 @@ struct PurchaseSheet: View {
                                         .foregroundColor(.speakEasyTextSecondary)
                                 }
                                 Spacer()
-                                Button(action: { Task { await vm.purchase(product: product) } }) {
+                                Button(action: { 
+                                    print("🔘 Purchase button tapped for \(product.displayName) - iPad compatibility fix")
+                                    Task { 
+                                        print("🔘 Starting purchase task for \(product.id)")
+                                        await vm.purchase(product: product)
+                                        print("🔘 Completed purchase task for \(product.id)")
+                                    }
+                                }) {
                                     Text(product.displayPrice)
                                         .font(.subheadline.weight(.semibold))
+                                        .frame(minWidth: 60, minHeight: 32) // Ensure minimum touch target
                                 }
                                 .buttonStyle(.borderedProminent)
                                 .disabled(vm.isPurchasing || isOverCap(product: product))
+                                .contentShape(Rectangle()) // Expand touch area
                             }
+                            .frame(minHeight: 60) // Ensure minimum row height for iPad
+                            .contentShape(Rectangle()) // Make entire row tappable
                         }
                     }
                 }
