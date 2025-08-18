@@ -479,6 +479,7 @@
                 <div class="toolbar">
                     <input type="text" id="userSearch" class="search-input" placeholder="Filter by email or UID... (shows all users by default)">
                     <button id="searchBtn" class="btn btn-secondary">🔍 Search</button>
+                    <button id="refreshUsersBtn" class="btn btn-primary">🔄 Refresh All Users</button>
                     <select id="userFilter" class="filter-select">
                         <option value="">All Users</option>
                         <option value="active">Active (30d)</option>
@@ -731,6 +732,7 @@
 
                 // User management
                 document.getElementById('searchBtn').onclick = () => this.searchUsers();
+                document.getElementById('refreshUsersBtn').onclick = () => this.refreshAllUsers();
                 document.getElementById('userSearch').oninput = () => this.filterUsersRealtime();
                 document.getElementById('userSearch').onkeyup = (e) => {
                     if (e.key === 'Enter') this.searchUsers();
@@ -935,21 +937,29 @@
 
                 try {
                     const usersCol = collection(db, 'users');
-                    let q;
+                    let snapshot;
 
-                    if (direction === 'next' && this.lastVisible) {
-                        q = query(usersCol, orderBy('lastSessionTime', 'desc'), 
-                                 startAfter(this.lastVisible), limit(this.pageSize));
-                    } else if (direction === 'prev' && this.prevStack.length > 0) {
-                        const cursor = this.prevStack.pop();
-                        q = query(usersCol, orderBy('lastSessionTime', 'desc'), 
-                                 startAfter(cursor), limit(this.pageSize));
-                    } else {
-                        q = query(usersCol, orderBy('lastSessionTime', 'desc'), limit(this.pageSize));
-                        this.prevStack = [];
+                    // Try different queries to ensure we get all users
+                    try {
+                        // First try with createdAt ordering
+                        let q;
+                        if (direction === 'next' && this.lastVisible) {
+                            q = query(usersCol, orderBy('createdAt', 'desc'), 
+                                     startAfter(this.lastVisible), limit(this.pageSize));
+                        } else if (direction === 'prev' && this.prevStack.length > 0) {
+                            const cursor = this.prevStack.pop();
+                            q = query(usersCol, orderBy('createdAt', 'desc'), 
+                                     startAfter(cursor), limit(this.pageSize));
+                        } else {
+                            q = query(usersCol, orderBy('createdAt', 'desc'), limit(this.pageSize));
+                            this.prevStack = [];
+                        }
+                        snapshot = await getDocs(q);
+                    } catch (orderError) {
+                        console.log('⚠️ CreatedAt ordering failed, trying simple query:', orderError);
+                        // Fallback: simple query without ordering
+                        snapshot = await getDocs(query(usersCol, limit(this.pageSize)));
                     }
-
-                    const snapshot = await getDocs(q);
                     
                     if (snapshot.docs.length > 0) {
                         if (this.lastVisible) this.prevStack.push(this.lastVisible);
@@ -988,7 +998,7 @@
                             credits,
                             totalMinutes: userData.totalMinutesUsed || 0,
                             sessions: userData.sessionsCount || 0,
-                            lastActive: userData.lastSessionTime?.toDate() || null,
+                            lastActive: userData.lastSessionTime?.toDate() || userData.createdAt?.toDate() || null,
                             revenue: userRevenue
                         };
                     }));
@@ -1046,8 +1056,9 @@
             async searchUsers() {
                 const searchTerm = document.getElementById('userSearch').value.trim();
                 if (!searchTerm) {
-                    // Show all current rows if search is cleared
-                    this.filterUsersRealtime();
+                    // Load all users if search is cleared
+                    console.log('🔄 Search cleared - loading all users');
+                    await this.loadUsers();
                     return;
                 }
 
@@ -1099,7 +1110,7 @@
                                 credits,
                                 totalMinutes: userData.totalMinutesUsed || 0,
                                 sessions: userData.sessionsCount || 0,
-                                lastActive: userData.lastSessionTime?.toDate() || null,
+                                lastActive: userData.lastSessionTime?.toDate() || userData.createdAt?.toDate() || null,
                                 revenue: userRevenue
                             };
                         }));
@@ -1119,6 +1130,12 @@
                 const filter = document.getElementById('userFilter').value;
                 // This would typically reload users with appropriate query constraints
                 this.loadUsers();
+            }
+
+            async refreshAllUsers() {
+                console.log('🔄 Manual refresh - loading all users');
+                document.getElementById('userSearch').value = '';
+                await this.loadUsers();
             }
 
             filterUsersRealtime() {
