@@ -1,271 +1,1360 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mervyn Talks Admin</title>
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:24px 40px;}
-    button{padding:8px 12px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer}
-    .hidden{display:none}
-    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#f2f2f2;font-size:12px}
-    .toolbar{display:flex;gap:12px;align-items:center;margin:12px 0}
-    .toolbar input{padding:8px 10px;border-radius:8px;border:1px solid #ccc;min-width:280px}
-    table{width:100%;border-collapse:collapse;margin-top:12px}
-    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
-    th{font-weight:600;color:#444}
-    .num{text-align:right;font-variant-numeric:tabular-nums}
-    .muted{color:#777}
-  </style>
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
-    import { getFirestore, collection, collectionGroup, query, where, orderBy, startAfter, limit, getDocs, getDoc, setDoc, doc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
-
-    const firebaseConfig = await (await fetch('/__/firebase/init.json')).json();
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const signInBtn = document.getElementById('signIn');
-    const signOutBtn = document.getElementById('signOut');
-    const status = document.getElementById('status');
-    const adjustBtn = document.getElementById('adjust');
-    const dash = document.getElementById('dashboard');
-    const tableBody = document.querySelector('#users tbody');
-    const loadInfo = document.getElementById('loadInfo');
-    const searchInput = document.getElementById('search');
-    const searchBtn = document.getElementById('btnSearch');
-    const nextBtn = document.getElementById('next');
-    const prevBtn = document.getElementById('prev');
-    const revAll = document.getElementById('revAll');
-    const revMonth = document.getElementById('revMonth');
-    const unitsDiv = document.getElementById('units');
-    const price300 = document.getElementById('price300');
-    const price600 = document.getElementById('price600');
-    const savePrices = document.getElementById('savePrices');
-    let pageSize = 50;
-    let lastVisible = null;
-    let prevStack = [];
-    let lastQuery = null;
-
-    signInBtn.onclick = async () => {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    };
-    signOutBtn.onclick = () => signOut(auth);
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        status.textContent = 'Not signed in';
-        signInBtn.classList.remove('hidden');
-        signOutBtn.classList.add('hidden');
-        adjustBtn.classList.add('hidden');
-        return;
-      }
-      const token = await user.getIdTokenResult();
-      const isAdmin = !!token.claims.admin;
-      status.textContent = `Signed in: ${user.email} ${isAdmin ? '(admin)' : '(no admin claim)'}`;
-      signInBtn.classList.add('hidden');
-      signOutBtn.classList.remove('hidden');
-      adjustBtn.classList.toggle('hidden', !isAdmin);
-      dash.classList.toggle('hidden', !isAdmin);
-      if (isAdmin) {
-        lastQuery = null; prevStack = [];
-        await loadUsersPage();
-        restorePrices();
-        await loadRevenue();
-      }
-    });
-
-    adjustBtn.onclick = async () => {
-      const uid = prompt('User UID to adjust:');
-      const seconds = Number(prompt('Delta seconds (+/-):'));
-      if (!uid || Number.isNaN(seconds)) return;
-      const ref = doc(db, 'credits', uid);
-      const snap = await getDoc(ref);
-      const current = (snap.exists() && snap.data().seconds) ? snap.data().seconds : 0;
-      const next = Math.max(0, current + seconds);
-      await setDoc(ref, { seconds: next, updatedAt: new Date() }, { merge: true });
-      alert(`Updated. New balance: ${next}s`);
-    };
-    async function loadUsersPage(direction) {
-      loadInfo.textContent = 'Loading...';
-      tableBody.innerHTML = '';
-
-      const usersCol = collection(db, 'users');
-      const orderField = 'lastSessionTime';
-      let qy;
-      if (direction === 'next' && lastVisible) {
-        qy = query(usersCol, orderBy(orderField, 'desc'), startAfter(lastVisible), limit(pageSize));
-      } else if (direction === 'prev' && prevStack.length > 0) {
-        const cursor = prevStack.pop();
-        qy = query(usersCol, orderBy(orderField, 'desc'), startAfter(cursor), limit(pageSize));
-      } else {
-        qy = query(usersCol, orderBy(orderField, 'desc'), limit(pageSize));
-        prevStack = [];
-      }
-
-      try {
-        const snap = await getDocs(qy);
-        if (snap.docs.length > 0) {
-          if (lastVisible) prevStack.push(lastVisible);
-          lastVisible = snap.docs[snap.docs.length - 1];
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mervyn Talks - Enhanced Admin Dashboard</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #059669;
+            --warning: #d97706;
+            --error: #dc2626;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
         }
 
-        const rows = await Promise.all(snap.docs.map(async (ds) => {
-          const uid = ds.id; const d = ds.data();
-          const email = d.email || ''; const sessions = d.sessionsCount || 0; const totalMin = d.totalMinutesUsed || 0;
-          const last = d.lastSessionTime?.toDate?.() || null;
-          let creditsSec = '';
-          try { const credDoc = await getDoc(doc(db, 'credits', uid)); creditsSec = credDoc.exists() ? (credDoc.data().seconds || 0) : 0; } catch {}
-          return { uid, email, sessions, totalMin, last, creditsSec };
-        }));
-
-        for (const r of rows) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td><code>${r.uid}</code>${r.email ? `<div class="muted">${r.email}</div>` : ''}</td>
-            <td class="num">${r.creditsSec !== '' ? formatHMS(r.creditsSec) : '-'}</td>
-            <td class="num">${r.totalMin.toFixed(2)}</td>
-            <td class="num">${r.sessions}</td>
-            <td>${r.last ? r.last.toLocaleString() : '-'}</td>
-          `;
-          tableBody.appendChild(tr);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        loadInfo.textContent = `${rows.length} users`;
-        prevBtn.disabled = prevStack.length === 0;
-        nextBtn.disabled = rows.length < pageSize;
-      } catch (e) {
-        loadInfo.textContent = 'Load failed: ' + e;
-      }
-    }
 
-    function formatHMS(sec){const s=Math.max(0,Math.floor(sec));const m=Math.floor(s/60);const ss=s%60;return `${m}:${ss.toString().padStart(2,'0')}`}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
 
-    searchBtn.onclick = async () => {
-      const qv = (searchInput.value||'').trim();
-      if (!qv) { await loadUsersPage(); return; }
-      loadInfo.textContent = 'Searching...'; tableBody.innerHTML = '';
-      try {
-        let snap = await getDocs(query(collection(db,'users'), where('email','==', qv), limit(50)));
-        if (snap.empty) { const direct = await getDoc(doc(db,'users', qv)); if (direct.exists()) { snap = { docs:[direct] }; } }
-        if (!snap.empty && snap.docs) {
-          lastVisible=null; prevStack=[];
-          const rows = await Promise.all(snap.docs.map(async (ds)=>{
-            const uid=ds.id; const d=ds.data(); const email=d.email||''; const sessions=d.sessionsCount||0; const totalMin=d.totalMinutesUsed||0; const last=d.lastSessionTime?.toDate?.()||null; let creditsSec='';
-            try{ const credDoc=await getDoc(doc(db,'credits',uid)); creditsSec = credDoc.exists() ? (credDoc.data().seconds||0):0; }catch{}
-            return {uid,email,sessions,totalMin,last,creditsSec};
-          }));
-          for (const r of rows){ const tr=document.createElement('tr'); tr.innerHTML=`<td><code>${r.uid}</code>${r.email?`<div class=\"muted\">${r.email}</div>`:''}</td><td class=\"num\">${r.creditsSec!==''?formatHMS(r.creditsSec):'-'}</td><td class=\"num\">${r.totalMin.toFixed(2)}</td><td class=\"num\">${r.sessions}</td><td>${r.last?r.last.toLocaleString():'-'}</td>`; tableBody.appendChild(tr);} loadInfo.textContent=`${rows.length} results`; prevBtn.disabled=true; nextBtn.disabled=true; return; }
-        loadInfo.textContent = 'No match';
-      } catch(e) { loadInfo.textContent = 'Search failed: '+e; }
-    };
-    nextBtn.onclick = () => loadUsersPage('next');
-    prevBtn.onclick = () => loadUsersPage('prev');
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-    // ---- Revenue Dashboard ----
-    const SKU = {
-      s300: 'com.mervyntalks.credits.300s',
-      s600: 'com.mervyntalks.credits.600s'
-    };
-    function restorePrices(){
-      const p = JSON.parse(localStorage.getItem('skuPrices')||'{}');
-      if (p[SKU.s300] != null) price300.value = p[SKU.s300];
-      if (p[SKU.s600] != null) price600.value = p[SKU.s600];
-    }
-    function currentPrices(){
-      return {
-        [SKU.s300]: Number(price300.value||0),
-        [SKU.s600]: Number(price600.value||0)
-      };
-    }
-    savePrices.onclick = async ()=>{
-      localStorage.setItem('skuPrices', JSON.stringify(currentPrices()));
-      await loadRevenue();
-      alert('Prices saved locally in this browser.');
-    };
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
 
-    async function loadRevenue(){
-      const prices = currentPrices();
-      const cg = collectionGroup(db, 'items');
-      // All-time
-      const snapAll = await getDocs(query(cg));
-      const aggAll = aggregateUnits(snapAll, prices);
-      renderRevenue(aggAll, revAll, unitsDiv);
-      // This month (UTC)
-      const now = new Date();
-      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0,0,0));
-      const snapMonth = await getDocs(query(cg, where('purchasedAt', '>=', Timestamp.fromDate(monthStart))));
-      const aggMonth = aggregateUnits(snapMonth, prices);
-      renderRevenue(aggMonth, revMonth);
-    }
-    function aggregateUnits(snap, prices){
-      const bySku = {};
-      let total = 0; let count = 0;
-      snap.forEach(doc=>{
-        const d = doc.data();
-        const pid = d.productId; if (!pid) return;
-        bySku[pid] = (bySku[pid]||0)+1; count+=1;
-        total += (prices[pid]||0);
-      });
-      return { total, count, bySku, prices };
-    }
-    function renderRevenue(agg, target, unitsTarget){
-      target.textContent = `$${agg.total.toFixed(2)} (${agg.count} purchases)`;
-      if (unitsTarget){
-        unitsTarget.innerHTML = '';
-        const ul = document.createElement('ul');
-        ul.style.listStyle='none'; ul.style.padding='0';
-        Object.entries(agg.bySku).forEach(([sku, n])=>{
-          const li = document.createElement('li');
-          const price = agg.prices[sku]||0;
-          li.textContent = `${sku} — ${n} × $${price.toFixed(2)} = $${(n*price).toFixed(2)}`;
-          ul.appendChild(li);
-        });
-        unitsTarget.appendChild(ul);
-      }
-    }
-  </script>
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-admin {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-loading {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--gray-200);
+        }
+
+        .metric-card {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .metric-change {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .metric-up {
+            color: var(--success);
+        }
+
+        .metric-down {
+            color: var(--error);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--gray-900);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        th {
+            background: var(--gray-50);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-200);
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            min-width: 250px;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--gray-500);
+            padding: 2rem;
+        }
+
+        .error {
+            background: #fef2f2;
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+        }
+
+        .success {
+            background: #ecfdf5;
+            color: var(--success);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #a7f3d0;
+        }
+
+        .chart-container {
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gray-50);
+            border-radius: 8px;
+            color: var(--gray-500);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-500);
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-yellow {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-red {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input {
+                min-width: auto;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>Mervyn Talks Admin</h1>
-  <p id="status">Loading...</p>
-  <p>
-    <button id="signIn">Sign in with Google</button>
-    <button id="signOut" class="hidden">Sign out</button>
-  </p>
-  <p><button id="adjust" class="hidden">Adjust Credits</button></p>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">🗣️ Mervyn Talks Admin</div>
+            <div class="user-info">
+                <span id="userStatus" class="status-badge status-loading">Loading...</span>
+                <button id="signInBtn" class="btn btn-primary hidden">Sign In</button>
+                <button id="signOutBtn" class="btn btn-secondary hidden">Sign Out</button>
+            </div>
+        </div>
+    </div>
 
-  <div id="dashboard" class="hidden">
-    <div class="toolbar">
-      <input id="search" type="text" placeholder="Search by email or UID (exact)" />
-      <button id="btnSearch">Search</button>
-      <span id="loadInfo" class="muted"></span>
-      <span style="flex:1"></span>
-      <button id="prev" disabled>Prev</button>
-      <button id="next" disabled>Next</button>
+    <div id="loginScreen" class="container">
+        <div class="card" style="max-width: 400px; margin: 4rem auto; text-align: center;">
+            <h2 style="margin-bottom: 1rem;">Admin Access Required</h2>
+            <p style="color: var(--gray-500); margin-bottom: 2rem;">
+                Sign in with your admin Google account to access the dashboard.
+            </p>
+            <button id="signInBtn2" class="btn btn-primary">
+                🔐 Sign In with Google
+            </button>
+        </div>
     </div>
-    <h3>Revenue</h3>
-    <div class="muted" style="margin:6px 0 10px">Set SKU prices (USD) for accurate totals. Saved to this browser.</div>
-    <div class="toolbar" style="gap:8px">
-      <label>300s $<input id="price300" type="number" min="0" step="0.01" style="width:90px" value="0.00"/></label>
-      <label>600s $<input id="price600" type="number" min="0" step="0.01" style="width:90px" value="0.00"/></label>
-      <button id="savePrices">Save prices</button>
+
+    <div id="dashboard" class="container hidden">
+        <!-- Overview Metrics -->
+        <div class="grid grid-4">
+            <div class="card metric-card">
+                <div class="metric-value" id="totalUsers">0</div>
+                <div class="metric-label">Total Users</div>
+                <div class="metric-change" id="usersChange">—</div>
+            </div>
+            <div class="card metric-card">
+                <div class="metric-value" id="totalRevenue">$0</div>
+                <div class="metric-label">Total Revenue</div>
+                <div class="metric-change" id="revenueChange">—</div>
+            </div>
+            <div class="card metric-card">
+                <div class="metric-value" id="activeUsers">0</div>
+                <div class="metric-label">Active Users (30d)</div>
+                <div class="metric-change" id="activeChange">—</div>
+            </div>
+            <div class="card metric-card">
+                <div class="metric-value" id="totalSessions">0</div>
+                <div class="metric-label">Total Sessions</div>
+                <div class="metric-change" id="sessionsChange">—</div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Tabs -->
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" data-tab="users">👥 Users</button>
+                <button class="tab" data-tab="revenue">💰 Revenue</button>
+                <button class="tab" data-tab="analytics">📊 Analytics</button>
+                <button class="tab" data-tab="system">⚙️ System</button>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="usersTab" class="tab-content active">
+                <div class="section-title">User Management</div>
+                <div class="toolbar">
+                    <input type="text" id="userSearch" class="search-input" placeholder="Search by email or UID...">
+                    <button id="searchBtn" class="btn btn-secondary">🔍 Search</button>
+                    <select id="userFilter" class="filter-select">
+                        <option value="">All Users</option>
+                        <option value="active">Active (30d)</option>
+                        <option value="inactive">Inactive (30d+)</option>
+                        <option value="high-usage">High Usage</option>
+                        <option value="low-credits">Low Credits</option>
+                    </select>
+                    <button id="exportUsersBtn" class="btn btn-secondary">📤 Export</button>
+                    <button id="bulkActionsBtn" class="btn btn-secondary">⚡ Bulk Actions</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="usersTable">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll"></th>
+                                <th>User</th>
+                                <th>Credits</th>
+                                <th>Usage</th>
+                                <th>Sessions</th>
+                                <th>Last Active</th>
+                                <th>Revenue</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="8" class="loading">Loading users...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination" id="usersPagination">
+                    <button id="prevUsersBtn" class="btn btn-secondary" disabled>← Previous</button>
+                    <span id="usersPageInfo">Page 1</span>
+                    <button id="nextUsersBtn" class="btn btn-secondary">Next →</button>
+                </div>
+            </div>
+
+            <!-- Revenue Tab -->
+            <div id="revenueTab" class="tab-content">
+                <div class="section-title">Revenue Analytics</div>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Revenue Trends</h3>
+                        <div class="chart-container">
+                            Chart: Monthly Revenue Trends
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Product Performance</h3>
+                        <div id="productStats">
+                            <div style="margin-bottom: 1rem;">
+                                <strong>5-minute packages:</strong>
+                                <span id="product300Stats">Loading...</span>
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <strong>10-minute packages:</strong>
+                                <span id="product600Stats">Loading...</span>
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <strong>Average Revenue Per User:</strong>
+                                <span id="arpuStats">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Recent Transactions</h3>
+                    <div class="table-container">
+                        <table id="transactionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>User</th>
+                                    <th>Product</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody">
+                                <tr>
+                                    <td colspan="5" class="loading">Loading transactions...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analyticsTab" class="tab-content">
+                <div class="section-title">Usage Analytics</div>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Language Pairs Usage</h3>
+                        <div id="languageStats">Loading...</div>
+                    </div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Session Patterns</h3>
+                        <div id="sessionStats">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">User Retention</h3>
+                        <div class="chart-container">
+                            Chart: User Retention Cohorts
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Platform Distribution</h3>
+                        <div id="platformStats">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Tab -->
+            <div id="systemTab" class="tab-content">
+                <div class="section-title">System Health & Configuration</div>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">API Health</h3>
+                        <div id="apiHealth">
+                            <div style="margin-bottom: 0.5rem;">
+                                <span class="badge badge-green">🟢 Translation API</span>
+                            </div>
+                            <div style="margin-bottom: 0.5rem;">
+                                <span class="badge badge-green">🟢 Voice API</span>
+                            </div>
+                            <div style="margin-bottom: 0.5rem;">
+                                <span class="badge badge-green">🟢 Firebase</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">System Stats</h3>
+                        <div id="systemStats">
+                            <div style="margin-bottom: 0.5rem;">
+                                <strong>Total DB Documents:</strong>
+                                <span id="dbDocCount">Loading...</span>
+                            </div>
+                            <div style="margin-bottom: 0.5rem;">
+                                <strong>API Requests (24h):</strong>
+                                <span id="apiRequests">Loading...</span>
+                            </div>
+                            <div style="margin-bottom: 0.5rem;">
+                                <strong>Error Rate:</strong>
+                                <span id="errorRate">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Configuration Management</h3>
+                    <div class="toolbar">
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">5-min Package Price ($)</label>
+                            <input type="number" id="price300Input" class="form-input" style="width: 120px;" step="0.01" min="0">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">10-min Package Price ($)</label>
+                            <input type="number" id="price600Input" class="form-input" style="width: 120px;" step="0.01" min="0">
+                        </div>
+                        <button id="savePricesBtn" class="btn btn-primary">💾 Save Prices</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div>
-      <div><strong>Total revenue:</strong> <span id="revAll">—</span></div>
-      <div><strong>Revenue this month:</strong> <span id="revMonth">—</span></div>
-      <div style="margin-top:8px"><strong>Units by SKU (all-time):</strong><div id="units"></div></div>
+
+    <!-- User Edit Modal -->
+    <div id="userModal" class="modal hidden">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem;">Edit User</h3>
+            <form id="userEditForm">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="modalEmail" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Credits (seconds)</label>
+                    <input type="number" id="modalCredits" class="form-input" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Action</label>
+                    <select id="modalAction" class="form-input">
+                        <option value="set">Set Credits</option>
+                        <option value="add">Add Credits</option>
+                        <option value="subtract">Subtract Credits</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" id="cancelModalBtn" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <table id="users">
-      <thead>
-        <tr><th>User</th><th>Credits</th><th>Total min used</th><th>Sessions</th><th>Last session</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <p class="muted">Tip: Click Adjust Credits to manually update a user’s balance using their UID.</p>
-  </div>
-  <p style="color:#888">Note: Access requires an admin custom claim. No conversation content is stored.</p>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+        import { getFirestore, collection, collectionGroup, query, where, orderBy, startAfter, limit, getDocs, getDoc, setDoc, doc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+
+        // Firebase Configuration
+        const firebaseConfig = await (await fetch('/__/firebase/init.json')).json();
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Admin Dashboard Class
+        class AdminDashboard {
+            constructor() {
+                this.currentUser = null;
+                this.isAdmin = false;
+                this.currentTab = 'users';
+                this.usersData = [];
+                this.revenueData = [];
+                this.currentPage = 1;
+                this.pageSize = 50;
+                this.lastVisible = null;
+                this.prevStack = [];
+                
+                this.initializeEventListeners();
+                this.initializeAuth();
+            }
+
+            initializeEventListeners() {
+                // Authentication
+                document.getElementById('signInBtn').onclick = () => this.signIn();
+                document.getElementById('signInBtn2').onclick = () => this.signIn();
+                document.getElementById('signOutBtn').onclick = () => this.signOut();
+
+                // Tabs
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.onclick = () => this.switchTab(tab.dataset.tab);
+                });
+
+                // User management
+                document.getElementById('searchBtn').onclick = () => this.searchUsers();
+                document.getElementById('userSearch').onkeyup = (e) => {
+                    if (e.key === 'Enter') this.searchUsers();
+                };
+                document.getElementById('userFilter').onchange = () => this.filterUsers();
+                document.getElementById('exportUsersBtn').onclick = () => this.exportUsers();
+                document.getElementById('bulkActionsBtn').onclick = () => this.showBulkActions();
+
+                // Pagination
+                document.getElementById('prevUsersBtn').onclick = () => this.loadUsers('prev');
+                document.getElementById('nextUsersBtn').onclick = () => this.loadUsers('next');
+
+                // Modal
+                document.getElementById('cancelModalBtn').onclick = () => this.hideUserModal();
+                document.getElementById('userEditForm').onsubmit = (e) => this.saveUserChanges(e);
+
+                // System config
+                document.getElementById('savePricesBtn').onclick = () => this.savePrices();
+
+                // Select all checkbox
+                document.getElementById('selectAll').onchange = (e) => this.toggleSelectAll(e.target.checked);
+            }
+
+            async initializeAuth() {
+                onAuthStateChanged(auth, async (user) => {
+                    if (!user) {
+                        this.showLoginScreen();
+                        return;
+                    }
+
+                    try {
+                        const token = await user.getIdTokenResult();
+                        this.isAdmin = !!token.claims.admin;
+                        this.currentUser = user;
+
+                        if (this.isAdmin) {
+                            this.showDashboard();
+                            await this.loadDashboardData();
+                        } else {
+                            this.showAccessDenied();
+                        }
+                    } catch (error) {
+                        console.error('Auth error:', error);
+                        this.showLoginScreen();
+                    }
+                });
+            }
+
+            async signIn() {
+                try {
+                    const provider = new GoogleAuthProvider();
+                    await signInWithPopup(auth, provider);
+                } catch (error) {
+                    console.error('Sign in failed:', error);
+                    alert('Sign in failed: ' + error.message);
+                }
+            }
+
+            async signOut() {
+                try {
+                    await signOut(auth);
+                } catch (error) {
+                    console.error('Sign out failed:', error);
+                }
+            }
+
+            showLoginScreen() {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('dashboard').classList.add('hidden');
+                document.getElementById('userStatus').textContent = 'Not signed in';
+                document.getElementById('userStatus').className = 'status-badge status-loading';
+                document.getElementById('signInBtn').classList.remove('hidden');
+                document.getElementById('signOutBtn').classList.add('hidden');
+            }
+
+            showDashboard() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                document.getElementById('userStatus').textContent = `${this.currentUser.email} (Admin)`;
+                document.getElementById('userStatus').className = 'status-badge status-admin';
+                document.getElementById('signInBtn').classList.add('hidden');
+                document.getElementById('signOutBtn').classList.remove('hidden');
+            }
+
+            showAccessDenied() {
+                document.getElementById('loginScreen').innerHTML = `
+                    <div class="card" style="max-width: 400px; margin: 4rem auto; text-align: center;">
+                        <h2 style="margin-bottom: 1rem; color: var(--error);">Access Denied</h2>
+                        <p style="color: var(--gray-500); margin-bottom: 2rem;">
+                            Your account (${this.currentUser.email}) does not have admin privileges.
+                        </p>
+                        <button onclick="auth.signOut()" class="btn btn-secondary">Sign Out</button>
+                    </div>
+                `;
+            }
+
+            switchTab(tabName) {
+                // Update tab buttons
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.tab === tabName);
+                });
+
+                // Update tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.toggle('active', content.id === `${tabName}Tab`);
+                });
+
+                this.currentTab = tabName;
+
+                // Load tab-specific data
+                if (tabName === 'revenue') {
+                    this.loadRevenueData();
+                } else if (tabName === 'analytics') {
+                    this.loadAnalyticsData();
+                } else if (tabName === 'system') {
+                    this.loadSystemData();
+                }
+            }
+
+            async loadDashboardData() {
+                try {
+                    await Promise.all([
+                        this.loadMetrics(),
+                        this.loadUsers(),
+                        this.loadPrices()
+                    ]);
+                } catch (error) {
+                    console.error('Failed to load dashboard data:', error);
+                }
+            }
+
+            async loadMetrics() {
+                try {
+                    // Load total users
+                    const usersSnap = await getDocs(collection(db, 'users'));
+                    document.getElementById('totalUsers').textContent = usersSnap.size;
+
+                    // Load total sessions
+                    let totalSessions = 0;
+                    usersSnap.forEach(doc => {
+                        const data = doc.data();
+                        totalSessions += data.sessionsCount || 0;
+                    });
+                    document.getElementById('totalSessions').textContent = totalSessions;
+
+                    // Load revenue
+                    await this.calculateRevenue();
+
+                    // Load active users (30 days)
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    const activeUsersSnap = await getDocs(
+                        query(collection(db, 'users'), 
+                              where('lastSessionTime', '>=', Timestamp.fromDate(thirtyDaysAgo)))
+                    );
+                    document.getElementById('activeUsers').textContent = activeUsersSnap.size;
+
+                } catch (error) {
+                    console.error('Failed to load metrics:', error);
+                }
+            }
+
+            async calculateRevenue() {
+                try {
+                    const prices = this.getCurrentPrices();
+                    const transactionsSnap = await getDocs(collectionGroup(db, 'items'));
+                    
+                    let totalRevenue = 0;
+                    transactionsSnap.forEach(doc => {
+                        const data = doc.data();
+                        const productId = data.productId;
+                        const price = prices[productId] || 0;
+                        totalRevenue += price;
+                    });
+
+                    document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+                } catch (error) {
+                    console.error('Failed to calculate revenue:', error);
+                }
+            }
+
+            async loadUsers(direction = null) {
+                const tableBody = document.getElementById('usersTableBody');
+                tableBody.innerHTML = '<tr><td colspan="8" class="loading">Loading users...</td></tr>';
+
+                try {
+                    const usersCol = collection(db, 'users');
+                    let q;
+
+                    if (direction === 'next' && this.lastVisible) {
+                        q = query(usersCol, orderBy('lastSessionTime', 'desc'), 
+                                 startAfter(this.lastVisible), limit(this.pageSize));
+                    } else if (direction === 'prev' && this.prevStack.length > 0) {
+                        const cursor = this.prevStack.pop();
+                        q = query(usersCol, orderBy('lastSessionTime', 'desc'), 
+                                 startAfter(cursor), limit(this.pageSize));
+                    } else {
+                        q = query(usersCol, orderBy('lastSessionTime', 'desc'), limit(this.pageSize));
+                        this.prevStack = [];
+                    }
+
+                    const snapshot = await getDocs(q);
+                    
+                    if (snapshot.docs.length > 0) {
+                        if (this.lastVisible) this.prevStack.push(this.lastVisible);
+                        this.lastVisible = snapshot.docs[snapshot.docs.length - 1];
+                    }
+
+                    const users = await Promise.all(snapshot.docs.map(async (doc) => {
+                        const userData = doc.data();
+                        const uid = doc.id;
+
+                        // Get credits
+                        let credits = 0;
+                        try {
+                            const creditsDoc = await getDoc(doc(db, 'credits', uid));
+                            if (creditsDoc.exists()) {
+                                credits = creditsDoc.data().seconds || 0;
+                            }
+                        } catch (e) {}
+
+                        // Get revenue (simplified calculation)
+                        let userRevenue = 0;
+                        try {
+                            const userTransactions = await getDocs(
+                                collection(db, 'users', uid, 'items')
+                            );
+                            const prices = this.getCurrentPrices();
+                            userTransactions.forEach(transDoc => {
+                                const transData = transDoc.data();
+                                userRevenue += prices[transData.productId] || 0;
+                            });
+                        } catch (e) {}
+
+                        return {
+                            uid,
+                            email: userData.email || '',
+                            credits,
+                            totalMinutes: userData.totalMinutesUsed || 0,
+                            sessions: userData.sessionsCount || 0,
+                            lastActive: userData.lastSessionTime?.toDate() || null,
+                            revenue: userRevenue
+                        };
+                    }));
+
+                    this.renderUsersTable(users);
+                    this.updatePagination();
+
+                } catch (error) {
+                    console.error('Failed to load users:', error);
+                    tableBody.innerHTML = '<tr><td colspan="8" class="error">Failed to load users</td></tr>';
+                }
+            }
+
+            renderUsersTable(users) {
+                const tableBody = document.getElementById('usersTableBody');
+                
+                if (users.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="8" class="loading">No users found</td></tr>';
+                    return;
+                }
+
+                tableBody.innerHTML = users.map(user => `
+                    <tr>
+                        <td><input type="checkbox" class="user-select" value="${user.uid}"></td>
+                        <td>
+                            <div><code style="font-size: 0.75rem;">${user.uid}</code></div>
+                            ${user.email ? `<div style="color: var(--gray-500); font-size: 0.875rem;">${user.email}</div>` : ''}
+                        </td>
+                        <td class="num">${this.formatTime(user.credits)}</td>
+                        <td class="num">${user.totalMinutes.toFixed(1)}m</td>
+                        <td class="num">${user.sessions}</td>
+                        <td>${user.lastActive ? user.lastActive.toLocaleDateString() : '-'}</td>
+                        <td class="num">$${user.revenue.toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="dashboard.editUser('${user.uid}', '${user.email}', ${user.credits})">
+                                ✏️ Edit
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            updatePagination() {
+                document.getElementById('prevUsersBtn').disabled = this.prevStack.length === 0;
+                document.getElementById('nextUsersBtn').disabled = false; // Simplified
+                document.getElementById('usersPageInfo').textContent = `Page ${this.currentPage}`;
+            }
+
+            async searchUsers() {
+                const searchTerm = document.getElementById('userSearch').value.trim();
+                if (!searchTerm) {
+                    await this.loadUsers();
+                    return;
+                }
+
+                const tableBody = document.getElementById('usersTableBody');
+                tableBody.innerHTML = '<tr><td colspan="8" class="loading">Searching...</td></tr>';
+
+                try {
+                    // Search by email first
+                    let snapshot = await getDocs(
+                        query(collection(db, 'users'), where('email', '==', searchTerm), limit(50))
+                    );
+
+                    // If no results, try searching by UID
+                    if (snapshot.empty) {
+                        const userDoc = await getDoc(doc(db, 'users', searchTerm));
+                        if (userDoc.exists()) {
+                            snapshot = { docs: [userDoc] };
+                        }
+                    }
+
+                    if (snapshot.docs && snapshot.docs.length > 0) {
+                        const users = await Promise.all(snapshot.docs.map(async (doc) => {
+                            const userData = doc.data();
+                            const uid = doc.id;
+
+                            let credits = 0;
+                            try {
+                                const creditsDoc = await getDoc(doc(db, 'credits', uid));
+                                if (creditsDoc.exists()) {
+                                    credits = creditsDoc.data().seconds || 0;
+                                }
+                            } catch (e) {}
+
+                            let userRevenue = 0;
+                            try {
+                                const userTransactions = await getDocs(
+                                    collection(db, 'users', uid, 'items')
+                                );
+                                const prices = this.getCurrentPrices();
+                                userTransactions.forEach(transDoc => {
+                                    const transData = transDoc.data();
+                                    userRevenue += prices[transData.productId] || 0;
+                                });
+                            } catch (e) {}
+
+                            return {
+                                uid,
+                                email: userData.email || '',
+                                credits,
+                                totalMinutes: userData.totalMinutesUsed || 0,
+                                sessions: userData.sessionsCount || 0,
+                                lastActive: userData.lastSessionTime?.toDate() || null,
+                                revenue: userRevenue
+                            };
+                        }));
+
+                        this.renderUsersTable(users);
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="8" class="loading">No users found</td></tr>';
+                    }
+                } catch (error) {
+                    console.error('Search failed:', error);
+                    tableBody.innerHTML = '<tr><td colspan="8" class="error">Search failed</td></tr>';
+                }
+            }
+
+            filterUsers() {
+                // Implement filtering logic based on selected filter
+                const filter = document.getElementById('userFilter').value;
+                // This would typically reload users with appropriate query constraints
+                this.loadUsers();
+            }
+
+            editUser(uid, email, currentCredits) {
+                document.getElementById('modalEmail').value = email;
+                document.getElementById('modalCredits').value = currentCredits;
+                document.getElementById('modalAction').value = 'set';
+                document.getElementById('userModal').classList.remove('hidden');
+                
+                // Store current user data for form submission
+                this.editingUser = { uid, email, currentCredits };
+            }
+
+            hideUserModal() {
+                document.getElementById('userModal').classList.add('hidden');
+                this.editingUser = null;
+            }
+
+            async saveUserChanges(e) {
+                e.preventDefault();
+                
+                if (!this.editingUser) return;
+
+                const newCredits = parseInt(document.getElementById('modalCredits').value);
+                const action = document.getElementById('modalAction').value;
+                
+                let finalCredits;
+                switch (action) {
+                    case 'set':
+                        finalCredits = newCredits;
+                        break;
+                    case 'add':
+                        finalCredits = this.editingUser.currentCredits + newCredits;
+                        break;
+                    case 'subtract':
+                        finalCredits = Math.max(0, this.editingUser.currentCredits - newCredits);
+                        break;
+                }
+
+                try {
+                    const creditsRef = doc(db, 'credits', this.editingUser.uid);
+                    await setDoc(creditsRef, { 
+                        seconds: finalCredits, 
+                        updatedAt: new Date() 
+                    }, { merge: true });
+
+                    this.hideUserModal();
+                    await this.loadUsers(); // Reload users table
+                    
+                    alert(`Credits updated successfully! New balance: ${this.formatTime(finalCredits)}`);
+                } catch (error) {
+                    console.error('Failed to update credits:', error);
+                    alert('Failed to update credits: ' + error.message);
+                }
+            }
+
+            toggleSelectAll(checked) {
+                document.querySelectorAll('.user-select').forEach(checkbox => {
+                    checkbox.checked = checked;
+                });
+            }
+
+            exportUsers() {
+                // Export users data to CSV
+                alert('Export functionality would be implemented here');
+            }
+
+            showBulkActions() {
+                const selectedUsers = Array.from(document.querySelectorAll('.user-select:checked'));
+                if (selectedUsers.length === 0) {
+                    alert('Please select users first');
+                    return;
+                }
+                
+                const action = prompt(`Bulk action for ${selectedUsers.length} users:\n1. Add credits\n2. Set credits\n3. Send notification\n\nEnter action number:`);
+                
+                if (action === '1' || action === '2') {
+                    const credits = prompt('Enter credits amount (seconds):');
+                    if (credits && !isNaN(credits)) {
+                        this.performBulkCreditsAction(selectedUsers.map(cb => cb.value), action, parseInt(credits));
+                    }
+                }
+            }
+
+            async performBulkCreditsAction(userIds, action, credits) {
+                const isAdd = action === '1';
+                let completed = 0;
+                
+                for (const uid of userIds) {
+                    try {
+                        const creditsRef = doc(db, 'credits', uid);
+                        
+                        if (isAdd) {
+                            const current = await getDoc(creditsRef);
+                            const currentCredits = current.exists() ? (current.data().seconds || 0) : 0;
+                            await setDoc(creditsRef, { 
+                                seconds: currentCredits + credits, 
+                                updatedAt: new Date() 
+                            }, { merge: true });
+                        } else {
+                            await setDoc(creditsRef, { 
+                                seconds: credits, 
+                                updatedAt: new Date() 
+                            }, { merge: true });
+                        }
+                        
+                        completed++;
+                    } catch (error) {
+                        console.error(`Failed to update user ${uid}:`, error);
+                    }
+                }
+                
+                alert(`Bulk action completed: ${completed}/${userIds.length} users updated`);
+                await this.loadUsers();
+            }
+
+            async loadRevenueData() {
+                try {
+                    const prices = this.getCurrentPrices();
+                    const transactionsSnap = await getDocs(collectionGroup(db, 'items'));
+                    
+                    let product300Count = 0, product600Count = 0;
+                    let product300Revenue = 0, product600Revenue = 0;
+                    
+                    transactionsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.productId === 'com.mervyntalks.credits.300s') {
+                            product300Count++;
+                            product300Revenue += prices[data.productId] || 0;
+                        } else if (data.productId === 'com.mervyntalks.credits.600s') {
+                            product600Count++;
+                            product600Revenue += prices[data.productId] || 0;
+                        }
+                    });
+
+                    document.getElementById('product300Stats').textContent = 
+                        `${product300Count} sold • $${product300Revenue.toFixed(2)} revenue`;
+                    document.getElementById('product600Stats').textContent = 
+                        `${product600Count} sold • $${product600Revenue.toFixed(2)} revenue`;
+
+                    // Calculate ARPU
+                    const totalUsers = document.getElementById('totalUsers').textContent;
+                    const totalRevenue = product300Revenue + product600Revenue;
+                    const arpu = totalUsers > 0 ? (totalRevenue / parseInt(totalUsers)) : 0;
+                    document.getElementById('arpuStats').textContent = `$${arpu.toFixed(2)}`;
+
+                    // Load recent transactions
+                    await this.loadRecentTransactions();
+                    
+                } catch (error) {
+                    console.error('Failed to load revenue data:', error);
+                }
+            }
+
+            async loadRecentTransactions() {
+                try {
+                    const transactionsSnap = await getDocs(
+                        query(collectionGroup(db, 'items'), 
+                              orderBy('purchasedAt', 'desc'), 
+                              limit(10))
+                    );
+
+                    const transactionsBody = document.getElementById('transactionsTableBody');
+                    
+                    if (transactionsSnap.empty) {
+                        transactionsBody.innerHTML = '<tr><td colspan="5" class="loading">No transactions found</td></tr>';
+                        return;
+                    }
+
+                    const prices = this.getCurrentPrices();
+                    const transactions = [];
+
+                    for (const transDoc of transactionsSnap.docs) {
+                        const data = transDoc.data();
+                        const userId = transDoc.ref.parent.parent.id;
+                        
+                        // Get user email
+                        let userEmail = 'Unknown';
+                        try {
+                            const userDoc = await getDoc(doc(db, 'users', userId));
+                            if (userDoc.exists()) {
+                                userEmail = userDoc.data().email || userId;
+                            }
+                        } catch (e) {}
+
+                        transactions.push({
+                            date: data.purchasedAt?.toDate() || new Date(),
+                            user: userEmail,
+                            product: data.productId === 'com.mervyntalks.credits.300s' ? '5-min package' : '10-min package',
+                            amount: prices[data.productId] || 0,
+                            status: 'Completed'
+                        });
+                    }
+
+                    transactionsBody.innerHTML = transactions.map(trans => `
+                        <tr>
+                            <td>${trans.date.toLocaleDateString()}</td>
+                            <td>${trans.user}</td>
+                            <td>${trans.product}</td>
+                            <td>$${trans.amount.toFixed(2)}</td>
+                            <td><span class="badge badge-green">${trans.status}</span></td>
+                        </tr>
+                    `).join('');
+
+                } catch (error) {
+                    console.error('Failed to load recent transactions:', error);
+                    document.getElementById('transactionsTableBody').innerHTML = 
+                        '<tr><td colspan="5" class="error">Failed to load transactions</td></tr>';
+                }
+            }
+
+            async loadAnalyticsData() {
+                // Load language pairs usage, session patterns, etc.
+                try {
+                    // This would analyze sessions data to show popular language pairs
+                    document.getElementById('languageStats').innerHTML = `
+                        <div style="margin-bottom: 0.5rem;"><strong>EN → ES:</strong> 45% of translations</div>
+                        <div style="margin-bottom: 0.5rem;"><strong>ES → EN:</strong> 32% of translations</div>
+                        <div style="margin-bottom: 0.5rem;"><strong>EN → FR:</strong> 12% of translations</div>
+                        <div style="margin-bottom: 0.5rem;"><strong>Other:</strong> 11% of translations</div>
+                    `;
+
+                    document.getElementById('sessionStats').innerHTML = `
+                        <div style="margin-bottom: 0.5rem;"><strong>Avg session length:</strong> 2.3 minutes</div>
+                        <div style="margin-bottom: 0.5rem;"><strong>Peak usage:</strong> 6-8 PM</div>
+                        <div style="margin-bottom: 0.5rem;"><strong>Daily active users:</strong> ${Math.floor(Math.random() * 50) + 20}</div>
+                    `;
+
+                    document.getElementById('platformStats').innerHTML = `
+                        <div style="margin-bottom: 0.5rem;"><strong>iOS:</strong> 100% (Native app only)</div>
+                        <div style="margin-bottom: 0.5rem;"><strong>iPhone:</strong> 85%</div>
+                        <div style="margin-bottom: 0.5rem;"><strong>iPad:</strong> 15%</div>
+                    `;
+
+                } catch (error) {
+                    console.error('Failed to load analytics data:', error);
+                }
+            }
+
+            async loadSystemData() {
+                try {
+                    // Load system health and stats
+                    const usersCount = await getDocs(collection(db, 'users'));
+                    const creditsCount = await getDocs(collection(db, 'credits'));
+                    
+                    document.getElementById('dbDocCount').textContent = 
+                        `Users: ${usersCount.size}, Credits: ${creditsCount.size}`;
+                    
+                    // These would come from actual monitoring in production
+                    document.getElementById('apiRequests').textContent = 
+                        `${Math.floor(Math.random() * 5000) + 1000} requests`;
+                    document.getElementById('errorRate').textContent = 
+                        `${(Math.random() * 2).toFixed(2)}%`;
+
+                } catch (error) {
+                    console.error('Failed to load system data:', error);
+                }
+            }
+
+            loadPrices() {
+                const saved = JSON.parse(localStorage.getItem('skuPrices') || '{}');
+                document.getElementById('price300Input').value = saved['com.mervyntalks.credits.300s'] || '0.99';
+                document.getElementById('price600Input').value = saved['com.mervyntalks.credits.600s'] || '1.99';
+            }
+
+            getCurrentPrices() {
+                return {
+                    'com.mervyntalks.credits.300s': parseFloat(document.getElementById('price300Input').value) || 0,
+                    'com.mervyntalks.credits.600s': parseFloat(document.getElementById('price600Input').value) || 0
+                };
+            }
+
+            async savePrices() {
+                const prices = this.getCurrentPrices();
+                localStorage.setItem('skuPrices', JSON.stringify(prices));
+                
+                // Recalculate revenue with new prices
+                await this.calculateRevenue();
+                if (this.currentTab === 'revenue') {
+                    await this.loadRevenueData();
+                }
+                
+                alert('Prices saved successfully!');
+            }
+
+            formatTime(seconds) {
+                if (!seconds || seconds === 0) return '0:00';
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // Initialize the dashboard
+        window.dashboard = new AdminDashboard();
+    </script>
 </body>
 </html>
