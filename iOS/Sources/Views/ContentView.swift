@@ -49,6 +49,9 @@ struct ContentView: View {
     @State private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
     @State private var observer: NSObjectProtocol?
     
+    // Cache audio data to avoid re-processing on replay
+    @State private var cachedTranslationAudio: Data?
+    
     // Computed properties for anonymous/authenticated mode
     private var currentCredits: Int {
         isAnonymousMode ? anonymousCredits.remainingSeconds : credits.remainingSeconds
@@ -141,7 +144,8 @@ struct ContentView: View {
             ConversationBubblesView(
                 sourceText: transcribedText,
                 targetText: translatedText,
-                onPlay: playTranslation
+                onPlay: playTranslation,
+                onShare: shareTranslation
             )
         } else if isRecording {
             // Show live transcription from AudioManager while recording
@@ -378,6 +382,9 @@ struct ContentView: View {
                     self.translatedText = result.translatedText
                     self.isProcessing = false
                     
+                    // Cache audio data for replay
+                    self.cachedTranslationAudio = result.audioData
+                    
                     // Auto-play the translation
                     if let audioData = result.audioData {
                         self.playAudio(audioData)
@@ -398,29 +405,37 @@ struct ContentView: View {
     private func playTranslation() {
         guard !translatedText.isEmpty else { return }
         
-        isProcessing = true
-        
-        Task {
-            do {
-                let result = try await translationService.translateWithAudio(
-                    text: translatedText,
-                    from: targetLanguage,
-                    to: targetLanguage
-                )
-                
-                await MainActor.run {
-                    self.isProcessing = false
+        // Use cached audio if available, otherwise re-generate
+        if let cachedAudio = cachedTranslationAudio {
+            print("🔄 Playing cached translation audio")
+            playAudio(cachedAudio)
+        } else {
+            print("⚠️ No cached audio found, re-generating translation audio")
+            isProcessing = true
+            
+            Task {
+                do {
+                    let result = try await translationService.translateWithAudio(
+                        text: translatedText,
+                        from: targetLanguage,
+                        to: targetLanguage
+                    )
                     
-                    if let audioData = result.audioData {
-                        self.playAudio(audioData)
+                    await MainActor.run {
+                        self.isProcessing = false
+                        
+                        // Cache the audio for future replays
+                        self.cachedTranslationAudio = result.audioData
+                        
+                        if let audioData = result.audioData {
+                            self.playAudio(audioData)
+                        }
                     }
-                    
-                    // Audio playback (tracking removed)
-                }
-            } catch {
-                await MainActor.run {
-                    self.isProcessing = false
-                    self.showError(error.localizedDescription)
+                } catch {
+                    await MainActor.run {
+                        self.isProcessing = false
+                        self.showError(error.localizedDescription)
+                    }
                 }
             }
         }
@@ -436,6 +451,34 @@ struct ContentView: View {
                     self.showError("Failed to play audio")
                 }
             }
+        }
+    }
+    
+    private func shareTranslation() {
+        guard !translatedText.isEmpty else { return }
+        
+        let activityViewController = UIActivityViewController(
+            activityItems: [translatedText],
+            applicationActivities: nil
+        )
+        
+        // For iPad: Set up popover presentation
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first,
+           let rootViewController = window.rootViewController {
+            
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                activityViewController.popoverPresentationController?.sourceView = window
+                activityViewController.popoverPresentationController?.sourceRect = CGRect(
+                    x: window.bounds.midX,
+                    y: window.bounds.midY,
+                    width: 0,
+                    height: 0
+                )
+                activityViewController.popoverPresentationController?.permittedArrowDirections = []
+            }
+            
+            rootViewController.present(activityViewController, animated: true)
         }
     }
     
@@ -455,6 +498,7 @@ struct ContentView: View {
         translatedText = ""
         showError = false
         errorMessage = ""
+        cachedTranslationAudio = nil  // Clear cached audio
     }
     
     private func endBackgroundTask() {

@@ -4,6 +4,7 @@ struct ConversationBubblesView: View {
     let sourceText: String
     let targetText: String
     let onPlay: () -> Void
+    let onShare: () -> Void
     
     var body: some View {
         VStack(spacing: 12) {
@@ -19,10 +20,18 @@ struct ConversationBubblesView: View {
                 HStack {
                     Spacer(minLength: 20)
                     bubble(text: targetText, isTarget: true) {
-                        Button(action: onPlay) {
-                            Image(systemName: "speaker.wave.2.fill")
-                                .foregroundColor(.white)
-                                .padding(6)
+                        HStack(spacing: 8) {
+                            Button(action: onPlay) {
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .foregroundColor(.white)
+                                    .padding(6)
+                            }
+                            
+                            Button(action: onShare) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .foregroundColor(.white)
+                                    .padding(6)
+                            }
                         }
                     }
                 }

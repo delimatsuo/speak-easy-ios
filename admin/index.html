@@ -966,15 +966,16 @@
                         this.lastVisible = snapshot.docs[snapshot.docs.length - 1];
                     }
 
-                    const users = await Promise.all(snapshot.docs.map(async (doc) => {
-                        const userData = doc.data();
-                        const uid = doc.id;
+                    const users = await Promise.all(snapshot.docs.map(async (userDoc) => {
+                        const userData = userDoc.data();
+                        const uid = userDoc.id;
 
                         // Get credits
                         let credits = 0;
                         try {
                             console.log(`💰 Fetching credits for user: ${uid}`);
-                            const creditsDoc = await getDoc(doc(db, 'credits', uid));
+                            const creditsRef = doc(db, 'credits', uid);
+                            const creditsDoc = await getDoc(creditsRef);
                             if (creditsDoc.exists()) {
                                 credits = creditsDoc.data().seconds || 0;
                                 console.log(`💰 User ${uid} has ${credits} seconds (${Math.round(credits/60*10)/10} minutes)`);
@@ -1087,14 +1088,15 @@
                     }
 
                     if (snapshot.docs && snapshot.docs.length > 0) {
-                        const users = await Promise.all(snapshot.docs.map(async (doc) => {
-                            const userData = doc.data();
-                            const uid = doc.id;
+                        const users = await Promise.all(snapshot.docs.map(async (userDoc) => {
+                            const userData = userDoc.data();
+                            const uid = userDoc.id;
 
                             let credits = 0;
                             try {
                                 console.log(`💰 [Search] Fetching credits for user: ${uid}`);
-                                const creditsDoc = await getDoc(doc(db, 'credits', uid));
+                                const creditsRef = doc(db, 'credits', uid);
+                                const creditsDoc = await getDoc(creditsRef);
                                 if (creditsDoc.exists()) {
                                     credits = creditsDoc.data().seconds || 0;
                                     console.log(`💰 [Search] User ${uid} has ${credits} seconds (${Math.round(credits/60*10)/10} minutes)`);

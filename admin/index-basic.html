@@ -973,17 +973,23 @@
                         // Get credits
                         let credits = 0;
                         try {
+                            console.log(`💰 Fetching credits for user: ${uid}`);
                             const creditsDoc = await getDoc(doc(db, 'credits', uid));
                             if (creditsDoc.exists()) {
                                 credits = creditsDoc.data().seconds || 0;
+                                console.log(`💰 User ${uid} has ${credits} seconds (${Math.round(credits/60*10)/10} minutes)`);
+                            } else {
+                                console.log(`💰 No credits document found for user: ${uid}`);
                             }
-                        } catch (e) {}
+                        } catch (e) {
+                            console.error(`💰 Error fetching credits for ${uid}:`, e);
+                        }
 
                         // Get revenue (simplified calculation)
                         let userRevenue = 0;
                         try {
                             const userTransactions = await getDocs(
-                                collection(db, 'users', uid, 'items')
+                                collection(db, 'purchases', uid, 'items')
                             );
                             const prices = this.getCurrentPrices();
                             userTransactions.forEach(transDoc => {
@@ -1087,16 +1093,22 @@
 
                             let credits = 0;
                             try {
+                                console.log(`💰 [Search] Fetching credits for user: ${uid}`);
                                 const creditsDoc = await getDoc(doc(db, 'credits', uid));
                                 if (creditsDoc.exists()) {
                                     credits = creditsDoc.data().seconds || 0;
+                                    console.log(`💰 [Search] User ${uid} has ${credits} seconds (${Math.round(credits/60*10)/10} minutes)`);
+                                } else {
+                                    console.log(`💰 [Search] No credits document found for user: ${uid}`);
                                 }
-                            } catch (e) {}
+                            } catch (e) {
+                                console.error(`💰 [Search] Error fetching credits for ${uid}:`, e);
+                            }
 
                             let userRevenue = 0;
                             try {
                                 const userTransactions = await getDocs(
-                                    collection(db, 'users', uid, 'items')
+                                    collection(db, 'purchases', uid, 'items')
                                 );
                                 const prices = this.getCurrentPrices();
                                 userTransactions.forEach(transDoc => {
