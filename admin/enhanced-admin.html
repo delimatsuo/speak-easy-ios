@@ -480,6 +480,7 @@
                     <input type="text" id="userSearch" class="search-input" placeholder="Filter by email or UID... (shows all users by default)">
                     <button id="searchBtn" class="btn btn-secondary">🔍 Search</button>
                     <button id="refreshUsersBtn" class="btn btn-primary">🔄 Refresh All Users</button>
+                    <button id="debugUsersBtn" class="btn btn-warning">🐛 Debug Connection</button>
                     <select id="userFilter" class="filter-select">
                         <option value="">All Users</option>
                         <option value="active">Active (30d)</option>
@@ -733,6 +734,7 @@
                 // User management
                 document.getElementById('searchBtn').onclick = () => this.searchUsers();
                 document.getElementById('refreshUsersBtn').onclick = () => this.refreshAllUsers();
+                document.getElementById('debugUsersBtn').onclick = () => this.debugConnection();
                 document.getElementById('userSearch').oninput = () => this.filterUsersRealtime();
                 document.getElementById('userSearch').onkeyup = (e) => {
                     if (e.key === 'Enter') this.searchUsers();
@@ -939,26 +941,24 @@
                     const usersCol = collection(db, 'users');
                     let snapshot;
 
-                    // Try different queries to ensure we get all users
+                    console.log('🔍 Attempting to load users...');
+                    
+                    // Try multiple query strategies to ensure we get users
                     try {
-                        // First try with createdAt ordering
-                        let q;
-                        if (direction === 'next' && this.lastVisible) {
-                            q = query(usersCol, orderBy('createdAt', 'desc'), 
-                                     startAfter(this.lastVisible), limit(this.pageSize));
-                        } else if (direction === 'prev' && this.prevStack.length > 0) {
-                            const cursor = this.prevStack.pop();
-                            q = query(usersCol, orderBy('createdAt', 'desc'), 
-                                     startAfter(cursor), limit(this.pageSize));
-                        } else {
-                            q = query(usersCol, orderBy('createdAt', 'desc'), limit(this.pageSize));
-                            this.prevStack = [];
-                        }
-                        snapshot = await getDocs(q);
-                    } catch (orderError) {
-                        console.log('⚠️ CreatedAt ordering failed, trying simple query:', orderError);
-                        // Fallback: simple query without ordering
+                        console.log('📊 Trying simple query first (no ordering)...');
+                        // Start with simplest query - no ordering
                         snapshot = await getDocs(query(usersCol, limit(this.pageSize)));
+                        console.log(`📊 Simple query returned ${snapshot.docs.length} users`);
+                        
+                        if (snapshot.docs.length === 0) {
+                            console.log('📊 No users found with simple query, trying without limit...');
+                            // Try without limit in case there are issues
+                            snapshot = await getDocs(usersCol);
+                            console.log(`📊 Query without limit returned ${snapshot.docs.length} users`);
+                        }
+                    } catch (queryError) {
+                        console.error('❌ All user queries failed:', queryError);
+                        throw queryError;
                     }
                     
                     if (snapshot.docs.length > 0) {
@@ -1009,7 +1009,8 @@
 
                 } catch (error) {
                     console.error('❌ Failed to load users:', error);
-                    tableBody.innerHTML = '<tr><td colspan="8" class="error">Failed to load users</td></tr>';
+                    console.error('❌ Error details:', error.message, error.code);
+                    tableBody.innerHTML = `<tr><td colspan="8" class="error">Failed to load users: ${error.message || error}</td></tr>`;
                 }
             }
 
@@ -1136,6 +1137,42 @@
                 console.log('🔄 Manual refresh - loading all users');
                 document.getElementById('userSearch').value = '';
                 await this.loadUsers();
+            }
+
+            async debugConnection() {
+                console.log('🐛 Starting debug connection test...');
+                const tableBody = document.getElementById('usersTableBody');
+                tableBody.innerHTML = '<tr><td colspan="8" class="loading">🐛 Testing Firebase connection...</td></tr>';
+
+                try {
+                    // Test basic Firestore connection
+                    console.log('🔍 Testing basic Firestore connection...');
+                    const testCol = collection(db, 'users');
+                    console.log('✅ Firestore collection reference created');
+
+                    // Test getting collection size
+                    console.log('🔍 Testing collection query...');
+                    const snapshot = await getDocs(testCol);
+                    console.log(`📊 Total documents in users collection: ${snapshot.size}`);
+
+                    // Log each document UID for debugging
+                    snapshot.docs.forEach((doc, index) => {
+                        console.log(`👤 User ${index + 1}: ${doc.id}`);
+                        console.log(`📄 Data:`, doc.data());
+                    });
+
+                    if (snapshot.size > 0) {
+                        tableBody.innerHTML = `<tr><td colspan="8" class="success">🎉 Connection OK! Found ${snapshot.size} users. Check console for details.</td></tr>`;
+                        // Try to load users normally now
+                        setTimeout(() => this.loadUsers(), 2000);
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="8" class="warning">⚠️ Connection OK but no users found in database.</td></tr>';
+                    }
+
+                } catch (error) {
+                    console.error('🐛 Debug connection failed:', error);
+                    tableBody.innerHTML = `<tr><td colspan="8" class="error">❌ Connection failed: ${error.message}</td></tr>`;
+                }
             }
 
             filterUsersRealtime() {
