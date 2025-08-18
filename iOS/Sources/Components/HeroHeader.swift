@@ -14,6 +14,25 @@ struct HeroHeader: View {
     let onProfile: (() -> Void)?
     var style: HeroHeaderStyle = .fullBleed
     var remainingSeconds: Int? = nil
+    
+    // Adaptive height based on device type and orientation
+    private var adaptiveHeight: CGFloat {
+        #if os(iOS)
+        let isIPad = UIDevice.current.userInterfaceIdiom == .pad
+        let baseHeight: CGFloat = style == .fullBleed ? (isIPad ? 160 : 180) : (isIPad ? 120 : 140)
+        return baseHeight
+        #else
+        return style == .fullBleed ? 180 : 140
+        #endif
+    }
+    
+    private var isIPadDevice: Bool {
+        #if os(iOS)
+        return UIDevice.current.userInterfaceIdiom == .pad
+        #else
+        return false
+        #endif
+    }
 
     var body: some View {
         Group {
@@ -25,8 +44,8 @@ struct HeroHeader: View {
                         .ignoresSafeArea(edges: .top)
 
                     headerContent
-                        .padding(.top, 24)
-                        .padding(.bottom, 20)
+                        .padding(.top, isIPadDevice ? 16 : 20)
+                        .padding(.bottom, isIPadDevice ? 12 : 16)
                 }
             case .card:
                 ZStack(alignment: .bottom) {
@@ -34,17 +53,17 @@ struct HeroHeader: View {
                         .fill(Color.speakEasyPrimaryGradient)
                         .applyShadow(DesignConstants.Shadows.subtle)
                     headerContent
-                        .padding(.vertical, 16)
+                        .padding(.vertical, isIPadDevice ? 12 : 14)
                 }
                 .padding(.horizontal, 16)
             }
         }
-        .frame(height: style == .fullBleed ? 220 : 160)
+        .frame(height: adaptiveHeight)
         .accessibilityElement(children: .combine)
     }
 
     private var headerContent: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: isIPadDevice ? 6 : 8) {
             HStack(spacing: 12) {
                 Spacer()
                 if let onProfile = onProfile {
@@ -54,16 +73,16 @@ struct HeroHeader: View {
             }
             .padding(.horizontal, 20)
 
-            VStack(spacing: 4) {
+            VStack(spacing: isIPadDevice ? 2 : 3) {
                 Text(title)
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.system(size: isIPadDevice ? 26 : 30, weight: .bold))
                     .foregroundColor(.speakEasyOnPrimary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
 
                 if let subtitle = subtitle, !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(.system(size: 15, weight: .regular))
+                        .font(.system(size: isIPadDevice ? 13 : 14, weight: .regular))
                         .foregroundColor(.speakEasyOnPrimarySecondary)
                         .tracking(0.5)
                         .multilineTextAlignment(.center)
@@ -72,16 +91,16 @@ struct HeroHeader: View {
 
                 if let seconds = remainingSeconds {
                     Text("\(format(seconds: seconds)) remaining")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: isIPadDevice ? 13 : 14, weight: .semibold))
                         .foregroundColor(.speakEasyOnPrimary)
-                        .padding(.top, 4)
+                        .padding(.top, isIPadDevice ? 2 : 3)
                     progressLine(seconds: seconds)
-                        .frame(height: 8)
-                        .padding(.horizontal, 32)
-                        .padding(.top, 2)
+                        .frame(height: isIPadDevice ? 6 : 7)
+                        .padding(.horizontal, isIPadDevice ? 40 : 32)
+                        .padding(.top, 1)
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, isIPadDevice ? 20 : 22)
         }
         .frame(maxWidth: .infinity)
     }
