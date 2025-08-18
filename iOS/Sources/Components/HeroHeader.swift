@@ -109,6 +109,7 @@ struct HeroHeader: View {
 // Simple initial-based profile badge (placeholder until real photo)
 private struct ProfileBadgeView: View {
     @State private var userInitials: String = ""
+    @State private var authStateListener: AuthStateDidChangeListenerHandle?
     
     var body: some View {
         ZStack {
@@ -128,12 +129,19 @@ private struct ProfileBadgeView: View {
         }
         .onAppear {
             loadUserInitials()
+            setupAuthListener()
+        }
+        .onDisappear {
+            if let listener = authStateListener {
+                Auth.auth().removeStateDidChangeListener(listener)
+            }
         }
     }
     
     private func loadUserInitials() {
         guard let user = Auth.auth().currentUser else { 
-            print("🔍 [ProfileBadge] No current user")
+            print("🔍 [ProfileBadge] No current user - clearing initials")
+            userInitials = ""
             return 
         }
         
@@ -158,6 +166,13 @@ private struct ProfileBadgeView: View {
         }
         else {
             print("🔍 [ProfileBadge] No display name or email available")
+        }
+    }
+    
+    private func setupAuthListener() {
+        authStateListener = Auth.auth().addStateDidChangeListener { [self] auth, user in
+            print("🔍 [ProfileBadge] Auth state changed - User: \(user?.uid ?? "nil")")
+            loadUserInitials()
         }
     }
 }

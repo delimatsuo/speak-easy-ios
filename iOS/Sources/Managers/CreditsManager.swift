@@ -166,6 +166,26 @@ final class CreditsManager: ObservableObject {
             remainingSeconds = 0
         }
     }
+    
+    /// Clear all local cached data (used for account deletion)
+    func clearAllLocalData() async {
+        print("🧹 CreditsManager: Clearing all local data")
+        remainingSeconds = 0
+        sessionSecondsDeducted = 0
+        lastCloudSyncAt = nil
+        lastSyncError = nil
+        
+        // Clear keychain storage
+        do {
+            try KeychainManager.shared.deleteAPIKey(forService: keychainServiceKey)
+            try KeychainManager.shared.deleteAPIKey(forService: keychainUpdatedAtKey)
+            print("🧹 CreditsManager: Keychain data cleared")
+        } catch {
+            print("⚠️ CreditsManager: Failed to clear keychain: \(error)")
+        }
+        
+        print("🧹 CreditsManager: Local data clearing complete")
+    }
 
     private func saveToStorage() {
         do {

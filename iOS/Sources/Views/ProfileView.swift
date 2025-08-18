@@ -243,6 +243,11 @@ struct ProfileView: View {
             print("✅ Complete account deletion finished successfully")
             print("🗑️ Deleted collections: credits, users, purchases, usageSessions")
             
+            // Clear local cached data (critical for preventing credit resurrection)
+            print("🗑️ Clearing local credit caches...")
+            await CreditsManager.shared.clearAllLocalData()
+            print("🗑️ ✅ Local caches cleared")
+            
             // Sign out the user after successful deletion
             print("🗑️ Signing out user after account deletion...")
             try Auth.auth().signOut()
