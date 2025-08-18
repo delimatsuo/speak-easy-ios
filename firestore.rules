@@ -9,7 +9,7 @@ service cloud.firestore {
     match /credits/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create, update: if isOwner(uid) || isAdmin();
-      allow delete: if isAdmin();
+      allow delete: if isOwner(uid) || isAdmin(); // Allow users to delete their own credits
 
       // Enforce numeric seconds and prevent negative values
       allow write: if (isOwner(uid) || isAdmin()) &&
@@ -18,6 +18,12 @@ service cloud.firestore {
     }
 
     // Purchases: metadata only (no receipts)
+    match /purchases/{uid} {
+      // Allow user to delete the main purchases document
+      allow delete: if isOwner(uid) || isAdmin();
+      allow read, create, update: if isOwner(uid) || isAdmin();
+    }
+    
     match /purchases/{uid}/items/{purchaseId} {
       allow read: if isOwner(uid) || isAdmin();
       // Owner can create and delete their own metadata (for privacy deletion). No updates.
@@ -47,7 +53,7 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create, update: if isOwner(uid) || isAdmin();
-      allow delete: if isAdmin();
+      allow delete: if isOwner(uid) || isAdmin(); // Allow users to delete their own profile
     }
 
     // Deny all else
