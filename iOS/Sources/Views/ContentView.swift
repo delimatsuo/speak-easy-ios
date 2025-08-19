@@ -252,6 +252,9 @@ struct ContentView: View {
             migrateToAnonymousMode()
         }
         
+        // CRITICAL FIX: Always update anonymous mode state to match auth state
+        updateModeBasedOnAuth()
+        
         // Clear any UI state that might be stale
         clearConversationText()
         
@@ -543,7 +546,10 @@ struct ContentView: View {
     // MARK: - Anonymous/Authenticated Mode Management
     
     private func updateModeBasedOnAuth() {
-        isAnonymousMode = !auth.isSignedIn
+        let newAnonymousMode = !auth.isSignedIn
+        print("🔍 updateModeBasedOnAuth: auth.isSignedIn=\(auth.isSignedIn), old isAnonymousMode=\(isAnonymousMode), new isAnonymousMode=\(newAnonymousMode)")
+        isAnonymousMode = newAnonymousMode
+        print("🔍 After update: isAnonymousMode=\(isAnonymousMode), will show \(isAnonymousMode ? "AnonymousPurchaseSheet" : "PurchaseSheet")")
     }
     
     private func migrateFromAnonymousMode() {

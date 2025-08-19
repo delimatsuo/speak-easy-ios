@@ -7,6 +7,7 @@
 
 import Foundation
 import StoreKit
+import FirebaseAuth
 import Combine
 import Firebase
 import FirebaseFirestore
@@ -28,6 +29,18 @@ final class PurchaseViewModel: ObservableObject {
 
     deinit {
         updatesTask?.cancel()
+    }
+    
+    // MARK: - Helper Functions
+    
+    /// Gets the current credits balance from the appropriate manager based on auth state
+    private func getCurrentCreditsBalance() -> Int {
+        guard let user = Auth.auth().currentUser, !user.isAnonymous else {
+            // User is not logged in or is anonymous - use anonymous credits
+            return AnonymousCreditsManager.shared.remainingSeconds
+        }
+        // User is authenticated - use cloud credits
+        return CreditsManager.shared.remainingSeconds
     }
 
     func loadProducts() async {
@@ -65,8 +78,8 @@ final class PurchaseViewModel: ObservableObject {
         isPurchasing = true
         defer { isPurchasing = false }
         do {
-            // Enforce hard cap (1800s)
-            let current = CreditsManager.shared.remainingSeconds
+            // Enforce hard cap (1800s) - check correct credits manager based on auth state
+            let current = getCurrentCreditsBalance()
             if let mapping = CreditProduct.allCases.first(where: { $0.rawValue == product.id }) {
                 if current >= 1800 || current + mapping.grantSeconds > 1800 {
                     lastError = "Balance limit reached (30 minutes). Please use some minutes before buying more."

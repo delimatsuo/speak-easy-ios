@@ -7,6 +7,7 @@
 
 import SwiftUI
 import StoreKit
+import FirebaseAuth
 
 struct PurchaseSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -48,11 +49,12 @@ struct PurchaseSheet: View {
                                 .onAppear {
                                     let isPurchasingDisabled = vm.isPurchasing
                                     let isOverCapDisabled = isOverCap(product: product)
-                                    let currentSeconds = CreditsManager.shared.remainingSeconds
+                                    let currentSeconds = getCurrentCreditsBalance()
+                                    let isAuthenticated = Auth.auth().currentUser?.isAnonymous == false
                                     print("🔍 Purchase button state for \(product.id):")
                                     print("  - isPurchasing: \(isPurchasingDisabled)")
                                     print("  - isOverCap: \(isOverCapDisabled)")
-                                    print("  - currentSeconds: \(currentSeconds)")
+                                    print("  - currentSeconds: \(currentSeconds) (from \(isAuthenticated ? "authenticated" : "anonymous") manager)")
                                     print("  - products loaded: \(vm.products.count)")
                                     print("  - isLoading: \(vm.isLoading)")
                                 }
@@ -121,10 +123,20 @@ struct PurchaseSheet: View {
 
     private func isOverCap(product: Product) -> Bool {
         if let mapping = CreditProduct.allCases.first(where: { $0.rawValue == product.id }) {
-            let current = CreditsManager.shared.remainingSeconds
+            let current = getCurrentCreditsBalance()
             return current >= 1800 || current + mapping.grantSeconds > 1800
         }
         return false
+    }
+    
+    /// Gets the current credits balance from the appropriate manager based on auth state
+    private func getCurrentCreditsBalance() -> Int {
+        guard let user = Auth.auth().currentUser, !user.isAnonymous else {
+            // User is not logged in or is anonymous - use anonymous credits
+            return AnonymousCreditsManager.shared.remainingSeconds
+        }
+        // User is authenticated - use cloud credits
+        return CreditsManager.shared.remainingSeconds
     }
 }
 
