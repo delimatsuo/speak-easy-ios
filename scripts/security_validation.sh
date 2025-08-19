@@ -40,8 +40,8 @@ else
     report_pass "api_keys.plist not in repository"
 fi
 
-if git ls-files | grep -q "GoogleService-Info.plist"; then
-    report_critical "GoogleService-Info.plist found in repository"
+if git ls-files | grep "GoogleService-Info.plist" | grep -v "\.template$"; then
+    report_critical "GoogleService-Info.plist found in repository (non-template)"
 else
     # Additional check for ignored files
     if find . -name "GoogleService-Info.plist" -type f | grep -q .; then
