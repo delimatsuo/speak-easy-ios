@@ -216,19 +216,19 @@ struct HeroHeader_Previews: PreviewProvider {
     static var previews: some View {
         Group {
             VStack(spacing: 0) {
-                HeroHeader(title: "Mervyn Talks", subtitle: "Speak to translate instantly", onHistory: {}, onProfile: {}, style: .card)
+                HeroHeader(title: "Universal AI Translator", subtitle: "Speak to translate instantly", onHistory: {}, onProfile: {}, style: .card)
                 Spacer()
             }
             .previewDisplayName("Light - Card")
 
             VStack(spacing: 0) {
-                HeroHeader(title: "Mervyn Talks", subtitle: "Speak to translate instantly", onHistory: {}, onProfile: {}, style: .fullBleed)
+                HeroHeader(title: "Universal AI Translator", subtitle: "Speak to translate instantly", onHistory: {}, onProfile: {}, style: .fullBleed)
                 Spacer()
             }
             .previewDisplayName("Light - FullBleed")
 
             VStack(spacing: 0) {
-                HeroHeader(title: "Mervyn Talks", subtitle: "Speak to translate instantly", onHistory: {}, onProfile: {}, style: .card)
+                HeroHeader(title: "Universal AI Translator", subtitle: "Speak to translate instantly", onHistory: {}, onProfile: {}, style: .card)
                 Spacer()
             }
             .preferredColorScheme(.dark)

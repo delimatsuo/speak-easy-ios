@@ -946,7 +946,7 @@
 				ENABLE_BITCODE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ../watchOS/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Mervyn Talks";
+				INFOPLIST_KEY_CFBundleDisplayName = "Universal AI Translator";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Mervyn Talks needs access to your microphone to record your speech for translation.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Mervyn Talks uses speech recognition to convert your spoken words to text for translation.";
@@ -980,7 +980,7 @@
 				ENABLE_BITCODE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ../watchOS/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Mervyn Talks";
+				INFOPLIST_KEY_CFBundleDisplayName = "Universal AI Translator";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Mervyn Talks needs access to your microphone to record your speech for translation.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Mervyn Talks uses speech recognition to convert your spoken words to text for translation.";
