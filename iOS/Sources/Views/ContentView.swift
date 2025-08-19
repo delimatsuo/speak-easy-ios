@@ -294,12 +294,14 @@ struct ContentView: View {
         audioManager.startRecording { success in
             Task { @MainActor in
                 if success {
-                    // Start live transcription using the AudioManager
-                    do {
-                        try self.audioManager.startLiveTranscription(language: self.sourceLanguage)
-                    } catch {
-                        print("Failed to start live transcription: \(error)")
-                        self.showError("Failed to start speech recognition")
+                    // Defer live transcription to avoid blocking UI
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        do {
+                            try self.audioManager.startLiveTranscription(language: self.sourceLanguage)
+                        } catch {
+                            print("Failed to start live transcription: \(error)")
+                            // Don't show error for transcription failure - recording still works
+                        }
                     }
                 } else {
                     self.showError("Failed to start recording")

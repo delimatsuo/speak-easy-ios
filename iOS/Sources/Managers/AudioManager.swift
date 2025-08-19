@@ -52,14 +52,29 @@ class AudioManager: NSObject, ObservableObject {
     // MARK: - Recording
     
     func startRecording(completion: @escaping (Bool) -> Void) {
-        // Check microphone permission
-        AVAudioSession.sharedInstance().requestRecordPermission { granted in
-            DispatchQueue.main.async {
-                if granted {
-                    self.beginRecording()
-                    completion(true)
-                } else {
-                    completion(false)
+        // Fast path: Check if permission is already granted
+        let permissionStatus = AVAudioSession.sharedInstance().recordPermission
+        
+        if permissionStatus == .granted {
+            // Permission already granted - start immediately
+            print("🎙️ Permission already granted - starting recording immediately")
+            self.beginRecording()
+            completion(true)
+        } else if permissionStatus == .denied {
+            // Permission denied - fail fast
+            print("❌ Recording permission denied")
+            completion(false)
+        } else {
+            // Permission undetermined - request it
+            print("🎙️ Requesting recording permission...")
+            AVAudioSession.sharedInstance().requestRecordPermission { granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        self.beginRecording()
+                        completion(true)
+                    } else {
+                        completion(false)
+                    }
                 }
             }
         }
@@ -75,67 +90,81 @@ class AudioManager: NSObject, ObservableObject {
     }
     
     private func beginRecording() {
-        do {
-            // Setup audio session with better error handling
-            let session = AVAudioSession.sharedInstance()
-            
-            // First check if audio input is available
-            guard session.availableInputs?.isEmpty == false else {
-                print("❌ No audio input available")
-                isRecording = false
-                return
+        // Update UI immediately for instant feedback
+        DispatchQueue.main.async {
+            self.isRecording = true
+        }
+        
+        // Perform heavy operations on background queue
+        audioQueue.async {
+            do {
+                let session = AVAudioSession.sharedInstance()
+                
+                // Quick availability check
+                guard session.availableInputs?.isEmpty == false else {
+                    print("❌ No audio input available")
+                    DispatchQueue.main.async { self.isRecording = false }
+                    return
+                }
+                
+                // Fast audio session setup - only if not already configured
+                if session.category != .playAndRecord {
+                    try session.setCategory(.playAndRecord, 
+                                           mode: .measurement,
+                                           options: [.defaultToSpeaker, .allowBluetooth])
+                }
+                
+                if !session.isOtherAudioPlaying {
+                    try session.setActive(true, options: .notifyOthersOnDeactivation)
+                }
+                
+                print("✅ Audio session activated successfully")
+                
+                // Create recording URL
+                let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                let fileName = "recording_\(Date().timeIntervalSince1970).m4a"
+                self.recordingURL = documentsPath.appendingPathComponent(fileName)
+                
+                print("📁 Recording to: \(self.recordingURL!.lastPathComponent)")
+                
+                // Configure recorder settings for high quality
+                let settings: [String: Any] = [
+                    AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                    AVSampleRateKey: 44100.0,
+                    AVNumberOfChannelsKey: 1,
+                    AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+                    AVEncoderBitRateKey: 128000
+                ]
+                
+                // Create and start recorder
+                self.audioRecorder = try AVAudioRecorder(url: self.recordingURL!, settings: settings)
+                self.audioRecorder?.delegate = self
+                self.audioRecorder?.isMeteringEnabled = true
+                self.audioRecorder?.prepareToRecord()
+                
+                // Actually start recording
+                let recordingStarted = self.audioRecorder?.record() ?? false
+                
+                DispatchQueue.main.async {
+                    if recordingStarted {
+                        print("🎙️ Recording started successfully")
+                        // isRecording already set to true above
+                    } else {
+                        print("❌ Failed to start recording - recorder.record() returned false")
+                        self.isRecording = false
+                        // Clean up session
+                        try? session.setActive(false)
+                    }
+                }
+                
+            } catch let error as NSError {
+                print("❌ Failed to start recording - Domain: \(error.domain), Code: \(error.code), Description: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.isRecording = false
+                }
+                // Try to clean up audio session
+                try? AVAudioSession.sharedInstance().setActive(false)
             }
-            
-            // Set category with options that work better in production
-            try session.setCategory(.playAndRecord, 
-                                   mode: .measurement,  // Better for speech recording
-                                   options: [.defaultToSpeaker, .allowBluetooth])
-            
-            // Activate session with options
-            try session.setActive(true, options: .notifyOthersOnDeactivation)
-            
-            print("✅ Audio session activated successfully")
-            
-            // Create recording URL
-            let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            let fileName = "recording_\(Date().timeIntervalSince1970).m4a"
-            recordingURL = documentsPath.appendingPathComponent(fileName)
-            
-            print("📁 Recording to: \(recordingURL!.lastPathComponent)")
-            
-            // Configure recorder settings for high quality
-            let settings: [String: Any] = [
-                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-                AVSampleRateKey: 44100.0,
-                AVNumberOfChannelsKey: 1,
-                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-                AVEncoderBitRateKey: 128000
-            ]
-            
-            // Create and start recorder
-            audioRecorder = try AVAudioRecorder(url: recordingURL!, settings: settings)
-            audioRecorder?.delegate = self
-            audioRecorder?.isMeteringEnabled = true
-            audioRecorder?.prepareToRecord()
-            
-            // Actually start recording
-            let recordingStarted = audioRecorder?.record() ?? false
-            
-            if recordingStarted {
-                isRecording = true
-                print("🎙️ Recording started successfully")
-            } else {
-                print("❌ Failed to start recording - recorder.record() returned false")
-                isRecording = false
-                // Clean up session
-                try? session.setActive(false)
-            }
-            
-        } catch let error as NSError {
-            print("❌ Failed to start recording - Domain: \(error.domain), Code: \(error.code), Description: \(error.localizedDescription)")
-            isRecording = false
-            // Try to clean up audio session
-            try? AVAudioSession.sharedInstance().setActive(false)
         }
     }
     
