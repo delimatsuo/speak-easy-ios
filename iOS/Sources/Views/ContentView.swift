@@ -146,7 +146,7 @@ struct ContentView: View {
                 onPlay: playTranslation,
                 onShare: shareTranslation
             )
-        } else if isRecording {
+        } else if audioManager.isRecording {
             // Show live transcription from AudioManager while recording
             if !audioManager.transcribedText.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
