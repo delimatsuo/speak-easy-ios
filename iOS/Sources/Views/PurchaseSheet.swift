@@ -45,6 +45,17 @@ struct PurchaseSheet: View {
                                 .buttonStyle(.borderedProminent)
                                 .disabled(vm.isPurchasing || isOverCap(product: product))
                                 .contentShape(Rectangle()) // Expand touch area
+                                .onAppear {
+                                    let isPurchasingDisabled = vm.isPurchasing
+                                    let isOverCapDisabled = isOverCap(product: product)
+                                    let currentSeconds = CreditsManager.shared.remainingSeconds
+                                    print("🔍 Purchase button state for \(product.id):")
+                                    print("  - isPurchasing: \(isPurchasingDisabled)")
+                                    print("  - isOverCap: \(isOverCapDisabled)")
+                                    print("  - currentSeconds: \(currentSeconds)")
+                                    print("  - products loaded: \(vm.products.count)")
+                                    print("  - isLoading: \(vm.isLoading)")
+                                }
                             }
                             .frame(minHeight: 60) // Ensure minimum row height for iPad
                             .contentShape(Rectangle()) // Make entire row tappable

@@ -35,10 +35,28 @@ final class PurchaseViewModel: ObservableObject {
         defer { isLoading = false }
         do {
             let ids = Set(CreditProduct.allCases.map { $0.rawValue })
+            print("🔍 Loading products with IDs: \(ids)")
             let fetched = try await Product.products(for: ids)
+            print("🔍 Fetched \(fetched.count) products from App Store:")
+            for product in fetched {
+                print("  - \(product.id): \(product.displayName) - \(product.displayPrice)")
+            }
+            
+            // If no products are fetched (likely not configured in App Store Connect),
+            // show a helpful message
+            if fetched.isEmpty {
+                print("⚠️ No products found in App Store Connect. Please configure in-app purchases:")
+                for id in ids {
+                    print("  - Product ID to configure: \(id)")
+                }
+                lastError = "In-app purchases not configured. Please set up products in App Store Connect with IDs: \(ids.joined(separator: ", "))"
+            }
+            
             // Sort by price ascending for UX
             products = fetched.sorted { $0.displayPrice < $1.displayPrice }
+            print("🔍 Final products array count: \(products.count)")
         } catch {
+            print("❌ Failed to load products: \(error.localizedDescription)")
             lastError = error.localizedDescription
         }
     }

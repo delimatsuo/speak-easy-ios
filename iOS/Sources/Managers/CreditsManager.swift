@@ -284,8 +284,8 @@ final class CreditsManager: ObservableObject {
 
 // MARK: - Constants for Credit Products
 enum CreditProduct: String, CaseIterable {
-    case seconds300 = "com.mervyntalks.credits.300s" // 5 minutes
-    case seconds600 = "com.mervyntalks.credits.600s" // 10 minutes
+    case seconds300 = "com.universaltranslator.credits.300s" // 5 minutes
+    case seconds600 = "com.universaltranslator.credits.600s" // 10 minutes
 
     var grantSeconds: Int {
         switch self {

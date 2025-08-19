@@ -1,0 +1,100 @@
+{
+  "identifier" : "5CA91892",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "6736537049",
+      "localizations" : [
+        {
+          "description" : "5 minutes of translation time",
+          "displayName" : "5 Minutes",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.universaltranslator.credits.300s",
+      "referenceName" : "5 Minutes Credit",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "6736537050",
+      "localizations" : [
+        {
+          "description" : "10 minutes of translation time",
+          "displayName" : "10 Minutes",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.universaltranslator.credits.600s",
+      "referenceName" : "10 Minutes Credit",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6736429133",
+    "_developerTeamID" : "K6T8V7QQHD",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 750643207.96363604,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

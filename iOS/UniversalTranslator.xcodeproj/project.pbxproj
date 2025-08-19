@@ -29,6 +29,7 @@
 		36A4540C43F34BADFD13E7D9 /* SignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5CE947E79C159A08720BC92 /* SignInView.swift */; };
 		37579BDD04350F3D3B7C00E4 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D78810219E504692342D82 /* ProfileView.swift */; };
 		3B7B928F5DC843CF51DDCC73 /* PRIVACY_POLICY.md in Resources */ = {isa = PBXBuildFile; fileRef = 5F4694A7766267815150C51E /* PRIVACY_POLICY.md */; };
+		3E9F5C4AA67D4EAB291C0EF8 /* SecureConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3D7B966824E7229F3C72F9 /* SecureConfig.swift */; };
 		3ED5595B7760AE9FC304E87B /* BuildFile in Sources */ = {isa = PBXBuildFile; };
 		401C7608C3A6832B8D4D609D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63358FB1F095BAD2F4DF2AE5 /* Foundation.framework */; };
 		411B3CCD041249F11A2FA0C3 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A2639274808AF858AD0112 /* SceneDelegate.swift */; };
@@ -36,14 +37,12 @@
 		471CBC5178706885F1153E9F /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 00AB260C9F2F28B43D7AABB3 /* Localizable.strings */; };
 		4865D4AAC7DF298439BABA5F /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0955261519B8B5B7E6172C93 /* WatchConnectivity.framework */; };
 		4DE0A57B26810EF49C6FD440 /* AnonymousCreditsManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6553FBDE383B81F5F008B87B /* AnonymousCreditsManagerTests.swift */; };
-		51BCE2A230991549806F3EEF /* SecureConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA95D15838F26FC4D718C04A /* SecureConfig.swift */; };
 		51DAC111AFC0180AA6BAD724 /* PurchaseSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322AC51DBFE4BE22DEA83746 /* PurchaseSheet.swift */; };
 		5266A898E84A24F3EA023216 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D6DF412A6C20AAB3E704DA /* AudioManager.swift */; };
 		5339429A0ECA7524D632F8D8 /* ConversationBubblesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD4E1D36AAAE55BCB1B22A96 /* ConversationBubblesView.swift */; };
 		5B48DCB0482B964B74E290D2 /* CreditsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67F69F45D7931C0BBE15C4DB /* CreditsManager.swift */; };
 		5BD9C6D7B2F19752E2D29FF7 /* APIKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FF363C7D52BA190FEC21E5 /* APIKeyManager.swift */; };
 		63C2D18CD96CDF1DEA314898 /* LowBalanceToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 422C864D82B59035A63C12C4 /* LowBalanceToast.swift */; };
-		63C2D18CD96CDF1DEA314899 /* ZeroBalanceToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40276E9BE193B9B032D3FF42 /* ZeroBalanceToast.swift */; };
 		7038CD0DB73768D0BDA91A09 /* ModernMicrophoneButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D277875FCDA3140E47D5F24 /* ModernMicrophoneButton.swift */; };
 		71BE4D031160CF7746FA0335 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C62D0501257218F50B887EF7 /* Localizable.strings */; };
 		71F4D82563717CCD3F74BB06 /* AnonymousPurchaseSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDF4DFCF16A5DACC75FED25 /* AnonymousPurchaseSheet.swift */; };
@@ -81,11 +80,11 @@
 		E8FA40A5E2EDA1711E16CCC8 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1533F91A3FF1E7F60AD75DB6 /* FirebaseFirestore */; };
 		EADB5FBD2E4D5139005A74CD /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EADB5FBC2E4D5139005A74CD /* LaunchScreen.storyboard */; };
 		EE3A9B9C86D4EC596D5C9D79 /* TranslationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 694432A9A8D1446E370ADAB4 /* TranslationResponse.swift */; };
+		F08FB427228E7067020C4D1D /* FirebaseConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C40B321E9111B04D39305518 /* FirebaseConfigManager.swift */; };
 		F624726373D5A389CFBFA2D9 /* UsageStatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC17D2EEA5CA3BC869AF05EC /* UsageStatisticsView.swift */; };
 		F87D567F0AA4F978E8E52BD7 /* TranslationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB15E5BD36668592E98E476A /* TranslationRequest.swift */; };
 		F9018A79BBEE0CA4FD442636 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DD8F86C605CC39E6021756A /* AppDelegate.swift */; };
 		F913B285E525CFAFBD69E701 /* AudioConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACC7D9F548C051DEB0512CC0 /* AudioConstants.swift */; };
-		FABE1E58624B1AA5B25EBEE1 /* FirebaseConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 932FCF1A8EB7D8098C7E9225 /* FirebaseConfigManager.swift */; };
 		FFF4EB123CDEF6FF7AF96E0E /* ModernAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC61928A1813F880F970A6A /* ModernAnimations.swift */; };
 /* End PBXBuildFile section */
 
@@ -140,6 +139,7 @@
 		27E16E18B1D2FF2B5FACEF74 /* SpeakEasyColors.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SpeakEasyColors.swift; path = Sources/Utilities/SpeakEasyColors.swift; sourceTree = "<group>"; };
 		2952DE4DAF50F1920A989607 /* de */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		2D277875FCDA3140E47D5F24 /* ModernMicrophoneButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ModernMicrophoneButton.swift; path = Sources/Components/ModernMicrophoneButton.swift; sourceTree = "<group>"; };
+		3190D43A0DF5D17D73EFFBD3 /* Products.storekit */ = {isa = PBXFileReference; includeInIndex = 1; name = Products.storekit; path = Resources/Configuration/Products.storekit; sourceTree = "<group>"; };
 		322AC51DBFE4BE22DEA83746 /* PurchaseSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PurchaseSheet.swift; path = Sources/Views/PurchaseSheet.swift; sourceTree = "<group>"; };
 		366AC8D9A1E6ECBB1A13A538 /* ModernTextDisplayCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ModernTextDisplayCard.swift; path = Sources/Components/ModernTextDisplayCard.swift; sourceTree = "<group>"; };
 		3AC61928A1813F880F970A6A /* ModernAnimations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ModernAnimations.swift; path = Sources/Extensions/ModernAnimations.swift; sourceTree = "<group>"; };
@@ -173,7 +173,6 @@
 		8A49C48E72BE2A882170FC13 /* Localizable.strings */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = Resources/Localization/it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		8F6C87A1885FA16FD5C1580F /* DeviceIdentity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DeviceIdentity.swift; path = Sources/Utilities/DeviceIdentity.swift; sourceTree = "<group>"; };
 		92E9E627B31EE727F4EAE173 /* SpeakEasyIcon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SpeakEasyIcon.swift; path = Sources/Components/SpeakEasyIcon.swift; sourceTree = "<group>"; };
-		932FCF1A8EB7D8098C7E9225 /* FirebaseConfigManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirebaseConfigManager.swift; sourceTree = "<group>"; };
 		94245457DF96A04FA32838A6 /* PurchaseViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PurchaseViewModel.swift; path = Sources/ViewModels/PurchaseViewModel.swift; sourceTree = "<group>"; };
 		989A40DD54C3E7B0DE3FF207 /* Localizable.strings */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = Resources/Localization/ko.lproj/Localizable.strings; sourceTree = "<group>"; };
 		98B52D389A6CF9B61F9DD742 /* it */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -182,9 +181,9 @@
 		9E9AFF452B3DDE396F5B1921 /* UniversalTranslatorApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UniversalTranslatorApp.swift; path = Sources/App/UniversalTranslatorApp.swift; sourceTree = "<group>"; };
 		A4C66B778FB11CE6C771E154 /* ko */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
 		A5CE947E79C159A08720BC92 /* SignInView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SignInView.swift; path = Sources/Views/SignInView.swift; sourceTree = "<group>"; };
-		AA95D15838F26FC4D718C04A /* SecureConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SecureConfig.swift; sourceTree = "<group>"; };
 		ACC7D9F548C051DEB0512CC0 /* AudioConstants.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AudioConstants.swift; path = ../Shared/Models/AudioConstants.swift; sourceTree = "<group>"; };
 		AD587C5D9EF33F74A757A6AA /* Localizable.strings */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = Resources/Localization/en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AF3D7B966824E7229F3C72F9 /* SecureConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SecureConfig.swift; path = Sources/Configuration/SecureConfig.swift; sourceTree = "<group>"; };
 		B67A7C4B0552DEB5352B8651 /* WatchSessionManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WatchSessionManager.swift; path = Sources/Managers/WatchSessionManager.swift; sourceTree = "<group>"; };
 		BB06FBD6060F9943B627FBFA /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
 		BB75C492B93A3B0BF5BDB4B9 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = Sources/Views/ContentView.swift; sourceTree = "<group>"; };
@@ -192,6 +191,7 @@
 		BD4E1D36AAAE55BCB1B22A96 /* ConversationBubblesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConversationBubblesView.swift; path = Sources/Components/ConversationBubblesView.swift; sourceTree = "<group>"; };
 		BE9FD0DA29395D8D3967DB92 /* NetworkConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NetworkConfig.swift; path = Sources/Utilities/NetworkConfig.swift; sourceTree = "<group>"; };
 		C18CBC6CC4360D74852462C8 /* LanguageChipsRow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LanguageChipsRow.swift; path = Sources/Components/LanguageChipsRow.swift; sourceTree = "<group>"; };
+		C40B321E9111B04D39305518 /* FirebaseConfigManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FirebaseConfigManager.swift; path = Sources/Configuration/FirebaseConfigManager.swift; sourceTree = "<group>"; };
 		C62D0501257218F50B887EF7 /* Localizable.strings */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = Resources/Localization/fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		CB57B39A9135AC6F3D6DE6A2 /* LanguageCardsSelector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LanguageCardsSelector.swift; path = Sources/Components/LanguageCardsSelector.swift; sourceTree = "<group>"; };
 		CC17D2EEA5CA3BC869AF05EC /* UsageStatisticsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UsageStatisticsView.swift; path = Sources/Views/UsageStatisticsView.swift; sourceTree = "<group>"; };
@@ -257,8 +257,8 @@
 		02F187BE3DC96C76773204B0 /* Configuration */ = {
 			isa = PBXGroup;
 			children = (
-				AA95D15838F26FC4D718C04A /* SecureConfig.swift */,
-				932FCF1A8EB7D8098C7E9225 /* FirebaseConfigManager.swift */,
+				AF3D7B966824E7229F3C72F9 /* SecureConfig.swift */,
+				C40B321E9111B04D39305518 /* FirebaseConfigManager.swift */,
 			);
 			name = Configuration;
 			sourceTree = "<group>";
@@ -274,6 +274,7 @@
 		09AD697AB791DA9F3FC04948 /* Configuration */ = {
 			isa = PBXGroup;
 			children = (
+				3190D43A0DF5D17D73EFFBD3 /* Products.storekit */,
 			);
 			name = Configuration;
 			sourceTree = "<group>";
@@ -861,7 +862,6 @@
 				D959C805232114B8D2901847 /* DeviceIdentity.swift in Sources */,
 				7038CD0DB73768D0BDA91A09 /* ModernMicrophoneButton.swift in Sources */,
 				63C2D18CD96CDF1DEA314898 /* LowBalanceToast.swift in Sources */,
-				63C2D18CD96CDF1DEA314899 /* ZeroBalanceToast.swift in Sources */,
 				9BC74F1C256BCE79C2640504 /* ModernLanguageSelector.swift in Sources */,
 				128EE35958ECC095A111B0C3 /* SpeakEasyIcon.swift in Sources */,
 				113ED667AF374EA6A386AC39 /* UsageStatsCard.swift in Sources */,
@@ -886,8 +886,8 @@
 				A29F8C340EB8C29B71C653B2 /* AnonymousCreditsManager.swift in Sources */,
 				71F4D82563717CCD3F74BB06 /* AnonymousPurchaseSheet.swift in Sources */,
 				9501B86316F94C58B4E3ABE1 /* ZeroBalanceToast.swift in Sources */,
-				51BCE2A230991549806F3EEF /* SecureConfig.swift in Sources */,
-				FABE1E58624B1AA5B25EBEE1 /* FirebaseConfigManager.swift in Sources */,
+				3E9F5C4AA67D4EAB291C0EF8 /* SecureConfig.swift in Sources */,
+				F08FB427228E7067020C4D1D /* FirebaseConfigManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

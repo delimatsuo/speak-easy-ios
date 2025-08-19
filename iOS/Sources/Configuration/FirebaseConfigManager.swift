@@ -133,15 +133,16 @@ class FirebaseConfigManager {
             return false
         }
         
-        guard let options = app.options else {
-            print("❌ Firebase options not available")
-            return false
-        }
+        let options = app.options
         
-        // Validate required fields
-        let hasAPIKey = !options.apiKey.isEmpty && options.apiKey != "test-api-key"
-        let hasProjectID = !options.projectID.isEmpty && options.projectID != "universal-translator-test"
-        let hasBundleID = !options.bundleID.isEmpty
+        // Validate required fields (handle optionals)
+        let apiKey = options.apiKey ?? ""
+        let projectID = options.projectID ?? ""
+        let bundleID = options.bundleID // This is non-optional
+        
+        let hasAPIKey = !apiKey.isEmpty && apiKey != "test-api-key"
+        let hasProjectID = !projectID.isEmpty && projectID != "universal-translator-test"
+        let hasBundleID = !bundleID.isEmpty
         
         let isValid = hasAPIKey && hasProjectID && hasBundleID
         
