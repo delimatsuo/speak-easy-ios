@@ -1,4 +1,4 @@
-Mervyn Talks - Terms of Use
+Universal AI Translator - Terms of Use
 
 Version 1.0
 
@@ -13,7 +13,7 @@ Contact: contact@electus.dev
 
 1. Service
 
-Mervyn Talks provides real-time translation and speech services. By using the app you agree to these terms.
+Universal AI Translator provides real-time translation and speech services. By using the app you agree to these terms.
 
 
 2. Accounts & Authentication

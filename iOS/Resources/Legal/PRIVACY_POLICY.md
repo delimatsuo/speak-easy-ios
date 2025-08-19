@@ -1,4 +1,4 @@
-Mervyn Talks - Privacy Policy
+Universal AI Translator - Privacy Policy
 
 Version 2.0
 
