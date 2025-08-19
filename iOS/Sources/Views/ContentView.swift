@@ -35,7 +35,6 @@ struct ContentView: View {
     @State private var targetLanguage = UserDefaults.standard.string(forKey: "targetLanguage") ?? "es"
     @State private var transcribedText = ""
     @State private var translatedText = ""
-    @State private var isRecording = false
     @State private var isProcessing = false
     @State private var isPlaying = false
     @State private var showError = false
@@ -129,13 +128,13 @@ struct ContentView: View {
     
     private var microphoneSection: some View {
         ModernMicrophoneButton(
-            isRecording: $isRecording,
+            isRecording: .constant(audioManager.isRecording), // Use AudioManager's state directly
             isProcessing: isProcessing,
             isPlaying: isPlaying,
             action: toggleRecording
         )
         .padding(.vertical, 20)
-        .disabled(!isRecording && !isProcessing && !isPlaying && currentCredits == 0)
+        .disabled(!audioManager.isRecording && !isProcessing && !isPlaying && currentCredits == 0)
     }
     
     @ViewBuilder
@@ -267,13 +266,18 @@ struct ContentView: View {
     // MARK: - Actions
     
     private func toggleRecording() {
-        if isRecording {
+        print("🔍 [UI] toggleRecording called - Current state: audioManager.isRecording=\(audioManager.isRecording)")
+        
+        if audioManager.isRecording {
+            print("🔍 [UI] Stopping recording...")
             stopRecording()
         } else {
             guard canStartTranslation else {
+                print("🔍 [UI] Cannot start translation - showing purchase sheet")
                 showPurchaseSheet = true
                 return
             }
+            print("🔍 [UI] Starting recording...")
             startRecording()
         }
         
@@ -281,6 +285,7 @@ struct ContentView: View {
     }
     
     private func startRecording() {
+        print("🔍 [UI] startRecording called")
         clearConversationText()
         
         // Start background task
@@ -288,27 +293,30 @@ struct ContentView: View {
             self.endBackgroundTask()
         }
         
-        isRecording = true
         recordingDuration = 0
+        print("🔍 [UI] UI state updated: recordingDuration=0")
         
         // Start the recording timer to deduct credits per second
         startRecordingTimer()
         
+        print("🔍 [UI] Calling audioManager.startRecording...")
         audioManager.startRecording { success in
             Task { @MainActor in
+                print("🔍 [UI] audioManager.startRecording completion: success=\(success)")
                 if success {
                     // Defer live transcription to avoid blocking UI
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         do {
+                            print("🔍 [UI] Starting live transcription for language: \(self.sourceLanguage)")
                             try self.audioManager.startLiveTranscription(language: self.sourceLanguage)
                         } catch {
-                            print("Failed to start live transcription: \(error)")
+                            print("❌ [UI] Failed to start live transcription: \(error)")
                             // Don't show error for transcription failure - recording still works
                         }
                     }
                 } else {
+                    print("❌ [UI] Recording failed - resetting state")
                     self.showError("Failed to start recording")
-                    self.isRecording = false
                     self.recordingTimer?.invalidate()
                     self.recordingTimer = nil
                 }
@@ -345,25 +353,32 @@ struct ContentView: View {
     }
     
     private func stopRecording() {
-        isRecording = false
+        print("🔍 [UI] stopRecording called")
         recordingTimer?.invalidate()
         recordingTimer = nil
+        print("🔍 [UI] UI state updated: timer invalidated")
         
         // Stop live transcription first
+        print("🔍 [UI] Stopping live transcription...")
         audioManager.stopLiveTranscription()
         
         // Copy the transcribed text from AudioManager
         transcribedText = audioManager.transcribedText
+        print("🔍 [UI] Transcribed text: '\(transcribedText.prefix(50))...' (length: \(transcribedText.count))")
         
+        print("🔍 [UI] Stopping audio recording...")
         audioManager.stopRecording { _ in }
         
         if !transcribedText.isEmpty {
+            print("🔍 [UI] Text detected - starting translation")
             translateText()
         } else {
+            print("❌ [UI] No speech detected")
             showError("No speech detected. Please try again.")
         }
         
         endBackgroundTask()
+        print("🔍 [UI] stopRecording completed")
     }
     
     private func translateText() {

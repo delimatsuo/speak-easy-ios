@@ -52,8 +52,26 @@ class AudioManager: NSObject, ObservableObject {
     // MARK: - Recording
     
     func startRecording(completion: @escaping (Bool) -> Void) {
+        print("🔍 [RECORDING] startRecording called - Current state: isRecording=\(isRecording)")
+        
+        // Check if already recording
+        if isRecording {
+            print("⚠️ [RECORDING] Already recording - ignoring duplicate call")
+            completion(false)
+            return
+        }
+        
+        // Check if audio recorder is still active from previous session
+        if audioRecorder != nil {
+            print("⚠️ [RECORDING] Previous audioRecorder still exists - cleaning up")
+            audioRecorder?.stop()
+            audioRecorder?.delegate = nil
+            audioRecorder = nil
+        }
+        
         // Fast path: Check if permission is already granted
         let permissionStatus = AVAudioSession.sharedInstance().recordPermission
+        print("🔍 [RECORDING] Permission status: \(permissionStatus.rawValue)")
         
         if permissionStatus == .granted {
             // Permission already granted - start immediately
@@ -90,32 +108,49 @@ class AudioManager: NSObject, ObservableObject {
     }
     
     private func beginRecording() {
+        print("🔍 [RECORDING] beginRecording called")
+        
         // Update UI immediately for instant feedback
         DispatchQueue.main.async {
             self.isRecording = true
+            print("🔍 [RECORDING] UI state updated: isRecording=true")
         }
         
         // Perform heavy operations on background queue
         audioQueue.async {
             do {
                 let session = AVAudioSession.sharedInstance()
+                print("🔍 [RECORDING] Audio session current state:")
+                print("  - Category: \(session.category)")
+                print("  - Mode: \(session.mode)")
+                print("  - IsActive: \(session.isOtherAudioPlaying)")
+                print("  - Available inputs: \(session.availableInputs?.count ?? 0)")
                 
                 // Quick availability check
                 guard session.availableInputs?.isEmpty == false else {
-                    print("❌ No audio input available")
-                    DispatchQueue.main.async { self.isRecording = false }
+                    print("❌ [RECORDING] No audio input available")
+                    DispatchQueue.main.async { 
+                        self.isRecording = false 
+                        print("🔍 [RECORDING] UI state reset: isRecording=false (no input)")
+                    }
                     return
                 }
                 
                 // Fast audio session setup - only if not already configured
                 if session.category != .playAndRecord {
+                    print("🔍 [RECORDING] Setting audio session category to playAndRecord")
                     try session.setCategory(.playAndRecord, 
                                            mode: .measurement,
                                            options: [.defaultToSpeaker, .allowBluetooth])
+                } else {
+                    print("🔍 [RECORDING] Audio session already configured for playAndRecord")
                 }
                 
                 if !session.isOtherAudioPlaying {
+                    print("🔍 [RECORDING] Activating audio session")
                     try session.setActive(true, options: .notifyOthersOnDeactivation)
+                } else {
+                    print("🔍 [RECORDING] Other audio playing - skipping activation")
                 }
                 
                 print("✅ Audio session activated successfully")
@@ -169,17 +204,23 @@ class AudioManager: NSObject, ObservableObject {
     }
     
     func stopRecording(completion: @escaping (URL?) -> Void) {
+        print("🔍 [RECORDING] stopRecording called - Current state: isRecording=\(isRecording)")
+        
         guard isRecording else {
+            print("⚠️ [RECORDING] stopRecording called but not recording - ignoring")
             completion(nil)
             return
         }
         
+        print("🔍 [RECORDING] Stopping audio recorder...")
         audioRecorder?.stop()
         isRecording = false
+        print("🔍 [RECORDING] UI state updated: isRecording=false")
         
         // Clean up audio recorder
         audioRecorder?.delegate = nil
         audioRecorder = nil
+        print("🔍 [RECORDING] Audio recorder cleaned up")
         
         print("🛑 Recording stopped, session cleaned up")
         
@@ -332,38 +373,58 @@ class AudioManager: NSObject, ObservableObject {
     }
     
     func stopLiveTranscription() {
+        print("🔍 [TRANSCRIPTION] stopLiveTranscription called")
+        
         // Clean up recognition components first
+        print("🔍 [TRANSCRIPTION] Cleaning up recognition components...")
         recognitionRequest?.endAudio()
         recognitionTask?.cancel()
         
         // Stop audio engine with proper cleanup
         if audioEngine.isRunning {
+            print("🔍 [TRANSCRIPTION] Stopping audio engine...")
             audioEngine.stop()
+        } else {
+            print("🔍 [TRANSCRIPTION] Audio engine already stopped")
         }
         
         // Remove tap and reset input node (safely)
+        print("🔍 [TRANSCRIPTION] Removing audio engine tap...")
         let inputNode = audioEngine.inputNode
         inputNode.removeTap(onBus: 0)
         print("🔧 Audio engine tap removed successfully")
         
         // Reset audio engine completely for next use
+        print("🔍 [TRANSCRIPTION] Resetting audio engine...")
         audioEngine.reset()
         
         resetTranscription()
         
-        // Reset audio session for next recording
+        // SIMPLIFIED: Don't aggressively reset audio session - just ensure it's ready for recording
+        print("🔍 [TRANSCRIPTION] Ensuring audio session is ready for next recording...")
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setActive(false, options: .notifyOthersOnDeactivation)
-            // Brief delay to ensure session state change
-            Thread.sleep(forTimeInterval: 0.1)
-            // Reactivate with recording configuration
-            try session.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
-            try session.setPreferredSampleRate(48000.0)  // Maintain consistent sample rate
-            try session.setActive(true, options: .notifyOthersOnDeactivation)
-            print("✅ Audio session reset for next recording - Sample rate: \(session.sampleRate)Hz")
+            print("🔍 [TRANSCRIPTION] Current session state:")
+            print("  - Category: \(session.category)")
+            print("  - Mode: \(session.mode)")
+            print("  - Sample rate: \(session.sampleRate)Hz")
+            print("  - IsActive: \(session.isOtherAudioPlaying)")
+            
+            // Only reconfigure if needed - avoid unnecessary session changes
+            if session.category != .playAndRecord {
+                print("🔍 [TRANSCRIPTION] Reconfiguring session category...")
+                try session.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
+            }
+            
+            // Ensure session is active
+            if !session.isOtherAudioPlaying {
+                print("🔍 [TRANSCRIPTION] Ensuring session is active...")
+                try session.setActive(true, options: .notifyOthersOnDeactivation)
+            }
+            
+            print("✅ Audio session ready for next recording - Sample rate: \(session.sampleRate)Hz")
         } catch {
-            print("⚠️ Failed to reset audio session: \(error)")
+            print("⚠️ [TRANSCRIPTION] Failed to prepare audio session: \(error)")
         }
     }
     
