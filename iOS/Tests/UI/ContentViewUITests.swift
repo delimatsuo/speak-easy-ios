@@ -26,13 +26,13 @@ final class ContentViewUITests: XCTestCase {
     // MARK: - App Launch Tests
     
     func testAppLaunchesSuccessfully() throws {
-        XCTAssertTrue(app.staticTexts["Mervyn Talks"].exists, "App title should be visible")
+        XCTAssertTrue(app.staticTexts["Universal AI Translator"].exists, "App title should be visible")
         XCTAssertTrue(app.staticTexts["Real-time voice translation"].exists, "App subtitle should be visible")
     }
     
     func testMainUIElementsPresent() throws {
         // Test header elements
-        XCTAssertTrue(app.staticTexts["Mervyn Talks"].exists)
+        XCTAssertTrue(app.staticTexts["Universal AI Translator"].exists)
         XCTAssertTrue(app.staticTexts["Real-time voice translation"].exists)
         
         // Test language selection area

@@ -5,7 +5,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>Mervyn Talks</string>
+    <string>Universal AI Translator</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -32,7 +32,7 @@
     <key>WKRunsIndependentlyOfCompanionApp</key>
     <false/>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Mervyn Talks needs microphone access to record speech for translation</string>
+    <string>Universal AI Translator needs microphone access to record speech for translation</string>
     <key>CFBundleIconName</key>
     <string>AppIcon</string>
     <key>CFBundleIconFiles</key>
