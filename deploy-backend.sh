@@ -4,7 +4,7 @@
 set -e  # Exit on any error
 
 # Configuration
-PROJECT_ID="universal-translator-prod"
+PROJECT_ID="${GCP_PROJECT_ID:-universal-translator-prod}"
 SERVICE_NAME="universal-translator-api"
 REGION="us-central1"
 IMAGE_NAME="gcr.io/${PROJECT_ID}/${SERVICE_NAME}"

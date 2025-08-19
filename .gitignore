@@ -39,6 +39,7 @@ fastlane/test_output
 *.p12
 *.mobileprovision
 GoogleService-Info.plist
+api_keys.plist
 .env
 .env.local
 .env.production

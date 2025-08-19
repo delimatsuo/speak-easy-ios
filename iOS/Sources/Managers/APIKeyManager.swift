@@ -1,8 +1,8 @@
 //
 //  APIKeyManager.swift
-//  Mervyn Talks
+//  Universal AI Translator
 //
-//  Manages API key storage and retrieval
+//  Manages API key storage and retrieval with secure configuration
 //
 
 import Foundation
@@ -13,7 +13,7 @@ class APIKeyManager {
     private let keychainService = "GoogleTranslateAPIKey"
     private let userDefaultsKey = "hasStoredAPIKey"
     
-    // API keys are now loaded from secure plist file
+    // API keys are now loaded via SecureConfig
     private var cachedAPIKey: String?
     
     private init() {
@@ -70,27 +70,20 @@ class APIKeyManager {
             return cachedKey
         }
         
-        // First try to get from keychain
+        // Use SecureConfig for comprehensive key management
+        if let key = SecureConfig.shared.getAPIKey(for: keychainService) {
+            cachedAPIKey = key
+            return key
+        }
+        
+        // Legacy fallback: try direct keychain access
         if let key = KeychainManager.shared.getAPIKey(forService: keychainService) {
             cachedAPIKey = key
             return key
         }
         
-        // If not in keychain, try to load from plist and store
-        guard let apiKey = loadAPIKeyFromPlist() else { return nil }
-        
-        // Store in keychain for future use
-        do {
-            try KeychainManager.shared.storeAPIKey(apiKey, forService: keychainService)
-            UserDefaults.standard.set(true, forKey: userDefaultsKey)
-            cachedAPIKey = apiKey
-            return apiKey
-        } catch {
-            print("❌ Failed to store API key in keychain: \(error)")
-            // Still return the key from plist
-            cachedAPIKey = apiKey
-            return apiKey
-        }
+        print("❌ No API key available from any secure source")
+        return nil
     }
     
     /// Force refresh the API key (useful for updates)

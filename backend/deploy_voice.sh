@@ -4,10 +4,19 @@
 
 set -e
 
-PROJECT_ID="universal-translator-prod"
-SERVICE_NAME="universal-translator-api"
-REGION="us-central1"
+# Environment-based configuration
+PROJECT_ID="${GCP_PROJECT_ID:-universal-translator-prod}"
+SERVICE_NAME="${SERVICE_NAME:-universal-translator-api}"
+REGION="${GCP_REGION:-us-central1}"
+ENVIRONMENT="${ENVIRONMENT:-production}"
 IMAGE_NAME="gcr.io/${PROJECT_ID}/${SERVICE_NAME}-voice:latest"
+
+echo "🎤 Deploying Voice Translation Backend to Cloud Run"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📋 Project: ${PROJECT_ID}"
+echo "🌍 Environment: ${ENVIRONMENT}"
+echo "📍 Region: ${REGION}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 echo "🎤 Deploying Voice Translation Backend to Cloud Run"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
