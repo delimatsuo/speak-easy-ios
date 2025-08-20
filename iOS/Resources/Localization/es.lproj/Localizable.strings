@@ -79,6 +79,22 @@
 "language_ar" = "Árabe";
 "language_hi" = "Hindi";
 
+// Phase 1: Major Market Languages
+"language_id" = "Indonesio";
+"language_fil" = "Filipino";
+"language_vi" = "Vietnamita";
+"language_tr" = "Turco";
+"language_th" = "Tailandés";
+"language_pl" = "Polaco";
+
+// Phase 2: Regional Powerhouses
+"language_bn" = "Bengalí";
+"language_te" = "Telugu";
+"language_mr" = "Maratí";
+"language_ta" = "Tamil";
+"language_uk" = "Ucraniano";
+"language_ro" = "Rumano";
+
 // Common Actions
 "ok" = "OK";
 "retry" = "Reintentar";
