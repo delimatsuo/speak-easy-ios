@@ -231,9 +231,18 @@ class VoiceTranslationService:
             
             # Map language codes to full language names for better Gemini understanding
             language_name_map = {
+                # Original languages
                 "en": "English", "es": "Spanish", "fr": "French", "de": "German",
                 "it": "Italian", "pt": "Portuguese", "ru": "Russian", "ja": "Japanese",
-                "ko": "Korean", "zh": "Chinese", "ar": "Arabic", "hi": "Hindi"
+                "ko": "Korean", "zh": "Chinese", "ar": "Arabic", "hi": "Hindi",
+                
+                # Phase 1: Major Market Languages
+                "id": "Indonesian", "fil": "Filipino", "vi": "Vietnamese", 
+                "tr": "Turkish", "th": "Thai", "pl": "Polish",
+                
+                # Phase 2: Regional Powerhouses
+                "bn": "Bengali", "te": "Telugu", "mr": "Marathi", 
+                "ta": "Tamil", "uk": "Ukrainian", "ro": "Romanian"
             }
             language_name = language_name_map.get(language, language)
             
@@ -389,6 +398,7 @@ class VoiceTranslationService:
     def _get_tts_language_code(self, lang: str) -> str:
         """Map language code to TTS language code"""
         language_map = {
+            # Original languages
             "en": "en-US",
             "es": "es-ES",
             "fr": "fr-FR",
@@ -400,7 +410,23 @@ class VoiceTranslationService:
             "ko": "ko-KR",
             "zh": "zh-CN",
             "ar": "ar-XA",
-            "hi": "hi-IN"
+            "hi": "hi-IN",
+            
+            # Phase 1: Major Market Languages
+            "id": "id-ID",
+            "fil": "fil-PH",  # Filipino - CRITICAL FIX
+            "vi": "vi-VN",
+            "tr": "tr-TR",
+            "th": "th-TH",
+            "pl": "pl-PL",
+            
+            # Phase 2: Regional Powerhouses
+            "bn": "bn-BD",
+            "te": "te-IN",
+            "mr": "mr-IN",
+            "ta": "ta-IN",
+            "uk": "uk-UA",
+            "ro": "ro-RO"
         }
         return language_map.get(lang, "en-US")
     
