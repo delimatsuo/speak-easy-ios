@@ -638,6 +638,7 @@ struct Language: Codable, Identifiable {
     var id: String { code }
     
     static let defaultLanguages = [
+        // Original languages
         Language(code: "en", name: "English", flag: "🇺🇸"),
         Language(code: "es", name: "Spanish", flag: "🇪🇸"),
         Language(code: "fr", name: "French", flag: "🇫🇷"),
@@ -649,7 +650,23 @@ struct Language: Codable, Identifiable {
         Language(code: "ko", name: "Korean", flag: "🇰🇷"),
         Language(code: "zh", name: "Chinese", flag: "🇨🇳"),
         Language(code: "ar", name: "Arabic", flag: "🇸🇦"),
-        Language(code: "hi", name: "Hindi", flag: "🇮🇳")
+        Language(code: "hi", name: "Hindi", flag: "🇮🇳"),
+        
+        // Phase 1: Major Market Languages
+        Language(code: "id", name: "Indonesian", flag: "🇮🇩"),
+        Language(code: "fil", name: "Filipino", flag: "🇵🇭"),
+        Language(code: "vi", name: "Vietnamese", flag: "🇻🇳"),
+        Language(code: "tr", name: "Turkish", flag: "🇹🇷"),
+        Language(code: "th", name: "Thai", flag: "🇹🇭"),
+        Language(code: "pl", name: "Polish", flag: "🇵🇱"),
+        
+        // Phase 2: Regional Powerhouses
+        Language(code: "bn", name: "Bengali", flag: "🇧🇩"),
+        Language(code: "te", name: "Telugu", flag: "🇮🇳"),
+        Language(code: "mr", name: "Marathi", flag: "🇮🇳"),
+        Language(code: "ta", name: "Tamil", flag: "🇮🇳"),
+        Language(code: "uk", name: "Ukrainian", flag: "🇺🇦"),
+        Language(code: "ro", name: "Romanian", flag: "🇷🇴")
     ]
     
     static func name(for code: String) -> String {

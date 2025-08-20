@@ -561,6 +561,7 @@ class AudioManager: NSObject, ObservableObject {
     
     private func languageToLocale(_ languageCode: String) -> String {
         let localeMap: [String: String] = [
+            // Original languages
             "en": "en-US",
             "es": "es-ES",
             "fr": "fr-FR",
@@ -572,7 +573,23 @@ class AudioManager: NSObject, ObservableObject {
             "ko": "ko-KR",
             "zh": "zh-CN",
             "ar": "ar-SA",
-            "hi": "hi-IN"
+            "hi": "hi-IN",
+            
+            // Phase 1: Major Market Languages
+            "id": "id-ID",
+            "fil": "fil-PH",
+            "vi": "vi-VN",
+            "tr": "tr-TR",
+            "th": "th-TH",
+            "pl": "pl-PL",
+            
+            // Phase 2: Regional Powerhouses
+            "bn": "bn-BD",
+            "te": "te-IN",
+            "mr": "mr-IN",
+            "ta": "ta-IN",
+            "uk": "uk-UA",
+            "ro": "ro-RO"
         ]
         return localeMap[languageCode] ?? "en-US"
     }
