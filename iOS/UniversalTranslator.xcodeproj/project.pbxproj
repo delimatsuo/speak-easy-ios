@@ -8,9 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		02B3B596EC838081AA930CFA /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8A49C48E72BE2A882170FC13 /* Localizable.strings */; };
-		03E77333A27F521B5C08D640 /* (null) in Sources */ = {isa = PBXBuildFile; };
+		03E77333A27F521B5C08D640 /* BuildFile in Sources */ = {isa = PBXBuildFile; };
 		06A9B5BCD6E6256D6F0C6156 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8229C878112205CC1B818EF6 /* KeychainManager.swift */; };
-		06C320ADF82A67FA6555CE32 /* Resources/Assets/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 577ED0340DAB4739BCDAEFC6 /* Resources/Assets/Assets.xcassets */; };
+		06C320ADF82A67FA6555CE32 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 577ED0340DAB4739BCDAEFC6 /* Assets.xcassets */; };
 		0CDCA026A4CCA7C08E39B05D /* NetworkSecurityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999712802FB66BA479AFA571 /* NetworkSecurityManager.swift */; };
 		113ED667AF374EA6A386AC39 /* UsageStatsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C8EE93A66FBF2A8778DF20D /* UsageStatsCard.swift */; };
 		11A651F9927F6D0C4946172D /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 2DB4C7213D368AA6287D930D /* FirebaseStorage */; };
@@ -20,7 +20,7 @@
 		19E8D604B6221DA09D8F60E4 /* TranslationIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D144817361BA56AB787900BE /* TranslationIntegrationTests.swift */; };
 		1A942D39398417A63F4FAA8B /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB06FBD6060F9943B627FBFA /* WatchConnectivity.framework */; };
 		1AF4CC44F0CA15BAE66B655C /* UsageTrackingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7151B6ACCBC6F309E4979F3B /* UsageTrackingService.swift */; };
-		1B44A5D82070BFC2C302AC8D /* (null) in Sources */ = {isa = PBXBuildFile; };
+		1B44A5D82070BFC2C302AC8D /* BuildFile in Sources */ = {isa = PBXBuildFile; };
 		24A7228F5A671ECC22A9F4F0 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 43E6F3803B48A5BFF2DCE2FD /* FirebaseAuth */; };
 		2C32EDFFDB0A6A13796BC197 /* ContentViewUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12A9EDEDC4F31E3E79405D36 /* ContentViewUITests.swift */; };
 		30EC02ABA4E288A116A283C8 /* FirebaseFirestoreSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1F03BBBBBEDE976FE38C47C3 /* FirebaseFirestoreSwift */; };
@@ -30,7 +30,7 @@
 		37579BDD04350F3D3B7C00E4 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D78810219E504692342D82 /* ProfileView.swift */; };
 		3B7B928F5DC843CF51DDCC73 /* PRIVACY_POLICY.md in Resources */ = {isa = PBXBuildFile; fileRef = 5F4694A7766267815150C51E /* PRIVACY_POLICY.md */; };
 		3E9F5C4AA67D4EAB291C0EF8 /* SecureConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3D7B966824E7229F3C72F9 /* SecureConfig.swift */; };
-		3ED5595B7760AE9FC304E87B /* (null) in Sources */ = {isa = PBXBuildFile; };
+		3ED5595B7760AE9FC304E87B /* BuildFile in Sources */ = {isa = PBXBuildFile; };
 		401C7608C3A6832B8D4D609D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63358FB1F095BAD2F4DF2AE5 /* Foundation.framework */; };
 		411B3CCD041249F11A2FA0C3 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A2639274808AF858AD0112 /* SceneDelegate.swift */; };
 		454193E2D73A8E69D8F1B0BC /* PurchaseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94245457DF96A04FA32838A6 /* PurchaseViewModel.swift */; };
@@ -64,9 +64,9 @@
 		A64710AED6114B86A63C0310 /* HeroHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE76FD11B42D56BA27A4285 /* HeroHeader.swift */; };
 		A889BC26DA11C5FEF8CC573A /* NetworkConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9FD0DA29395D8D3967DB92 /* NetworkConfig.swift */; };
 		B26FFAC49DF3E3D88DC78903 /* DesignConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170364F6F1A03BAD03786714 /* DesignConstants.swift */; };
-		B4FECB272FD5F8554109C8E1 /* (null) in Sources */ = {isa = PBXBuildFile; };
+		B4FECB272FD5F8554109C8E1 /* BuildFile in Sources */ = {isa = PBXBuildFile; };
 		B934FFD336D2DAB7C8565FEF /* CreditsBalanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A853F60B093E2A9BAC8669 /* CreditsBalanceView.swift */; };
-		BC87195FFC3BA6F6605CC322 /* Resources/Configuration/GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = EA0483272E46D01B00F0DC51 /* Resources/Configuration/GoogleService-Info.plist */; };
+		BC87195FFC3BA6F6605CC322 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = EA0483272E46D01B00F0DC51 /* GoogleService-Info.plist */; };
 		C530A49A46B4548700F43078 /* LanguageCardsSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB57B39A9135AC6F3D6DE6A2 /* LanguageCardsSelector.swift */; };
 		CA009F6C327E04FA54EA8270 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 5F81392413D116851B3D806D /* Localizable.strings */; };
 		CA2F40E3A215B3F865370517 /* SpeakEasyColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E16E18B1D2FF2B5FACEF74 /* SpeakEasyColors.swift */; };
@@ -148,11 +148,10 @@
 		422C864D82B59035A63C12C4 /* LowBalanceToast.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LowBalanceToast.swift; path = Sources/Components/LowBalanceToast.swift; sourceTree = "<group>"; };
 		44A853F60B093E2A9BAC8669 /* CreditsBalanceView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CreditsBalanceView.swift; path = Sources/Views/CreditsBalanceView.swift; sourceTree = "<group>"; };
 		455ABC97CD860E8811F713D9 /* TERMS_OF_USE.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = TERMS_OF_USE.md; path = Resources/Legal/TERMS_OF_USE.md; sourceTree = "<group>"; };
-		49A3BD933BE2E0E25B253A97 /* zh-Hans */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		4B40C3FA80D47395A22ED0EE /* AnonymousCreditsManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AnonymousCreditsManager.swift; path = Sources/Managers/AnonymousCreditsManager.swift; sourceTree = "<group>"; };
 		4BDF4DFCF16A5DACC75FED25 /* AnonymousPurchaseSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AnonymousPurchaseSheet.swift; path = Sources/Views/AnonymousPurchaseSheet.swift; sourceTree = "<group>"; };
 		54FE9C0AE04185601A3047B4 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../watchOS/Info.plist; sourceTree = "<group>"; };
-		577ED0340DAB4739BCDAEFC6 /* Resources/Assets/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources/Assets/Assets.xcassets; sourceTree = "<group>"; };
+		577ED0340DAB4739BCDAEFC6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources/Assets/Assets.xcassets; sourceTree = "<group>"; };
 		57FF363C7D52BA190FEC21E5 /* APIKeyManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = APIKeyManager.swift; path = Sources/Managers/APIKeyManager.swift; sourceTree = "<group>"; };
 		58C77D3AB8796AAC17E91783 /* ru */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		59D6DF412A6C20AAB3E704DA /* AudioManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AudioManager.swift; path = Sources/Managers/AudioManager.swift; sourceTree = "<group>"; };
@@ -204,7 +203,7 @@
 		E420A88031E718FBA982C50C /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Resources/Assets/Assets.xcassets; sourceTree = "<group>"; };
 		EA0483222E4694E500F0DC51 /* UniversalTranslator.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = UniversalTranslator.entitlements; path = UniversalTranslator/UniversalTranslator.entitlements; sourceTree = "<group>"; };
 		EA0483232E46C56000F0DC51 /* api_keys.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = api_keys.plist; sourceTree = "<group>"; };
-		EA0483272E46D01B00F0DC51 /* Resources/Configuration/GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Resources/Configuration/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		EA0483272E46D01B00F0DC51 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Resources/Configuration/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		EADB5FBC2E4D5139005A74CD /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Resources/Assets/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		EAF0B6F42E496B6900EE3653 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../watchOS/Info.plist; sourceTree = SOURCE_ROOT; };
 		F0E71E23B46B4B0C8077F5E9 /* hi */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = hi; path = hi.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -513,20 +512,11 @@
 			name = "pt-BR.lproj";
 			sourceTree = "<group>";
 		};
-		BEF50D7FC1E711661DCC3672 /* zh-Hans.lproj */ = {
-			isa = PBXGroup;
-			children = (
-				00AB260C9F2F28B43D7AABB3 /* Localizable.strings */,
-			);
-			name = "zh-Hans.lproj";
-			sourceTree = "<group>";
-		};
 		CAEDAD421ECED0A5D9B327A2 /* Localization */ = {
 			isa = PBXGroup;
 			children = (
 				CB5CEF1ECA915E995085469A /* de.lproj */,
 				0CD2D13AB5AAB9DC865617B7 /* ar.lproj */,
-				BEF50D7FC1E711661DCC3672 /* zh-Hans.lproj */,
 				B37F93B690DF5CCEAB6F3386 /* ja.lproj */,
 				A439B110A232EF9900002433 /* en.lproj */,
 				2D919D80ED5122C63CCD290D /* es.lproj */,
@@ -583,8 +573,8 @@
 		EA92CB242E41688E007279C1 /* Recovered References */ = {
 			isa = PBXGroup;
 			children = (
-				EA0483272E46D01B00F0DC51 /* Resources/Configuration/GoogleService-Info.plist */,
-				577ED0340DAB4739BCDAEFC6 /* Resources/Assets/Assets.xcassets */,
+				EA0483272E46D01B00F0DC51 /* GoogleService-Info.plist */,
+				577ED0340DAB4739BCDAEFC6 /* Assets.xcassets */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -715,7 +705,6 @@
 				de,
 				it,
 				"pt-BR",
-				"zh-Hans",
 				ja,
 				ru,
 				ko,
@@ -758,8 +747,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				06C320ADF82A67FA6555CE32 /* Resources/Assets/Assets.xcassets in Resources */,
-				BC87195FFC3BA6F6605CC322 /* Resources/Configuration/GoogleService-Info.plist in Resources */,
+				06C320ADF82A67FA6555CE32 /* Assets.xcassets in Resources */,
+				BC87195FFC3BA6F6605CC322 /* GoogleService-Info.plist in Resources */,
 				760EF37AC9D19DF88A33FEA9 /* Localizable.strings in Resources */,
 				9C86E31BEDE265F861C38295 /* Localizable.strings in Resources */,
 				471CBC5178706885F1153E9F /* Localizable.strings in Resources */,
@@ -814,10 +803,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3ED5595B7760AE9FC304E87B /* (null) in Sources */,
-				03E77333A27F521B5C08D640 /* (null) in Sources */,
-				1B44A5D82070BFC2C302AC8D /* (null) in Sources */,
-				B4FECB272FD5F8554109C8E1 /* (null) in Sources */,
+				3ED5595B7760AE9FC304E87B /* BuildFile in Sources */,
+				03E77333A27F521B5C08D640 /* BuildFile in Sources */,
+				1B44A5D82070BFC2C302AC8D /* BuildFile in Sources */,
+				B4FECB272FD5F8554109C8E1 /* BuildFile in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -929,7 +918,6 @@
 				2952DE4DAF50F1920A989607 /* de */,
 				98B52D389A6CF9B61F9DD742 /* it */,
 				F6D19873A998DF6A83118E5A /* Portuguese (Brazil) */,
-				49A3BD933BE2E0E25B253A97 /* zh-Hans */,
 				D0300DF263146515ACFC1117 /* ja */,
 				58C77D3AB8796AAC17E91783 /* ru */,
 				A4C66B778FB11CE6C771E154 /* ko */,
@@ -1105,7 +1093,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Resources/Configuration/UniversalTranslator.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = 3FLG8W6B95;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Resources/Configuration/Info.plist;
@@ -1137,7 +1125,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Resources/Configuration/UniversalTranslator.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = 3FLG8W6B95;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Resources/Configuration/Info.plist;
