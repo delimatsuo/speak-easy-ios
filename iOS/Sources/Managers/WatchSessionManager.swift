@@ -30,6 +30,7 @@ class WatchSessionManager: NSObject, ObservableObject {
     }
     
     func activate() {
+        print("🔄 iPhone: Activating WatchSession...")
         session?.activate()
     }
     
@@ -243,8 +244,11 @@ extension WatchSessionManager: WCSessionDelegate {
     // MARK: - Helper Methods
     
     private func handleReceivedMessage(_ message: [String: Any], replyHandler: (([String: Any]) -> Void)?) {
+        print("📥 iPhone: Received message from Watch: \(message)")
+        
         // Check for special actions
         if let action = message["action"] as? String {
+            print("🎬 iPhone: Processing action: \(action)")
             switch action {
             case "requestCredits":
                 Task { @MainActor in

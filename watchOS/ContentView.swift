@@ -210,10 +210,21 @@ struct ContentView: View {
     }
     
     private func handleTranslationResponse(_ response: TranslationResponse?) {
-        guard let response = response else { return }
+        guard let response = response else { 
+            print("❌ Watch: No response received")
+            errorMessage = "No response from iPhone"
+            currentState = .error
+            return
+        }
+        
+        print("📥 Watch: Processing response - Original: '\(response.originalText)', Translated: '\(response.translatedText)', Error: \(response.error ?? "none")")
         
         if let error = response.error {
             errorMessage = error
+            currentState = .error
+            WKInterfaceDevice.current().play(.failure)
+        } else if response.translatedText.isEmpty {
+            errorMessage = "Empty translation received"
             currentState = .error
             WKInterfaceDevice.current().play(.failure)
         } else {

@@ -119,14 +119,30 @@ struct ContentView: View {
     }
     
     private var headerSection: some View {
-        HeroHeader(
-            title: NSLocalizedString("app_name", comment: "App name displayed in header"),
-            subtitle: NSLocalizedString("app_subtitle", comment: "App subtitle describing main functionality"),
-            onHistory: nil,
-            onProfile: { showProfile = true },
-            style: .fullBleed,
-            remainingSeconds: isAnonymousMode ? anonymousCredits.remainingSeconds : credits.remainingSeconds
-        )
+        VStack(spacing: 8) {
+            HeroHeader(
+                title: NSLocalizedString("app_name", comment: "App name displayed in header"),
+                subtitle: NSLocalizedString("app_subtitle", comment: "App subtitle describing main functionality"),
+                onHistory: nil,
+                onProfile: { showProfile = true },
+                style: .fullBleed,
+                remainingSeconds: isAnonymousMode ? anonymousCredits.remainingSeconds : credits.remainingSeconds
+            )
+            
+            // Watch Connection Status
+            if watchSession.isPaired {
+                HStack {
+                    Image(systemName: watchSession.isReachable ? "applewatch" : "applewatch.slash")
+                        .font(.caption)
+                        .foregroundColor(watchSession.isReachable ? .green : .orange)
+                    Text(watchSession.isReachable ? "Watch Connected" : "Watch Disconnected")
+                        .font(.caption)
+                        .foregroundColor(watchSession.isReachable ? .green : .orange)
+                    Spacer()
+                }
+                .padding(.horizontal)
+            }
+        }
     }
     
     private var languageSection: some View {
