@@ -12,6 +12,7 @@ import Firebase
 import UIKit
 import FirebaseFirestore
 import StoreKit
+import WatchConnectivity
 
 // Distinguishes which language picker is active for the sheet
 fileprivate enum LanguagePickerType: Identifiable {
@@ -27,6 +28,7 @@ struct ContentView: View {
     @StateObject private var usageService = UsageTrackingService.shared
     @ObservedObject private var credits = CreditsManager.shared
     @ObservedObject private var anonymousCredits = AnonymousCreditsManager.shared
+    @StateObject private var watchSession = WatchSessionManager.shared
     
     // Anonymous mode state
     @State private var isAnonymousMode = true
@@ -71,11 +73,23 @@ struct ContentView: View {
             .onDisappear(perform: cleanup)
             .onChange(of: sourceLanguage) { newValue in
                 UserDefaults.standard.set(newValue, forKey: "sourceLanguage")
+                watchSession.syncLanguages(source: newValue, target: targetLanguage)
             }
             .onChange(of: targetLanguage) { newValue in
                 UserDefaults.standard.set(newValue, forKey: "targetLanguage")
+                watchSession.syncLanguages(source: sourceLanguage, target: newValue)
             }
             .onChange(of: auth.isSignedIn, perform: handleAuthChange)
+            .onChange(of: credits.remainingSeconds) { _ in
+                // Sync credit balance to Watch
+                watchSession.updateCredits()
+            }
+            .onChange(of: anonymousCredits.remainingSeconds) { _ in
+                // Sync anonymous credit balance to Watch if in anonymous mode
+                if isAnonymousMode {
+                    watchSession.updateCredits()
+                }
+            }
     }
     
     private var contentWithOverlay: some View {
@@ -194,12 +208,20 @@ struct ContentView: View {
         let temp = sourceLanguage
         sourceLanguage = targetLanguage
         targetLanguage = temp
+        // Sync swapped languages to Watch
+        watchSession.syncLanguages(source: sourceLanguage, target: targetLanguage)
     }
     
     private func setupView() {
         setupAudio()
         loadLanguages()
         requestPermissions()
+        
+        // Activate Watch connectivity
+        watchSession.activate()
+        
+        // Sync initial languages to Watch
+        watchSession.syncLanguages(source: sourceLanguage, target: targetLanguage)
         
         // Clear any previous conversation text for privacy
         clearConversationText()
