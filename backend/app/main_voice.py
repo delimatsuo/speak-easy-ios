@@ -237,11 +237,11 @@ class VoiceTranslationService:
                 "ko": "Korean", "zh": "Chinese", "ar": "Arabic", "hi": "Hindi",
                 
                 # Phase 1: Major Market Languages
-                "id": "Indonesian", "fil": "Filipino", "vi": "Vietnamese", 
+                "id": "Indonesian", "fil": "Tagalog", "vi": "Vietnamese",
                 "tr": "Turkish", "th": "Thai", "pl": "Polish",
                 
                 # Phase 2: Regional Powerhouses
-                "bn": "Bengali", "te": "Telugu", "mr": "Marathi", 
+                "bn": "Bengali", "te": "Telugu", "mr": "Marathi",
                 "ta": "Tamil", "uk": "Ukrainian", "ro": "Romanian"
             }
             language_name = language_name_map.get(language, language)
@@ -342,12 +342,21 @@ class VoiceTranslationService:
     def _gtts_fallback(self, text: str, language: str) -> bytes:
         """Fallback to gTTS for text-to-speech"""
         try:
-            tts = gTTS(text=text, lang=language, slow=False)
+            # Map language codes for gTTS compatibility
+            gtts_language_map = {
+                "fil": "tl",  # Filipino -> Tagalog for gTTS
+                "zh": "zh-cn",  # Chinese simplified
+                "ar": "ar"  # Arabic
+            }
+            gtts_lang = gtts_language_map.get(language, language)
+            
+            tts = gTTS(text=text, lang=gtts_lang, slow=False)
             with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as tmp_file:
                 tts.save(tmp_file.name)
                 with open(tmp_file.name, 'rb') as f:
                     audio_data = f.read()
                 os.unlink(tmp_file.name)
+                logger.info(f"✅ gTTS fallback successful for {language} -> {gtts_lang}")
                 return audio_data
         except Exception as e:
             logger.error(f"gTTS fallback failed: {e}")
@@ -414,7 +423,7 @@ class VoiceTranslationService:
             
             # Phase 1: Major Market Languages
             "id": "id-ID",
-            "fil": "fil-PH",  # Filipino - CRITICAL FIX
+            "fil": "tl-PH",  # Filipino -> Tagalog (TTS services use 'tl' not 'fil')
             "vi": "vi-VN",
             "tr": "tr-TR",
             "th": "th-TH",
