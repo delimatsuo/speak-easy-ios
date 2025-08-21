@@ -638,7 +638,7 @@ struct Language: Codable, Identifiable {
     var id: String { code }
     
     static let defaultLanguages = [
-        // Original languages
+        // Original languages - ONLY GEMINI 2.5 FLASH TTS SUPPORTED
         Language(code: "en", name: "English", flag: "🇺🇸"),
         Language(code: "es", name: "Spanish", flag: "🇪🇸"),
         Language(code: "fr", name: "French", flag: "🇫🇷"),
@@ -648,13 +648,13 @@ struct Language: Codable, Identifiable {
         Language(code: "ru", name: "Russian", flag: "🇷🇺"),
         Language(code: "ja", name: "Japanese", flag: "🇯🇵"),
         Language(code: "ko", name: "Korean", flag: "🇰🇷"),
-        Language(code: "zh", name: "Chinese", flag: "🇨🇳"),
+        // REMOVED: Chinese (zh) - Not supported by Gemini 2.5 Flash TTS
         Language(code: "ar", name: "Arabic", flag: "🇸🇦"),
         Language(code: "hi", name: "Hindi", flag: "🇮🇳"),
         
         // Phase 1: Major Market Languages
         Language(code: "id", name: "Indonesian", flag: "🇮🇩"),
-        Language(code: "fil", name: "Filipino", flag: "🇵🇭"),
+        // REMOVED: Filipino (fil) - Not supported by Gemini 2.5 Flash TTS
         Language(code: "vi", name: "Vietnamese", flag: "🇻🇳"),
         Language(code: "tr", name: "Turkish", flag: "🇹🇷"),
         Language(code: "th", name: "Thai", flag: "🇹🇭"),

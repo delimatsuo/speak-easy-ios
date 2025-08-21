@@ -124,8 +124,10 @@ class VoiceTranslationService:
         if not gemini_api_key or len(gemini_api_key) < 20:
             raise RuntimeError("Invalid or missing GEMINI_API_KEY")
         genai.configure(api_key=gemini_api_key)
-        # Using Gemini 2.5 Flash Preview TTS for cost-effective translations and speech
+        # Using Gemini 2.5 Flash for translations
         self.model = genai.GenerativeModel('gemini-2.5-flash')
+        # Using Gemini 2.5 Flash TTS for speech generation
+        self.tts_model = genai.GenerativeModel('gemini-2.5-flash-preview-tts')
         
     async def translate_text(self, text: str, source_lang: str, target_lang: str, voice_config: dict = None) -> Dict[str, Any]:
         """Translate text using Gemini with strict timeout"""
@@ -210,87 +212,72 @@ class VoiceTranslationService:
             raise HTTPException(status_code=500, detail="Translation failed")
     
     async def text_to_speech(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
-        """Convert text to speech using Gemini TTS primary, Google Cloud TTS fallback"""
-        # Try Gemini TTS first (primary method)
-        try:
-            return await self._gemini_tts(text, language, voice_gender, speaking_rate)
-        except Exception as e:
-            logger.warning(f"Gemini TTS failed, falling back to Google Cloud TTS: {e}")
-            return await self._google_cloud_tts(text, language, voice_gender, speaking_rate)
+        """Convert text to speech using ONLY Gemini 2.5 Flash TTS"""
+        # Use ONLY Gemini 2.5 Flash TTS - no fallbacks
+        return await self._gemini_tts(text, language, voice_gender, speaking_rate)
     
     async def _gemini_tts(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
-        """Primary TTS using Gemini 2.5 Flash with enhanced voice control"""
+        """Primary TTS using Gemini 2.5 Flash TTS API"""
         try:
-            # Map voice gender to style descriptions
-            voice_style_map = {
-                "neutral": "professional and clear",
-                "male": "confident and warm male voice", 
-                "female": "friendly and articulate female voice"
+            # Get the correct language code for Gemini TTS
+            tts_language_code = self._get_tts_language_code(language)
+            
+            logger.info(f"🎵 Gemini TTS: Converting '{text[:50]}...' to {tts_language_code}")
+            
+            # Map voice gender to Gemini voice names
+            voice_map = {
+                "male": "Kore",      # Male voice
+                "female": "Charon",  # Female voice  
+                "neutral": "Kore"    # Default to male
             }
-            voice_style = voice_style_map.get(voice_gender, "professional and clear")
+            voice_name = voice_map.get(voice_gender.lower(), "Kore")
             
-            # Map language codes to full language names for better Gemini understanding
-            language_name_map = {
-                # Original languages
-                "en": "English", "es": "Spanish", "fr": "French", "de": "German",
-                "it": "Italian", "pt": "Portuguese", "ru": "Russian", "ja": "Japanese",
-                "ko": "Korean", "zh": "Chinese", "ar": "Arabic", "hi": "Hindi",
-                
-                # Phase 1: Major Market Languages
-                "id": "Indonesian", "fil": "Tagalog", "vi": "Vietnamese",
-                "tr": "Turkish", "th": "Thai", "pl": "Polish",
-                
-                # Phase 2: Regional Powerhouses
-                "bn": "Bengali", "te": "Telugu", "mr": "Marathi",
-                "ta": "Tamil", "uk": "Ukrainian", "ro": "Romanian"
-            }
-            language_name = language_name_map.get(language, language)
-            
-            # Create enhanced prompt for Gemini TTS
-            prompt = f"""Convert this text to natural speech in {language_name} with a {voice_style} tone.
-            
-            Text to convert: {text}
-            
-            Please generate clear, natural-sounding speech with appropriate pacing and intonation."""
-            
-            # Configure generation for audio output
-            generation_config = {
-                "temperature": 0.1,  # Low temperature for consistent voice
-                "top_p": 0.8,
-                "candidate_count": 1
-            }
-            
-            # Add timeout for Gemini TTS
+            # Create the TTS request using Gemini 2.5 Flash TTS
             import asyncio
+            from google.genai import types
+            
             loop = asyncio.get_event_loop()
+            
+            # Use the new Gemini TTS API
             response = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: self.model.generate_content(
-                    prompt,
-                    generation_config=generation_config
+                loop.run_in_executor(None, lambda: self.tts_model.generate_content(
+                    contents=[{"parts": [{"text": text}]}],
+                    config=types.GenerateContentConfig(
+                        response_modalities=["AUDIO"],
+                        speech_config=types.SpeechConfig(
+                            voice_config=types.VoiceConfig(
+                                prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                    voice_name=voice_name
+                                )
+                            )
+                        )
+                    )
                 )),
-                timeout=6.0  # Optimized timeout for TTS
+                timeout=10.0
             )
             
-            # Check if response contains audio content
-            if hasattr(response, 'audio_content') and response.audio_content:
-                logger.info(f"✅ Gemini TTS successful for {language}")
-                return response.audio_content
-            elif hasattr(response, 'parts') and response.parts:
-                # Check if any part contains audio data
-                for part in response.parts:
-                    if hasattr(part, 'inline_data') and part.inline_data.mime_type.startswith('audio/'):
-                        logger.info(f"✅ Gemini TTS successful for {language} (inline data)")
-                        return part.inline_data.data
-            
-            # If no audio content found, raise exception to trigger fallback
-            raise Exception("No audio content in Gemini response")
+            # Extract audio data from response
+            if (response.candidates and 
+                len(response.candidates) > 0 and 
+                response.candidates[0].content.parts and
+                len(response.candidates[0].content.parts) > 0 and
+                hasattr(response.candidates[0].content.parts[0], 'inline_data')):
+                
+                audio_data = response.candidates[0].content.parts[0].inline_data.data
+                logger.info(f"✅ Gemini TTS successful for {language} -> {tts_language_code}")
+                return audio_data
+            else:
+                raise Exception(f"No audio content in Gemini TTS response for {tts_language_code}")
             
         except asyncio.TimeoutError:
-            logger.warning(f"Gemini TTS timed out for {language}")
-            raise Exception("Gemini TTS timeout")
+            logger.error(f"❌ Gemini TTS timed out for {language}")
+            raise HTTPException(status_code=408, detail="TTS request timed out")
+        except ImportError as e:
+            logger.error(f"❌ Gemini TTS API not available: {e}")
+            raise HTTPException(status_code=503, detail="TTS service requires updated google-genai library")
         except Exception as e:
-            logger.warning(f"Gemini TTS failed for {language}: {e}")
-            raise e
+            logger.error(f"❌ Gemini TTS failed for {language}: {e}")
+            raise HTTPException(status_code=500, detail="TTS generation failed")
     
     async def _google_cloud_tts(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
         """Fallback TTS using Google Cloud TTS"""
@@ -342,10 +329,8 @@ class VoiceTranslationService:
     def _gtts_fallback(self, text: str, language: str) -> bytes:
         """Fallback to gTTS for text-to-speech"""
         try:
-            # Map language codes for gTTS compatibility
+            # Map language codes for gTTS compatibility (DEPRECATED - NOT USED)
             gtts_language_map = {
-                "fil": "tl",  # Filipino -> Tagalog for gTTS
-                "zh": "zh-cn",  # Chinese simplified
                 "ar": "ar"  # Arabic
             }
             gtts_lang = gtts_language_map.get(language, language)
@@ -405,37 +390,37 @@ class VoiceTranslationService:
             raise HTTPException(status_code=500, detail="Speech recognition failed")
     
     def _get_tts_language_code(self, lang: str) -> str:
-        """Map language code to TTS language code"""
+        """Map language code to Gemini 2.5 Flash TTS supported language codes"""
         language_map = {
-            # Original languages
-            "en": "en-US",
-            "es": "es-ES",
-            "fr": "fr-FR",
-            "de": "de-DE",
-            "it": "it-IT",
-            "pt": "pt-BR",
-            "ru": "ru-RU",
-            "ja": "ja-JP",
-            "ko": "ko-KR",
-            "zh": "zh-CN",
-            "ar": "ar-XA",
-            "hi": "hi-IN",
+            # Original languages - ONLY GEMINI 2.5 FLASH TTS SUPPORTED
+            "en": "en-US",      # ✅ English (US) - Supported
+            "es": "es-US",      # ✅ Spanish (US) - Supported
+            "fr": "fr-FR",      # ✅ French (France) - Supported
+            "de": "de-DE",      # ✅ German (Germany) - Supported
+            "it": "it-IT",      # ✅ Italian (Italy) - Supported
+            "pt": "pt-BR",      # ✅ Portuguese (Brazil) - Supported
+            "ru": "ru-RU",      # ✅ Russian (Russia) - Supported
+            "ja": "ja-JP",      # ✅ Japanese (Japan) - Supported
+            "ko": "ko-KR",      # ✅ Korean (Korea) - Supported
+            # REMOVED: Chinese (zh) - Not supported by Gemini 2.5 Flash TTS
+            "ar": "ar-EG",      # ✅ Arabic (Egyptian) - Supported
+            "hi": "hi-IN",      # ✅ Hindi (India) - Supported
             
             # Phase 1: Major Market Languages
-            "id": "id-ID",
-            "fil": "tl-PH",  # Filipino -> Tagalog (TTS services use 'tl' not 'fil')
-            "vi": "vi-VN",
-            "tr": "tr-TR",
-            "th": "th-TH",
-            "pl": "pl-PL",
+            "id": "id-ID",      # ✅ Indonesian (Indonesia) - Supported
+            # REMOVED: Filipino (fil) - Not supported by Gemini 2.5 Flash TTS
+            "vi": "vi-VN",      # ✅ Vietnamese (Vietnam) - Supported
+            "tr": "tr-TR",      # ✅ Turkish (Turkey) - Supported
+            "th": "th-TH",      # ✅ Thai (Thailand) - Supported
+            "pl": "pl-PL",      # ✅ Polish (Poland) - Supported
             
             # Phase 2: Regional Powerhouses
-            "bn": "bn-BD",
-            "te": "te-IN",
-            "mr": "mr-IN",
-            "ta": "ta-IN",
-            "uk": "uk-UA",
-            "ro": "ro-RO"
+            "bn": "bn-BD",      # ✅ Bengali (Bangladesh) - Supported
+            "te": "te-IN",      # ✅ Telugu (India) - Supported
+            "mr": "mr-IN",      # ✅ Marathi (India) - Supported
+            "ta": "ta-IN",      # ✅ Tamil (India) - Supported
+            "uk": "uk-UA",      # ✅ Ukrainian (Ukraine) - Supported
+            "ro": "ro-RO"       # ✅ Romanian (Romania) - Supported
         }
         return language_map.get(lang, "en-US")
     

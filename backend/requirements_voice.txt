@@ -5,7 +5,8 @@ google-cloud-secret-manager==2.16.4
 google-cloud-logging==3.8.0
 google-cloud-texttospeech==2.14.2
 google-cloud-speech==2.21.1
-google-generativeai==0.3.0
+google-generativeai==0.8.3
+google-genai==0.2.2
 gtts==2.4.0
 httpx==0.25.1
 python-multipart==0.0.6

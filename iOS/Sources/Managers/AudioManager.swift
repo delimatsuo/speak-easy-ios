@@ -561,7 +561,7 @@ class AudioManager: NSObject, ObservableObject {
     
     private func languageToLocale(_ languageCode: String) -> String {
         let localeMap: [String: String] = [
-            // Original languages
+            // Original languages - ONLY GEMINI 2.5 FLASH TTS SUPPORTED
             "en": "en-US",
             "es": "es-ES",
             "fr": "fr-FR",
@@ -571,13 +571,13 @@ class AudioManager: NSObject, ObservableObject {
             "ru": "ru-RU",
             "ja": "ja-JP",
             "ko": "ko-KR",
-            "zh": "zh-CN",
+            // REMOVED: Chinese (zh) - Not supported by Gemini 2.5 Flash TTS
             "ar": "ar-SA",
             "hi": "hi-IN",
             
             // Phase 1: Major Market Languages
             "id": "id-ID",
-            "fil": "fil-PH",
+            // REMOVED: Filipino (fil) - Not supported by Gemini 2.5 Flash TTS
             "vi": "vi-VN",
             "tr": "tr-TR",
             "th": "th-TH",

@@ -18,14 +18,14 @@
 "speak_in" = "Speak in";
 "translate_to" = "Translate to";
 
-// Language Names
+// Language Names - ONLY GEMINI 2.5 FLASH TTS SUPPORTED
 "language_en" = "English";
 "language_es" = "Spanish";
 "language_fr" = "French";
 "language_de" = "German";
 "language_it" = "Italian";
 "language_pt" = "Portuguese";
-"language_zh" = "Chinese";
+// REMOVED: Chinese (zh) - Not supported by Gemini 2.5 Flash TTS
 "language_ja" = "Japanese";
 "language_ru" = "Russian";
 "language_ko" = "Korean";
@@ -34,7 +34,7 @@
 
 // Phase 1: Major Market Languages
 "language_id" = "Indonesian";
-"language_fil" = "Filipino";
+// REMOVED: Filipino (fil) - Not supported by Gemini 2.5 Flash TTS
 "language_vi" = "Vietnamese";
 "language_tr" = "Turkish";
 "language_th" = "Thai";
@@ -95,19 +95,7 @@
 "sign_in_anonymous" = "Continue as Guest";
 "signing_in" = "Signing in...";
 
-// Languages
-"language_en" = "English";
-"language_es" = "Spanish";
-"language_fr" = "French";
-"language_de" = "German";
-"language_it" = "Italian";
-"language_pt" = "Portuguese";
-"language_zh" = "Chinese";
-"language_ja" = "Japanese";
-"language_ko" = "Korean";
-"language_ru" = "Russian";
-"language_ar" = "Arabic";
-"language_hi" = "Hindi";
+// Languages (duplicate entries removed - see above for complete list)
 
 // Common Actions
 "ok" = "OK";
