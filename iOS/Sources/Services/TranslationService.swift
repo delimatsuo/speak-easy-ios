@@ -648,7 +648,7 @@ struct Language: Codable, Identifiable {
         Language(code: "ru", name: "Russian", flag: "🇷🇺"),
         Language(code: "ja", name: "Japanese", flag: "🇯🇵"),
         Language(code: "ko", name: "Korean", flag: "🇰🇷"),
-        // REMOVED: Chinese (zh) - Not supported by Gemini 2.5 Flash TTS
+        Language(code: "zh", name: "Chinese", flag: "🇨🇳"),
         Language(code: "ar", name: "Arabic", flag: "🇸🇦"),
         Language(code: "hi", name: "Hindi", flag: "🇮🇳"),
         

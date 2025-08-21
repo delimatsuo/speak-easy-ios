@@ -184,6 +184,7 @@
 		AD587C5D9EF33F74A757A6AA /* Localizable.strings */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = Resources/Localization/en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AF3D7B966824E7229F3C72F9 /* SecureConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SecureConfig.swift; path = Sources/Configuration/SecureConfig.swift; sourceTree = "<group>"; };
 		B67A7C4B0552DEB5352B8651 /* WatchSessionManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WatchSessionManager.swift; path = Sources/Managers/WatchSessionManager.swift; sourceTree = "<group>"; };
+		B7E1F4956A369BC0E4761B82 /* zh-CN */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-CN"; path = "Resources/Localization/zh-CN.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		BB06FBD6060F9943B627FBFA /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
 		BB75C492B93A3B0BF5BDB4B9 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = Sources/Views/ContentView.swift; sourceTree = "<group>"; };
 		BC3C89CD45A7884BE2619006 /* AccessibilitySupport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AccessibilitySupport.swift; path = Sources/Extensions/AccessibilitySupport.swift; sourceTree = "<group>"; };
@@ -710,6 +711,7 @@
 				ko,
 				ar,
 				hi,
+				"zh-CN",
 			);
 			mainGroup = 4A5132BB0DF3195B1E9A7926;
 			minimizedProjectReferenceProxies = 1;
@@ -923,6 +925,7 @@
 				A4C66B778FB11CE6C771E154 /* ko */,
 				61009A9B1D52FDC8FF6A7F36 /* ar */,
 				F0E71E23B46B4B0C8077F5E9 /* hi */,
+				B7E1F4956A369BC0E4761B82 /* zh-CN */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

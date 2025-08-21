@@ -571,7 +571,7 @@ class AudioManager: NSObject, ObservableObject {
             "ru": "ru-RU",
             "ja": "ja-JP",
             "ko": "ko-KR",
-            // REMOVED: Chinese (zh) - Not supported by Gemini 2.5 Flash TTS
+            "zh": "zh-CN",
             "ar": "ar-SA",
             "hi": "hi-IN",
             

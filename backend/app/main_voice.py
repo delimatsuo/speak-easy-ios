@@ -331,6 +331,7 @@ class VoiceTranslationService:
         try:
             # Map language codes for gTTS compatibility (DEPRECATED - NOT USED)
             gtts_language_map = {
+                "zh": "zh-cn",  # Chinese simplified
                 "ar": "ar"  # Arabic
             }
             gtts_lang = gtts_language_map.get(language, language)
@@ -402,7 +403,7 @@ class VoiceTranslationService:
             "ru": "ru-RU",      # ✅ Russian (Russia) - Supported
             "ja": "ja-JP",      # ✅ Japanese (Japan) - Supported
             "ko": "ko-KR",      # ✅ Korean (Korea) - Supported
-            # REMOVED: Chinese (zh) - Not supported by Gemini 2.5 Flash TTS
+            "zh": "zh-CN",      # ✅ Chinese (Simplified) - Google Cloud TTS standard
             "ar": "ar-EG",      # ✅ Arabic (Egyptian) - Supported
             "hi": "hi-IN",      # ✅ Hindi (India) - Supported
             

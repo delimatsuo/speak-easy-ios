@@ -25,7 +25,7 @@
 "language_de" = "German";
 "language_it" = "Italian";
 "language_pt" = "Portuguese";
-// REMOVED: Chinese (zh) - Not supported by Gemini 2.5 Flash TTS
+"language_zh" = "Chinese";
 "language_ja" = "Japanese";
 "language_ru" = "Russian";
 "language_ko" = "Korean";
