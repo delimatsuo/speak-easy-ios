@@ -52,10 +52,13 @@ class WatchConnectivityManager: NSObject, ObservableObject {
             return
         }
         
-        // Store completion handler
+        // Store completion handler with better logging
         pendingRequests[request.requestId] = { [weak self] response in
+            print("🔄 Watch: Completion handler called for \(request.requestId)")
+            print("📊 Watch: Response details - Has response: \(response != nil), Error: \(response?.error ?? "none")")
             DispatchQueue.main.async {
                 self?.lastResponse = response
+                print("✅ Watch: Response stored in lastResponse")
             }
         }
         

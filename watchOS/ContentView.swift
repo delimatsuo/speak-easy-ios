@@ -201,11 +201,38 @@ struct ContentView: View {
             audioFileURL: audioURL
         )
         
+        print("📤 Watch: Sending request with ID: \(request.requestId)")
+        
         connectivityManager.sendTranslationRequest(request) { success in
-            if !success {
+            if success {
+                print("✅ Watch: Request sent, waiting for response...")
+                // Monitor for response
+                self.waitForResponse(requestId: request.requestId, attempts: 0)
+            } else {
                 errorMessage = "Failed to send to iPhone"
                 currentState = .error
             }
+        }
+    }
+    
+    private func waitForResponse(requestId: UUID, attempts: Int) {
+        // Check if response arrived
+        if let response = connectivityManager.lastResponse {
+            print("📥 Watch: Response arrived!")
+            handleTranslationResponse(response)
+            // Clear for next request
+            connectivityManager.lastResponse = nil
+        } else if attempts < 30 { // Wait up to 30 seconds
+            // Keep waiting
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                if self?.currentState == .processing {
+                    self?.waitForResponse(requestId: requestId, attempts: attempts + 1)
+                }
+            }
+        } else {
+            // Timeout
+            errorMessage = "Translation timeout"
+            currentState = .error
         }
     }
     
