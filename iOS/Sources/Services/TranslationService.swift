@@ -161,10 +161,13 @@ class TranslationService: ObservableObject {
         print("⏰ [\(Date())] Request timeout set to \(requestTimeoutSeconds) seconds")
         #endif
         
-        // Optionally attach API key if configured (not required for backend using Secret Manager)
+        // API key is optional - backend uses Google Cloud Secret Manager
+        // Only attach if available (for development/testing scenarios)
         if let apiKey = APIKeyManager.shared.getAPIKey() {
             request.setValue(apiKey, forHTTPHeaderField: "X-API-Key")
-            // Do not log API key
+            print("🔐 Using keychain storage for GoogleTranslateAPIKey")
+        } else {
+            print("🔐 No local API key - backend will use Secret Manager")
         }
         
         let body = TranslationAudioRequest(

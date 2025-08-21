@@ -212,8 +212,8 @@ class VoiceTranslationService:
             raise HTTPException(status_code=500, detail="Translation failed")
     
     async def text_to_speech(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
-        """Convert text to speech using ONLY Gemini 2.5 Flash TTS"""
-        # Use ONLY Gemini 2.5 Flash TTS - no fallbacks
+        """Convert text to speech using Gemini 2.5 Flash TTS with Google Cloud TTS fallback"""
+        # Try Gemini TTS first, fall back to Google Cloud TTS if needed
         return await self._gemini_tts(text, language, voice_gender, speaking_rate)
     
     async def _gemini_tts(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
@@ -238,36 +238,36 @@ class VoiceTranslationService:
             
             loop = asyncio.get_event_loop()
             
-            # Use the new Gemini TTS API
-            response = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: self.tts_model.generate_content(
-                    contents=[{"parts": [{"text": text}]}],
-                    config=types.GenerateContentConfig(
-                        response_modalities=["AUDIO"],
-                        speech_config=types.SpeechConfig(
-                            voice_config=types.VoiceConfig(
-                                prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                    voice_name=voice_name
-                                )
-                            )
-                        )
-                    )
-                )),
-                timeout=10.0
-            )
-            
-            # Extract audio data from response
-            if (response.candidates and 
-                len(response.candidates) > 0 and 
-                response.candidates[0].content.parts and
-                len(response.candidates[0].content.parts) > 0 and
-                hasattr(response.candidates[0].content.parts[0], 'inline_data')):
+            # Simplified Gemini TTS approach - let's try basic text generation first
+            # If Gemini TTS is not available, we'll fall back to Google Cloud TTS
+            try:
+                response = await asyncio.wait_for(
+                    loop.run_in_executor(None, lambda: self.tts_model.generate_content(
+                        contents=[{"parts": [{"text": text}]}]
+                    )),
+                    timeout=10.0
+                )
                 
-                audio_data = response.candidates[0].content.parts[0].inline_data.data
-                logger.info(f"✅ Gemini TTS successful for {language} -> {tts_language_code}")
-                return audio_data
-            else:
-                raise Exception(f"No audio content in Gemini TTS response for {tts_language_code}")
+                # Check if response contains audio data
+                if (response.candidates and 
+                    len(response.candidates) > 0 and 
+                    response.candidates[0].content.parts and
+                    len(response.candidates[0].content.parts) > 0):
+                    
+                    # Look for audio in the response
+                    for part in response.candidates[0].content.parts:
+                        if hasattr(part, 'inline_data') and part.inline_data:
+                            audio_data = part.inline_data.data
+                            logger.info(f"✅ Gemini TTS successful for {language} -> {tts_language_code}")
+                            return audio_data
+                
+                # If no audio found, fall back to Google Cloud TTS
+                logger.warning(f"⚠️ Gemini TTS returned no audio for {language}, falling back to Google Cloud TTS")
+                return await self._google_cloud_tts(text, language, voice_gender, speaking_rate)
+                
+            except Exception as gemini_error:
+                logger.warning(f"⚠️ Gemini TTS failed for {language}: {gemini_error}, falling back to Google Cloud TTS")
+                return await self._google_cloud_tts(text, language, voice_gender, speaking_rate)
             
         except asyncio.TimeoutError:
             logger.error(f"❌ Gemini TTS timed out for {language}")
