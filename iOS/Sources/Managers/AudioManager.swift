@@ -136,15 +136,12 @@ class AudioManager: NSObject, ObservableObject {
                     return
                 }
                 
-                // Fast audio session setup - only if not already configured
-                if session.category != .playAndRecord {
-                    print("🔍 [RECORDING] Setting audio session category to playAndRecord")
-                    try session.setCategory(.playAndRecord, 
-                                           mode: .measurement,
-                                           options: [.defaultToSpeaker, .allowBluetooth])
-                } else {
-                    print("🔍 [RECORDING] Audio session already configured for playAndRecord")
-                }
+                // Ensure audio session is properly configured for recording
+                print("🔍 [RECORDING] Configuring audio session for recording")
+                try session.setCategory(.playAndRecord, 
+                                       mode: .default,
+                                       options: [.defaultToSpeaker, .allowBluetooth])
+                print("🔍 [RECORDING] Audio session configured for recording")
                 
                 if !session.isOtherAudioPlaying {
                     print("🔍 [RECORDING] Activating audio session")
@@ -318,7 +315,7 @@ class AudioManager: NSObject, ObservableObject {
             throw TranscriptionError.recognizerNotAvailable
         }
         
-        // Use consistent audio session configuration (same as recording)
+        // Configure audio session for live transcription (measurement mode for better accuracy)
         let audioSession = AVAudioSession.sharedInstance()
         try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
         
@@ -400,8 +397,8 @@ class AudioManager: NSObject, ObservableObject {
         
         resetTranscription()
         
-        // SIMPLIFIED: Don't aggressively reset audio session - just ensure it's ready for recording
-        print("🔍 [TRANSCRIPTION] Ensuring audio session is ready for next recording...")
+        // CRITICAL FIX: Properly reset audio session for next recording
+        print("🔍 [TRANSCRIPTION] Resetting audio session for next recording...")
         do {
             let session = AVAudioSession.sharedInstance()
             print("🔍 [TRANSCRIPTION] Current session state:")
@@ -410,21 +407,24 @@ class AudioManager: NSObject, ObservableObject {
             print("  - Sample rate: \(session.sampleRate)Hz")
             print("  - IsActive: \(session.isOtherAudioPlaying)")
             
-            // Only reconfigure if needed - avoid unnecessary session changes
-            if session.category != .playAndRecord {
-                print("🔍 [TRANSCRIPTION] Reconfiguring session category...")
-                try session.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
-            }
+            // CRITICAL: Reset session completely to avoid conflicts
+            // First deactivate to clear any lingering state
+            try session.setActive(false, options: .notifyOthersOnDeactivation)
+            print("🔍 [TRANSCRIPTION] Session deactivated")
             
-            // Ensure session is active
-            if !session.isOtherAudioPlaying {
-                print("🔍 [TRANSCRIPTION] Ensuring session is active...")
-                try session.setActive(true, options: .notifyOthersOnDeactivation)
-            }
+            // Wait a brief moment for the session to fully reset
+            Thread.sleep(forTimeInterval: 0.1)
             
-            print("✅ Audio session ready for next recording - Sample rate: \(session.sampleRate)Hz")
+            // Reconfigure for recording with default mode (not measurement)
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            print("🔍 [TRANSCRIPTION] Session reconfigured for recording")
+            
+            // Reactivate the session
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+            print("✅ Audio session reset and ready for next recording - Sample rate: \(session.sampleRate)Hz")
+            
         } catch {
-            print("⚠️ [TRANSCRIPTION] Failed to prepare audio session: \(error)")
+            print("⚠️ [TRANSCRIPTION] Failed to reset audio session: \(error)")
         }
     }
     
