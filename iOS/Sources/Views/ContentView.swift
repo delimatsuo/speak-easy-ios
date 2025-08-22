@@ -68,7 +68,11 @@ struct ContentView: View {
             .profileSheet(isPresented: $showProfile)
             .usageStatsSheet(isPresented: $showUsageStats)
             .languagePickerSheet(item: $showLanguagePicker, sourceLanguage: $sourceLanguage, targetLanguage: $targetLanguage)
-            .errorAlert(isPresented: $showError, message: errorMessage, onRetry: retryLastTranslation)
+            .errorAlert(isPresented: $showError, message: errorMessage, onRetry: retryLastTranslation, onCancel: {
+                // Reset state when user cancels
+                isProcessing = false
+                // Don't clear the text, just the processing state
+            })
             .onAppear(perform: setupView)
             .onDisappear(perform: cleanup)
             .onChange(of: sourceLanguage) { newValue in
@@ -706,9 +710,15 @@ extension View {
         }
     }
     
-    func errorAlert(isPresented: Binding<Bool>, message: String, onRetry: @escaping () -> Void) -> some View {
+    func errorAlert(isPresented: Binding<Bool>, message: String, onRetry: @escaping () -> Void, onCancel: @escaping () -> Void = {}) -> some View {
         self.alert("Translation Error", isPresented: isPresented) {
-            if !message.contains("✅") {
+            // Always show Cancel button to let users go back
+            Button(NSLocalizedString("cancel", comment: "Cancel button text"), role: .cancel) {
+                onCancel()
+            }
+            
+            // Show Retry button if it makes sense
+            if !message.contains("✅") && !message.contains("No speech detected") {
                 Button(NSLocalizedString("retry", comment: "Retry button text")) {
                     onRetry()
                 }
