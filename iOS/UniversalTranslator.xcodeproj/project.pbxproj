@@ -1035,6 +1035,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "../watchOS/UniversalTranslator Watch App.entitlements";
 				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = 3FLG8W6B95;
 				ENABLE_BITCODE = YES;
@@ -1070,6 +1071,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "../watchOS/UniversalTranslator Watch App.entitlements";
 				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = 3FLG8W6B95;
 				ENABLE_BITCODE = YES;
@@ -1183,7 +1185,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Resources/Configuration/UniversalTranslator.entitlements;
+				CODE_SIGN_ENTITLEMENTS = UniversalTranslator.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = 3FLG8W6B95;
@@ -1215,7 +1217,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Resources/Configuration/UniversalTranslator.entitlements;
+				CODE_SIGN_ENTITLEMENTS = UniversalTranslator.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = 3FLG8W6B95;

@@ -45,42 +45,56 @@ class WatchConnectivityManager: NSObject, ObservableObject {
     
     // MARK: - Sending Requests
     
-    func sendTranslationRequest(_ request: TranslationRequest, completion: @escaping (Bool) -> Void) {
-        guard let session = session, session.isReachable else {
-            print("❌ Watch: iPhone not reachable")
+    func sendTranslationRequest(_ request: TranslationRequest, completion: @escaping (Bool) -> Void, attempt: Int = 1) {
+        guard let session = session else {
+            print("❌ Watch: WCSession not available.")
             completion(false)
             return
         }
+
+        guard session.isReachable else {
+            print("❌ Watch: iPhone not reachable on attempt \(attempt).")
+            if attempt < 3 {
+                print("🔄 Watch: Retrying in 2 seconds...")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    self.sendTranslationRequest(request, completion: completion, attempt: attempt + 1)
+                }
+            } else {
+                completion(false)
+            }
+            return
+        }
         
-        // Store completion handler with better logging
         pendingRequests[request.requestId] = { [weak self] response in
             print("🔄 Watch: Completion handler called for \(request.requestId)")
-            print("📊 Watch: Response details - Has response: \(response != nil), Error: \(response?.error ?? "none")")
             DispatchQueue.main.async {
                 self?.lastResponse = response
                 print("✅ Watch: Response stored in lastResponse")
             }
         }
         
-        // If we have audio file, use file transfer
         if let audioURL = request.audioFileURL {
             let metadata = request.dictionary
             session.transferFile(audioURL, metadata: metadata)
             print("📤 Watch: Sending audio file to iPhone: \(audioURL.lastPathComponent)")
             completion(true)
-        }
-        // For small audio data, use message
-        else if let audioData = request.audioData, audioData.count < AudioConstants.maxChunkSize {
-            session.sendMessage(request.dictionary, replyHandler: nil) { error in
-                print("❌ Watch: Failed to send message: \(error)")
-                completion(false)
+        } else if let audioData = request.audioData, audioData.count < AudioConstants.maxChunkSize {
+            session.sendMessage(request.dictionary, replyHandler: { _ in
+                print("✅ Watch: Successfully sent audio data message.")
+                completion(true)
+            }) { error in
+                print("❌ Watch: Failed to send message: \(error.localizedDescription)")
+                if (error as? WCError)?.code == .notReachable, attempt < 3 {
+                    print("🔄 Watch: iPhone became unreachable. Retrying in 2 seconds...")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        self.sendTranslationRequest(request, completion: completion, attempt: attempt + 1)
+                    }
+                } else {
+                    completion(false)
+                }
             }
-            print("📤 Watch: Sending audio data to iPhone: \(audioData.count) bytes")
-            completion(true)
-        }
-        // Fallback for edge cases
-        else {
-            print("❌ Watch: No audio data to send")
+        } else {
+            print("❌ Watch: No audio data to send or data too large for a message.")
             completion(false)
         }
     }

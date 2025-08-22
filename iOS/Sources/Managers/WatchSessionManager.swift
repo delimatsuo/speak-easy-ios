@@ -36,17 +36,34 @@ class WatchSessionManager: NSObject, ObservableObject {
     
     // MARK: - Sending Data to Watch
     
-    func sendTranslationResponse(_ response: TranslationResponse) {
-        guard let session = session, session.isReachable else {
-            print("❌ iPhone: Watch not reachable")
+    func sendTranslationResponse(_ response: TranslationResponse, attempt: Int = 1) {
+        guard let session = session else {
+            print("❌ iPhone: WCSession not available.")
+            return
+        }
+
+        guard session.isReachable else {
+            print("❌ iPhone: Watch not reachable on attempt \(attempt).")
+            if attempt < 3 {
+                print("🔄 iPhone: Retrying in 2 seconds...")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    self.sendTranslationResponse(response, attempt: attempt + 1)
+                }
+            }
             return
         }
         
-        session.sendMessage(response.dictionary, replyHandler: nil) { error in
-            print("❌ iPhone: Failed to send response: \(error)")
+        session.sendMessage(response.dictionary, replyHandler: { _ in
+            print("✅ iPhone: Successfully sent translation response to Watch.")
+        }) { error in
+            print("❌ iPhone: Failed to send response: \(error.localizedDescription)")
+            if (error as? WCError)?.code == .notReachable, attempt < 3 {
+                print("🔄 iPhone: Watch became unreachable. Retrying in 2 seconds...")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    self.sendTranslationResponse(response, attempt: attempt + 1)
+                }
+            }
         }
-        
-        print("📤 iPhone: Sent translation response to Watch")
     }
     
     func updateCredits() {
