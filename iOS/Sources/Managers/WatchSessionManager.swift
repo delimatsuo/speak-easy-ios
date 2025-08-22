@@ -124,7 +124,7 @@ class WatchSessionManager: NSObject, ObservableObject {
                 print("🎵 iPhone: Audio data: \(translationResult.audioData?.count ?? 0) bytes")
                 
                 // 3. Create response
-                let creditsRemaining = await MainActor.run { creditsManager.remainingSeconds }
+                let creditsRemaining = await MainActor.run { self.creditsManager.remainingSeconds }
                 let response = TranslationResponse(
                     requestId: request.requestId,
                     originalText: transcription,
@@ -137,10 +137,10 @@ class WatchSessionManager: NSObject, ObservableObject {
                 print("📤 iPhone: Sending response with \(response.audioData?.count ?? 0) bytes of audio")
                 
                 // 4. Send back to Watch
-                sendTranslationResponse(response)
+                self.sendTranslationResponse(response)
                 
                 // 5. Update credits
-                updateCredits()
+                self.updateCredits()
                 
                 // Clean up temp files
                 if audioURL != nil {
@@ -157,7 +157,7 @@ class WatchSessionManager: NSObject, ObservableObject {
                 print("❌ iPhone: Translation failed: \(error)")
                 
                 // Send error response
-                let creditsRemaining = await MainActor.run { creditsManager.remainingSeconds }
+                let creditsRemaining = await MainActor.run { self.creditsManager.remainingSeconds }
                 let errorResponse = TranslationResponse(
                     requestId: request.requestId,
                     originalText: "",
@@ -167,7 +167,7 @@ class WatchSessionManager: NSObject, ObservableObject {
                     creditsRemaining: creditsRemaining
                 )
                 
-                sendTranslationResponse(errorResponse)
+                self.sendTranslationResponse(errorResponse)
             }
         }
     }
@@ -181,7 +181,7 @@ class WatchSessionManager: NSObject, ObservableObject {
         } catch {
             print("⚠️ iPhone: Local STT failed, using server")
             // Fall back to server STT
-            return try await translationService.remoteSpeechToText(audioURL: audioURL, language: language)
+            return try await self.translationService.remoteSpeechToText(audioURL: audioURL, language: language)
         }
     }
 }
@@ -265,7 +265,7 @@ extension WatchSessionManager: WCSessionDelegate {
             // Send error response
             if let request = TranslationRequest(from: file.metadata ?? [:]) {
                 Task {
-                    let creditsRemaining = await MainActor.run { creditsManager.remainingSeconds }
+                    let creditsRemaining = await MainActor.run { self.creditsManager.remainingSeconds }
                     let errorResponse = TranslationResponse(
                         requestId: request.requestId,
                         originalText: "",
@@ -274,7 +274,7 @@ extension WatchSessionManager: WCSessionDelegate {
                         error: "Failed to save audio file",
                         creditsRemaining: creditsRemaining
                     )
-                    sendTranslationResponse(errorResponse)
+                    self.sendTranslationResponse(errorResponse)
                 }
             }
         }
@@ -295,7 +295,7 @@ extension WatchSessionManager: WCSessionDelegate {
             switch action {
             case "requestCredits":
                 Task { @MainActor in
-                    let credits = creditsManager.remainingSeconds
+                    let credits = self.creditsManager.remainingSeconds
                     replyHandler?(["credits": credits])
                     print("💰 iPhone: Sent credits to Watch: \(credits)")
                 }
