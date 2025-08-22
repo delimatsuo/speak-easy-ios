@@ -282,12 +282,20 @@ class TranslationService: ObservableObject {
             
             // If audio is base64 encoded, decode it
             if let audioBase64 = audioResponse.audioBase64 {
+                print("🎵 Decoding base64 audio: \(audioBase64.prefix(50))...")
                 audioResponse.audioData = Data(base64Encoded: audioBase64)
+                print("🎵 Decoded audio data: \(audioResponse.audioData?.count ?? 0) bytes")
             }
             
             // If audio URL is provided, download it with retry
             if audioResponse.audioData == nil, let audioURLString = audioResponse.audioURL {
+                print("🎵 Downloading audio from URL: \(audioURLString)")
                 audioResponse.audioData = try await self.downloadAudioWithRetry(from: audioURLString)
+                print("🎵 Downloaded audio data: \(audioResponse.audioData?.count ?? 0) bytes")
+            }
+            
+            if audioResponse.audioData == nil {
+                print("⚠️ No audio data available - neither base64 nor URL provided")
             }
             
             return audioResponse

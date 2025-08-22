@@ -117,6 +117,9 @@ class WatchSessionManager: NSObject, ObservableObject {
                 )
                 
                 print("🌐 iPhone: Translated: \"\(translationResult.translatedText.prefix(50))...\"")
+                print("🎵 iPhone: Audio base64: \(translationResult.audioBase64 != nil ? "present" : "nil")")
+                print("🎵 iPhone: Audio URL: \(translationResult.audioURL ?? "nil")")
+                print("🎵 iPhone: Audio data: \(translationResult.audioData?.count ?? 0) bytes")
                 
                 // 3. Create response
                 let creditsRemaining = await MainActor.run { creditsManager.remainingSeconds }
@@ -129,14 +132,24 @@ class WatchSessionManager: NSObject, ObservableObject {
                     creditsRemaining: creditsRemaining
                 )
                 
+                print("📤 iPhone: Sending response with \(response.audioData?.count ?? 0) bytes of audio")
+                
                 // 4. Send back to Watch
                 sendTranslationResponse(response)
                 
                 // 5. Update credits
                 updateCredits()
                 
-                // Clean up temp file
-                try? FileManager.default.removeItem(at: audioToProcess)
+                // Clean up temp files
+                if audioURL != nil {
+                    // Clean up the copied file from Watch
+                    try? FileManager.default.removeItem(at: audioURL!)
+                    print("🗑️ iPhone: Cleaned up Watch audio file")
+                } else if let tempURL = audioToProcess as URL? {
+                    // Clean up temp file created from audio data
+                    try? FileManager.default.removeItem(at: tempURL)
+                    print("🗑️ iPhone: Cleaned up temp audio file")
+                }
                 
             } catch {
                 print("❌ iPhone: Translation failed: \(error)")
@@ -231,9 +244,37 @@ extension WatchSessionManager: WCSessionDelegate {
     func session(_ session: WCSession, didReceive file: WCSessionFile) {
         print("📥 iPhone: Received file from Watch: \(file.fileURL.lastPathComponent)")
         
-        // Process translation request from metadata
-        if let request = TranslationRequest(from: file.metadata ?? [:]) {
-            processTranslationRequest(request, audioURL: file.fileURL)
+        // IMPORTANT: Copy the file immediately as WCSessionFile is temporary
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let destinationURL = documentsPath.appendingPathComponent("watch_audio_\(UUID().uuidString).m4a")
+        
+        do {
+            // Copy the file to a permanent location
+            try FileManager.default.copyItem(at: file.fileURL, to: destinationURL)
+            print("📁 iPhone: Copied Watch audio to: \(destinationURL.lastPathComponent)")
+            
+            // Process translation request from metadata with the copied file
+            if let request = TranslationRequest(from: file.metadata ?? [:]) {
+                processTranslationRequest(request, audioURL: destinationURL)
+            }
+        } catch {
+            print("❌ iPhone: Failed to copy Watch audio file: \(error)")
+            
+            // Send error response
+            if let request = TranslationRequest(from: file.metadata ?? [:]) {
+                Task {
+                    let creditsRemaining = await MainActor.run { creditsManager.remainingSeconds }
+                    let errorResponse = TranslationResponse(
+                        requestId: request.requestId,
+                        originalText: "",
+                        translatedText: "",
+                        audioData: nil,
+                        error: "Failed to save audio file",
+                        creditsRemaining: creditsRemaining
+                    )
+                    sendTranslationResponse(errorResponse)
+                }
+            }
         }
     }
     

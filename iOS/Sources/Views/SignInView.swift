@@ -14,7 +14,7 @@ struct SignInView: View {
     var body: some View {
         VStack(spacing: 24) {
             VStack(spacing: 12) {
-                Text("Welcome to Mervyn Talks")
+                Text("Welcome to Universal AI Translator")
                     .font(.title.bold())
                 Text("We do not retain your conversations. Your voice/text is used only to perform translation in real time, then purged when the session ends. Purchase and session metadata (no conversation content) may be stored to manage credits and support.")
                     .font(.subheadline)

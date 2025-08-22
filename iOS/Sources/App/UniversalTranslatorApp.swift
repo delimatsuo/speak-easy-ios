@@ -37,7 +37,7 @@ private struct FirstRunConsentView: View {
         NavigationView {
             VStack(spacing: 24) {
                 VStack(spacing: 16) {
-                    Text("Welcome to Mervyn Talks")
+                    Text("Welcome to Universal AI Translator")
                         .font(.largeTitle.bold())
                         .multilineTextAlignment(.center)
                     

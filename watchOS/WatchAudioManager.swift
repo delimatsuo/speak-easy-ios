@@ -51,8 +51,11 @@ class WatchAudioManager: NSObject, ObservableObject {
     }
     
     private func beginRecording(completion: @escaping (Bool) -> Void) {
-        // Clean up any previous recording
+        // Clean up any previous recording and stop playback
         cleanupRecording()
+        if isPlaying {
+            stopPlayback()
+        }
         
         // Create temporary file URL
         recordingURL = AudioConstants.temporaryAudioFileURL()

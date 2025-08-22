@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var originalText = ""
     @State private var recordingProgress: Double = 0
     @State private var recordingTimer: Timer?
+    @State private var lastTranslationAudio: Data?
     
     enum AppState {
         case idle
@@ -132,6 +133,12 @@ struct ContentView: View {
     }
     
     private func startRecording() {
+        // Clear previous translation results
+        originalText = ""
+        translatedText = ""
+        lastTranslationAudio = nil
+        errorMessage = ""
+        
         // Check WCSession activation first
         guard let session = WCSession.default as WCSession? else {
             errorMessage = "Watch connectivity not supported"
@@ -224,9 +231,9 @@ struct ContentView: View {
             connectivityManager.lastResponse = nil
         } else if attempts < 30 { // Wait up to 30 seconds
             // Keep waiting
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                if self?.currentState == .processing {
-                    self?.waitForResponse(requestId: requestId, attempts: attempts + 1)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                if self.currentState == .processing {
+                    self.waitForResponse(requestId: requestId, attempts: attempts + 1)
                 }
             }
         } else {
@@ -246,6 +253,9 @@ struct ContentView: View {
         
         print("📥 Watch: Processing response - Original: '\(response.originalText)', Translated: '\(response.translatedText)', Error: \(response.error ?? "none")")
         
+        // Clear the lastResponse to prevent replaying old responses
+        connectivityManager.lastResponse = nil
+        
         if let error = response.error {
             errorMessage = error
             currentState = .error
@@ -259,8 +269,13 @@ struct ContentView: View {
             translatedText = response.translatedText
             
             if let audioData = response.audioData {
+                print("🎵 Watch: Received audio data: \(audioData.count) bytes")
+                // Store audio for replay
+                lastTranslationAudio = audioData
                 playTranslation(audioData)
             } else {
+                print("⚠️ Watch: No audio data in response - text only")
+                lastTranslationAudio = nil
                 currentState = .idle
                 WKInterfaceDevice.current().play(.success)
             }
@@ -291,6 +306,18 @@ struct ContentView: View {
     private func stopRecordingTimer() {
         recordingTimer?.invalidate()
         recordingTimer = nil
+    }
+    
+    // MARK: - Replay Function
+    
+    private func replayLastTranslation() {
+        guard let audioData = lastTranslationAudio else {
+            print("⚠️ Watch: No audio to replay")
+            return
+        }
+        
+        print("🔁 Watch: Replaying last translation (\(audioData.count) bytes)")
+        playTranslation(audioData)
     }
 }
 
@@ -434,19 +461,39 @@ struct StatusView: View {
             
             // Translation results
             if !originalText.isEmpty || !translatedText.isEmpty {
-                VStack(spacing: 4) {
-                    if !originalText.isEmpty {
-                        Text(originalText)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                VStack(spacing: 8) {
+                    VStack(spacing: 4) {
+                        if !originalText.isEmpty {
+                            Text(originalText)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        
+                        if !translatedText.isEmpty {
+                            Text(translatedText)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .multilineTextAlignment(.center)
+                        }
                     }
                     
-                    if !translatedText.isEmpty {
-                        Text(translatedText)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .multilineTextAlignment(.center)
+                    // Replay button for last translation
+                    if !translatedText.isEmpty && lastTranslationAudio != nil {
+                        Button(action: replayLastTranslation) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .font(.caption)
+                                Text("Replay")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(16)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding(.horizontal)
@@ -470,7 +517,7 @@ struct StatusView: View {
             if creditsRemaining <= 0 {
                 return "No credits remaining"
             } else if !isConnected {
-                return "Open Mervyn Talks on iPhone"
+                return "Open Universal AI Translator on iPhone"
             } else {
                 return "Tap to translate"
             }
