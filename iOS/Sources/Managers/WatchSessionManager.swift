@@ -84,7 +84,7 @@ class WatchSessionManager: NSObject, ObservableObject {
     // MARK: - Processing Watch Requests
     
     private func processTranslationRequest(_ request: TranslationRequest, audioURL: URL?) {
-        Task {
+        Task.detached {  // Use detached to avoid blocking main thread
             do {
                 var audioToProcess: URL
                 
@@ -101,16 +101,18 @@ class WatchSessionManager: NSObject, ObservableObject {
                     throw TranslationError.emptyText
                 }
                 
-                print("🎙️ iPhone: Processing Watch audio: \(audioToProcess.lastPathComponent)")
+                await MainActor.run {
+                    print("🎙️ iPhone: Processing Watch audio: \(audioToProcess.lastPathComponent)")
+                }
                 
                 // Use existing iPhone pipeline
                 // 1. Speech-to-text (local or server)
-                let transcription = try await transcribeAudio(audioToProcess, language: request.sourceLanguage)
+                let transcription = try await self.transcribeAudio(audioToProcess, language: request.sourceLanguage)
                 
                 print("📝 iPhone: Transcribed: \"\(transcription.prefix(50))...\"")
                 
                 // 2. Translation with audio
-                let translationResult = try await translationService.translateWithAudio(
+                let translationResult = try await self.translationService.translateWithAudio(
                     text: transcription,
                     from: request.sourceLanguage,
                     to: request.targetLanguage

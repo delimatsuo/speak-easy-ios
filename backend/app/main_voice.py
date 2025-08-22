@@ -17,6 +17,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from google.cloud import secretmanager, texttospeech, speech, logging as cloud_logging
 import google.generativeai as genai
+from google import genai as google_genai
+from google.genai import types
 from pydantic import BaseModel, Field
 import httpx
 from gtts import gTTS
@@ -126,8 +128,8 @@ class VoiceTranslationService:
         genai.configure(api_key=gemini_api_key)
         # Using Gemini 2.5 Flash for translations
         self.model = genai.GenerativeModel('gemini-2.5-flash')
-        # Using Gemini 2.5 Flash TTS for speech generation
-        self.tts_model = genai.GenerativeModel('gemini-2.5-flash-preview-tts')
+        # Initialize Google GenAI client for TTS
+        self.genai_client = google_genai.Client(api_key=gemini_api_key)
         
     async def translate_text(self, text: str, source_lang: str, target_lang: str, voice_config: dict = None) -> Dict[str, Any]:
         """Translate text using Gemini with strict timeout"""
@@ -212,141 +214,185 @@ class VoiceTranslationService:
             raise HTTPException(status_code=500, detail="Translation failed")
     
     async def text_to_speech(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
-        """Convert text to speech using Gemini 2.5 Flash TTS with Google Cloud TTS fallback"""
-        # Try Gemini TTS first, fall back to Google Cloud TTS if needed
+        """Convert text to speech using ONLY Gemini 2.5 Flash TTS - NO FALLBACK"""
+        # Use ONLY Gemini TTS - no fallback
         return await self._gemini_tts(text, language, voice_gender, speaking_rate)
     
     async def _gemini_tts(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
-        """Primary TTS using Gemini 2.5 Flash TTS API"""
+        """TTS using ONLY Gemini 2.5 Flash TTS API - NO FALLBACK"""
         try:
             # Get the correct language code for Gemini TTS
             tts_language_code = self._get_tts_language_code(language)
             
-            logger.info(f"🎵 Gemini TTS: Converting '{text[:50]}...' to {tts_language_code}")
+            logger.info(f"🎵 Gemini Flash TTS: Converting '{text[:50]}...' to {tts_language_code}")
             
             # Map voice gender to Gemini voice names
+            # Available voices: Puck, Charon, Kore, Fenrir, Aoede
             voice_map = {
                 "male": "Kore",      # Male voice
                 "female": "Charon",  # Female voice  
-                "neutral": "Kore"    # Default to male
+                "neutral": "Fenrir"  # Neutral voice
             }
             voice_name = voice_map.get(voice_gender.lower(), "Kore")
             
-            # Create the TTS request using Gemini 2.5 Flash TTS
-            import asyncio
-            from google.genai import types
+            # Create natural language prompt for better control
+            # Adjust speaking rate description based on value
+            rate_desc = ""
+            if speaking_rate < 0.8:
+                rate_desc = "slowly and clearly"
+            elif speaking_rate > 1.2:
+                rate_desc = "quickly"
+            else:
+                rate_desc = "at normal pace"
             
+            # Create TTS prompt with language instruction
+            tts_prompt = f"Say {rate_desc} in {self._get_language_name(language)}: {text}"
+            
+            logger.info(f"🔄 Calling Gemini Flash TTS with voice: {voice_name}, prompt: {tts_prompt[:100]}...")
+            
+            import asyncio
+            import io
             loop = asyncio.get_event_loop()
             
-            # Simplified Gemini TTS approach - let's try basic text generation first
-            # If Gemini TTS is not available, we'll fall back to Google Cloud TTS
             try:
+                # Use the proper Gemini TTS API
                 response = await asyncio.wait_for(
-                    loop.run_in_executor(None, lambda: self.tts_model.generate_content(
-                        contents=[{"parts": [{"text": text}]}]
+                    loop.run_in_executor(None, lambda: self.genai_client.models.generate_content(
+                        model="gemini-2.5-flash-preview-tts",
+                        contents=tts_prompt,
+                        config=types.GenerateContentConfig(
+                            response_modalities=["AUDIO"],
+                            speech_config=types.SpeechConfig(
+                                voice_config=types.VoiceConfig(
+                                    prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                        voice_name=voice_name
+                                    )
+                                )
+                            )
+                        )
                     )),
-                    timeout=10.0
+                    timeout=20.0  # Increased timeout for TTS generation
                 )
                 
-                # Check if response contains audio data
-                if (response.candidates and 
-                    len(response.candidates) > 0 and 
-                    response.candidates[0].content.parts and
-                    len(response.candidates[0].content.parts) > 0):
-                    
-                    # Look for audio in the response
-                    for part in response.candidates[0].content.parts:
-                        if hasattr(part, 'inline_data') and part.inline_data:
-                            audio_data = part.inline_data.data
-                            logger.info(f"✅ Gemini TTS successful for {language} -> {tts_language_code}")
-                            return audio_data
+                # Extract audio from response
+                if response and response.candidates:
+                    for candidate in response.candidates:
+                        if candidate.content and candidate.content.parts:
+                            for part in candidate.content.parts:
+                                # Check for audio data
+                                if hasattr(part, 'inline_data') and part.inline_data:
+                                    # Get the raw PCM audio data
+                                    audio_data = part.inline_data.data
+                                    mime_type = getattr(part.inline_data, 'mime_type', 'audio/pcm')
+                                    
+                                    logger.info(f"✅ Gemini Flash TTS successful: generated {len(audio_data)} bytes ({mime_type})")
+                                    
+                                    # Convert PCM to MP3 for compatibility
+                                    mp3_audio = await self._convert_pcm_to_mp3(audio_data)
+                                    return mp3_audio
                 
-                # If no audio found, fall back to Google Cloud TTS
-                logger.warning(f"⚠️ Gemini TTS returned no audio for {language}, falling back to Google Cloud TTS")
-                return await self._google_cloud_tts(text, language, voice_gender, speaking_rate)
+                # NO FALLBACK - Fail explicitly if no audio generated
+                error_msg = f"Gemini Flash TTS did not generate audio for text: '{text[:50]}...'"
+                logger.error(f"❌ {error_msg}")
+                raise HTTPException(status_code=500, detail=error_msg)
                 
+            except asyncio.TimeoutError:
+                error_msg = f"Gemini Flash TTS timed out after 20 seconds"
+                logger.error(f"❌ {error_msg}")
+                raise HTTPException(status_code=408, detail=error_msg)
             except Exception as gemini_error:
-                logger.warning(f"⚠️ Gemini TTS failed for {language}: {gemini_error}, falling back to Google Cloud TTS")
-                return await self._google_cloud_tts(text, language, voice_gender, speaking_rate)
+                error_msg = f"Gemini Flash TTS failed: {str(gemini_error)}"
+                logger.error(f"❌ {error_msg}")
+                logger.error(f"Full error: {repr(gemini_error)}")
+                import traceback
+                logger.error(f"Stack trace: {traceback.format_exc()}")
+                raise HTTPException(status_code=500, detail=error_msg)
             
-        except asyncio.TimeoutError:
-            logger.error(f"❌ Gemini TTS timed out for {language}")
-            raise HTTPException(status_code=408, detail="TTS request timed out")
-        except ImportError as e:
-            logger.error(f"❌ Gemini TTS API not available: {e}")
-            raise HTTPException(status_code=503, detail="TTS service requires updated google-genai library")
+        except HTTPException:
+            # Re-raise HTTP exceptions
+            raise
         except Exception as e:
-            logger.error(f"❌ Gemini TTS failed for {language}: {e}")
-            raise HTTPException(status_code=500, detail="TTS generation failed")
+            error_msg = f"Gemini Flash TTS critical error: {str(e)}"
+            logger.error(f"❌ {error_msg}")
+            import traceback
+            logger.error(f"Stack trace: {traceback.format_exc()}")
+            raise HTTPException(status_code=500, detail=error_msg)
     
-    async def _google_cloud_tts(self, text: str, language: str, voice_gender: str = "neutral", speaking_rate: float = 1.0) -> bytes:
-        """Fallback TTS using Google Cloud TTS"""
+    async def _convert_pcm_to_mp3(self, pcm_data: bytes, sample_rate: int = 24000) -> bytes:
+        """Convert PCM audio to MP3 format"""
         try:
-            # Check if TTS client is available
-            if not tts_client:
-                logger.warning("Google Cloud TTS client not available, falling back to gTTS")
-                return self._gtts_fallback(text, language)
-                
-            # Use Google Cloud TTS for reliable fallback
-            synthesis_input = texttospeech.SynthesisInput(text=text)
+            import wave
+            import subprocess
+            import tempfile
+            import os
             
-            # Select voice parameters
-            voice = texttospeech.VoiceSelectionParams(
-                language_code=self._get_tts_language_code(language),
-                ssml_gender=self._get_voice_gender(voice_gender)
-            )
+            # Save PCM as WAV temporarily
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as wav_file:
+                with wave.open(wav_file.name, 'wb') as wf:
+                    wf.setnchannels(1)  # Mono
+                    wf.setsampwidth(2)  # 16-bit
+                    wf.setframerate(sample_rate)
+                    wf.writeframes(pcm_data)
+                wav_path = wav_file.name
             
-            # Select audio configuration
-            audio_config = texttospeech.AudioConfig(
-                audio_encoding=texttospeech.AudioEncoding.MP3,
-                speaking_rate=speaking_rate,
-                pitch=0.0
-            )
+            # Convert WAV to MP3 using ffmpeg
+            mp3_path = wav_path.replace('.wav', '.mp3')
+            cmd = ['ffmpeg', '-i', wav_path, '-codec:a', 'libmp3lame', '-b:a', '128k', mp3_path, '-y']
             
-            # Add timeout to prevent hanging
-            import asyncio
-            loop = asyncio.get_event_loop()
-            response = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: tts_client.synthesize_speech(
-                    input=synthesis_input,
-                    voice=voice,
-                    audio_config=audio_config
-                )),
-                timeout=8.0
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                logger.error(f"FFmpeg conversion failed: {result.stderr}")
+                # Return PCM data as-is if conversion fails
+                return pcm_data
             
-            logger.info(f"✅ Google Cloud TTS fallback successful for {language}")
-            return response.audio_content
+            # Read MP3 data
+            with open(mp3_path, 'rb') as f:
+                mp3_data = f.read()
             
-        except asyncio.TimeoutError:
-            logger.warning("Google Cloud TTS timed out, falling back to gTTS")
-            return self._gtts_fallback(text, language)
+            # Cleanup temp files
+            os.unlink(wav_path)
+            os.unlink(mp3_path)
+            
+            logger.info(f"📀 Converted PCM ({len(pcm_data)} bytes) to MP3 ({len(mp3_data)} bytes)")
+            return mp3_data
+            
         except Exception as e:
-            logger.warning(f"Google Cloud TTS failed, falling back to gTTS: {e}")
-            # Final fallback to gTTS
-            return self._gtts_fallback(text, language)
+            logger.warning(f"PCM to MP3 conversion failed: {e}, returning PCM data")
+            # Return original PCM data if conversion fails
+            return pcm_data
     
-    def _gtts_fallback(self, text: str, language: str) -> bytes:
-        """Fallback to gTTS for text-to-speech"""
-        try:
-            # Map language codes for gTTS compatibility (DEPRECATED - NOT USED)
-            gtts_language_map = {
-                "zh": "zh-cn",  # Chinese simplified
-                "ar": "ar"  # Arabic
-            }
-            gtts_lang = gtts_language_map.get(language, language)
-            
-            tts = gTTS(text=text, lang=gtts_lang, slow=False)
-            with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as tmp_file:
-                tts.save(tmp_file.name)
-                with open(tmp_file.name, 'rb') as f:
-                    audio_data = f.read()
-                os.unlink(tmp_file.name)
-                logger.info(f"✅ gTTS fallback successful for {language} -> {gtts_lang}")
-                return audio_data
-        except Exception as e:
-            logger.error(f"gTTS fallback failed: {e}")
-            raise HTTPException(status_code=500, detail="Text-to-speech failed")
+    def _get_language_name(self, lang_code: str) -> str:
+        """Get full language name from code for natural language prompts"""
+        language_names = {
+            "en": "English",
+            "es": "Spanish",
+            "fr": "French",
+            "de": "German",
+            "it": "Italian",
+            "pt": "Portuguese",
+            "ru": "Russian",
+            "ja": "Japanese",
+            "ko": "Korean",
+            "zh": "Chinese",
+            "ar": "Arabic",
+            "hi": "Hindi",
+            "id": "Indonesian",
+            "vi": "Vietnamese",
+            "tr": "Turkish",
+            "th": "Thai",
+            "pl": "Polish",
+            "bn": "Bengali",
+            "te": "Telugu",
+            "mr": "Marathi",
+            "ta": "Tamil",
+            "uk": "Ukrainian",
+            "ro": "Romanian"
+        }
+        return language_names.get(lang_code, "English")
+    
+    # REMOVED: Google Cloud TTS fallback - Using ONLY Gemini Flash TTS
+    
+    # REMOVED: gTTS fallback - Using ONLY Gemini Flash TTS
     
     async def speech_to_text(self, audio_data: bytes, language: str, encoding: str = "MP3", sample_rate: int = 44100) -> str:
         """Convert speech to text using Google Cloud Speech-to-Text"""

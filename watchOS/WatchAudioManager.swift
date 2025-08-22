@@ -76,7 +76,13 @@ class WatchAudioManager: NSObject, ObservableObject {
             try session.setActive(true)
             
             // Create and start recorder
-            audioRecorder = try AVAudioRecorder(url: recordingURL!, settings: settings)
+            guard let url = recordingURL else {
+                print("❌ Recording URL is nil")
+                completion(false)
+                return
+            }
+            
+            audioRecorder = try AVAudioRecorder(url: url, settings: settings)
             audioRecorder?.delegate = self
             audioRecorder?.isMeteringEnabled = true
             audioRecorder?.prepareToRecord()
@@ -87,7 +93,7 @@ class WatchAudioManager: NSObject, ObservableObject {
             isRecording = true
             completion(true)
             
-            print("📹 Watch recording started: \(recordingURL!.lastPathComponent)")
+            print("📹 Watch recording started: \(url.lastPathComponent)")
             
         } catch {
             print("Failed to start recording: \(error)")

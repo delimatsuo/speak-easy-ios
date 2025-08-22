@@ -448,6 +448,33 @@ struct StatusView: View {
     let creditsRemaining: Int
     let isConnected: Bool
     
+    private var statusMessage: String {
+        switch state {
+        case .recording:
+            return "Listening..."
+        case .sending:
+            return "Sending to iPhone..."
+        case .processing:
+            return "Translating..."
+        case .playing:
+            return "Playing translation"
+        case .error:
+            return errorMessage
+        default:
+            return ""
+        }
+    }
+    
+    private var statusColor: Color {
+        switch state {
+        case .recording: return .orange
+        case .sending, .processing: return .blue
+        case .playing: return .green
+        case .error: return .red
+        default: return .blue
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 8) {
             // Status message
@@ -477,60 +504,9 @@ struct StatusView: View {
                                 .multilineTextAlignment(.center)
                         }
                     }
-                    
-                    // Replay button for last translation
-                    if !translatedText.isEmpty && lastTranslationAudio != nil {
-                        Button(action: replayLastTranslation) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "speaker.wave.2.fill")
-                                    .font(.caption)
-                                Text("Replay")
-                                    .font(.caption)
-                            }
-                            .foregroundColor(.blue)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(16)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
                 }
                 .padding(.horizontal)
             }
-        }
-    }
-    
-    private var statusMessage: String {
-        switch state {
-        case .recording:
-            return "Listening..."
-        case .sending:
-            return "Sending to iPhone..."
-        case .processing:
-            return "Translating..."
-        case .playing:
-            return "Playing translation"
-        case .error:
-            return errorMessage
-        default:
-            if creditsRemaining <= 0 {
-                return "No credits remaining"
-            } else if !isConnected {
-                return "Open Universal AI Translator on iPhone"
-            } else {
-                return "Tap to translate"
-            }
-        }
-    }
-    
-    private var statusColor: Color {
-        switch state {
-        case .error: return .red
-        case .recording: return .red
-        case .processing, .sending: return .blue
-        case .playing: return .green
-        default: return .secondary
         }
     }
 }
