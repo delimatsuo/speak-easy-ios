@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  Enhanced_ContentView.swift
 //  UniversalTranslator Watch App
 //
 //  Enhanced UI with Digital Crown language selection, live transcription, and improved visual hierarchy
@@ -9,7 +9,7 @@ import SwiftUI
 import WatchKit
 import WatchConnectivity
 
-struct ContentView: View {
+struct Enhanced_ContentView: View {
     @StateObject private var audioManager = WatchAudioManager()
     @StateObject private var connectivityManager = WatchConnectivityManager.shared
     
@@ -120,9 +120,7 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Enhanced View Components
-    
-    // ENHANCED: Header with time and connection status
+    // MARK: - Enhanced Header View
     private var headerView: some View {
         HStack {
             Text(getCurrentTime())
@@ -146,7 +144,7 @@ struct ContentView: View {
         .padding(.top, 2)
     }
     
-    // ENHANCED: Language selection with better visual design
+    // MARK: - Enhanced Language Selection View
     private var languageSelectionView: some View {
         HStack(spacing: 8) {
             // From language - Enhanced design
@@ -209,7 +207,7 @@ struct ContentView: View {
         }
     }
     
-    // ENHANCED: Idle state with improved design
+    // MARK: - Idle State View (Enhanced)
     private var idleStateView: some View {
         VStack(spacing: 12) {
             // Enhanced record button
@@ -240,7 +238,7 @@ struct ContentView: View {
         }
     }
     
-    // NEW: Enhanced Recording View with Live Transcription
+    // MARK: - NEW: Enhanced Recording View with Live Transcription
     private var enhancedRecordingView: some View {
         VStack(spacing: 8) {
             // Recording indicator
@@ -322,7 +320,7 @@ struct ContentView: View {
         }
     }
     
-    // ENHANCED: Processing state
+    // MARK: - Processing State View (Enhanced)
     private var processingStateView: some View {
         VStack(spacing: 12) {
             ProgressView()
@@ -343,7 +341,7 @@ struct ContentView: View {
         }
     }
     
-    // ENHANCED: Playing state with better layout
+    // MARK: - Playing State View (Enhanced)
     private var playingStateView: some View {
         VStack(spacing: 8) {
             // Source text
@@ -399,7 +397,7 @@ struct ContentView: View {
         }
     }
     
-    // ENHANCED: Error state with cancel and retry
+    // MARK: - Error State View (Enhanced)
     private var errorStateView: some View {
         VStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle.fill")
@@ -443,7 +441,7 @@ struct ContentView: View {
         }
     }
     
-    // Credits and status view
+    // MARK: - Credits Status View
     private var creditsStatusView: some View {
         VStack(spacing: 4) {
             // Connection indicator
@@ -469,7 +467,7 @@ struct ContentView: View {
         }
     }
     
-    // ENHANCED: Language selection sheet with native names
+    // MARK: - Language Selection Sheet
     private var languageSelectionSheet: some View {
         NavigationStack {
             List {
@@ -572,7 +570,7 @@ struct ContentView: View {
         recordingProgress = 0
     }
     
-    // MARK: - Actions
+    // MARK: - Recording Actions (Using existing logic)
     
     private func handleRecordingTap() {
         switch currentState {
@@ -586,7 +584,7 @@ struct ContentView: View {
     }
     
     private func startRecording() {
-        // Clear previous translation results using enhanced reset
+        // Clear previous results
         resetForNewTranslation()
         
         // Check WCSession activation first
@@ -607,7 +605,6 @@ struct ContentView: View {
         if !connectivityManager.isReachable {
             errorMessage = "Open iPhone app first"
             currentState = .error
-            // Try to activate and request credits to test connection
             connectivityManager.activate()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.connectivityManager.requestCreditsUpdate()
@@ -615,7 +612,7 @@ struct ContentView: View {
             return
         }
         
-        // Check credits (allow recording if credits > 0 or unlimited)
+        // Check credits
         if connectivityManager.creditsRemaining == 0 {
             errorMessage = "No credits remaining"
             currentState = .error
@@ -630,7 +627,7 @@ struct ContentView: View {
                 startRecordingTimer()
                 WKInterfaceDevice.current().play(.start)
                 
-                // NEW: Simulate live transcription updates
+                // Simulate live transcription updates (you would integrate real STT here)
                 simulateLiveTranscription()
             } else {
                 errorMessage = "Failed to start recording"
@@ -653,6 +650,26 @@ struct ContentView: View {
         }
     }
     
+    // NEW: Simulate live transcription (replace with real implementation)
+    private func simulateLiveTranscription() {
+        let sampleTexts = ["Hello", "Hello how", "Hello how are", "Hello how are you", "Hello how are you today"]
+        var index = 0
+        
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+            if currentState == .recording && index < sampleTexts.count {
+                liveTranscription = sampleTexts[index]
+                index += 1
+                
+                // Simulate audio levels
+                audioLevels = (0..<20).map { _ in Float.random(in: 0.1...1.0) }
+            } else {
+                timer.invalidate()
+            }
+        }
+    }
+    
+    // MARK: - Existing methods (unchanged)
+    
     private func sendAudioToPhone(_ audioURL: URL) {
         currentState = .processing
         
@@ -662,12 +679,8 @@ struct ContentView: View {
             audioFileURL: audioURL
         )
         
-        print("📤 Watch: Sending request with ID: \(request.requestId)")
-        
         connectivityManager.sendTranslationRequest(request) { success in
             if success {
-                print("✅ Watch: Request sent, waiting for response...")
-                // Monitor for response
                 self.waitForResponse(requestId: request.requestId, attempts: 0)
             } else {
                 errorMessage = "Failed to send to iPhone"
@@ -677,37 +690,28 @@ struct ContentView: View {
     }
     
     private func waitForResponse(requestId: UUID, attempts: Int) {
-        // Check if response arrived
         if let response = connectivityManager.lastResponse {
-            print("📥 Watch: Response arrived!")
             handleTranslationResponse(response)
-            // Clear for next request
             connectivityManager.lastResponse = nil
-        } else if attempts < 30 { // Wait up to 30 seconds
-            // Keep waiting
+        } else if attempts < 30 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if self.currentState == .processing {
                     self.waitForResponse(requestId: requestId, attempts: attempts + 1)
                 }
             }
         } else {
-            // Timeout
             errorMessage = "Translation timeout"
             currentState = .error
         }
     }
     
     private func handleTranslationResponse(_ response: TranslationResponse?) {
-        guard let response = response else { 
-            print("❌ Watch: No response received")
+        guard let response = response else {
             errorMessage = "No response from iPhone"
             currentState = .error
             return
         }
         
-        print("📥 Watch: Processing response - Original: '\(response.originalText)', Translated: '\(response.translatedText)', Error: \(response.error ?? "none")")
-        
-        // Clear the lastResponse to prevent replaying old responses
         connectivityManager.lastResponse = nil
         
         if let error = response.error {
@@ -723,12 +727,9 @@ struct ContentView: View {
             translatedText = response.translatedText
             
             if let audioData = response.audioData {
-                print("🎵 Watch: Received audio data: \(audioData.count) bytes")
-                // Store audio for replay
                 lastTranslationAudio = audioData
                 playTranslation(audioData)
             } else {
-                print("⚠️ Watch: No audio data in response - text only")
                 lastTranslationAudio = nil
                 currentState = .idle
                 WKInterfaceDevice.current().play(.success)
@@ -745,12 +746,10 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Recording Timer
-    
     private func startRecordingTimer() {
         recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             recordingProgress += 0.1 / AudioConstants.maxRecordingDuration
-            recordingDuration += 1  // Increment by 100ms (0.1 seconds)
+            recordingDuration += 1  // Increment by 0.1 seconds (100ms)
             
             if recordingProgress >= 1.0 {
                 stopRecording()
@@ -762,41 +761,9 @@ struct ContentView: View {
         recordingTimer?.invalidate()
         recordingTimer = nil
     }
-    
-    // MARK: - Replay Function
-    
-    private func replayLastTranslation() {
-        guard let audioData = lastTranslationAudio else {
-            print("⚠️ Watch: No audio to replay")
-            return
-        }
-        
-        print("🔁 Watch: Replaying last translation (\(audioData.count) bytes)")
-        playTranslation(audioData)
-    }
-    
-    // NEW: Simulate live transcription (replace with real implementation)
-    private func simulateLiveTranscription() {
-        let sampleTexts = ["Hello", "Hello how", "Hello how are", "Hello how are you", "Hello how are you today"]
-        var index = 0
-        
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-            if currentState == .recording && index < sampleTexts.count {
-                liveTranscription = sampleTexts[index]
-                index += 1
-                
-                // Simulate audio levels for waveform
-                audioLevels = (0..<20).map { _ in Float.random(in: 0.1...1.0) }
-            } else {
-                timer.invalidate()
-            }
-        }
-    }
 }
 
-// MARK: - NEW Enhanced Components
-
-// NEW: Waveform Visualization Component
+// MARK: - NEW: Waveform Visualization Component
 struct WaveformView: View {
     let audioLevels: [Float]
     
@@ -819,8 +786,9 @@ struct WaveformView: View {
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
+// MARK: - Preview
+struct Enhanced_ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        Enhanced_ContentView()
     }
 }
