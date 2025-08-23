@@ -17,6 +17,7 @@ struct ProfileView: View {
     @State private var signOutError: String?
     @State private var showSignOutConfirmation = false
     @State private var showDeleteAccountConfirmation = false
+    @State private var showAbout = false
     @ObservedObject private var authViewModel = AuthViewModel.shared
     
     private var isSignedIn: Bool {
@@ -38,6 +39,7 @@ struct ProfileView: View {
                 accountStatusSection
                 errorSection
                 creditsSection
+                aboutSection
                 legalSection
                 accountActionsSection
                 privacySection
@@ -50,6 +52,9 @@ struct ProfileView: View {
                 }
             }
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .sheet(isPresented: $showAbout) {
+                AboutView()
+            }
             .confirmationDialog("Sign Out", isPresented: $showSignOutConfirmation) {
                 Button("Sign Out", role: .destructive) {
                     signOut()
@@ -235,6 +240,18 @@ struct ProfileView: View {
                 }
             } label: {
                 Label("Buy Minutes", systemImage: "cart")
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+    }
+    
+    private var aboutSection: some View {
+        Section(header: Text("App Information")) {
+            Button {
+                showAbout = true
+            } label: {
+                Label("About Universal Translator", systemImage: "info.circle")
             }
             .frame(minHeight: 44)
             .contentShape(Rectangle())
