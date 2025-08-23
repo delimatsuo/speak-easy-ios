@@ -986,18 +986,18 @@
                             console.error(`💰 Error fetching credits for ${uid}:`, e);
                         }
 
-                        // Get revenue (simplified calculation)
+                        // Get revenue (beta mode - purchases not yet recorded)
                         let userRevenue = 0;
-                        try {
-                            const userTransactions = await getDocs(
-                                collection(db, 'purchases', uid, 'items')
-                            );
-                            const prices = this.getCurrentPrices();
-                            userTransactions.forEach(transDoc => {
-                                const transData = transDoc.data();
-                                userRevenue += prices[transData.productId] || 0;
-                            });
-                        } catch (e) {}
+                        // In beta mode, estimate revenue based on credits
+                        // Users with 5:00+ likely made a purchase ($1.99 for 5 min)
+                        if (credits >= 300 && credits < 600) {
+                            userRevenue = 1.99; // 5 minute purchase
+                        } else if (credits >= 600 && credits < 1800) {
+                            userRevenue = 1.99; // Assume single purchase for now
+                        } else if (credits >= 1800) {
+                            userRevenue = 9.99; // 30 minute purchase
+                        }
+                        // Note: This is an estimate until purchase tracking is implemented
 
                         return {
                             uid,

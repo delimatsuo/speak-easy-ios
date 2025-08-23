@@ -14,6 +14,19 @@ struct ModernContentView: View {
     @StateObject private var audioManager = WatchAudioManager()
     @StateObject private var connectivityManager = WatchConnectivityManager.shared
     
+    // MARK: - Screen Size Detection
+    private var screenSize: CGSize {
+        WKInterfaceDevice.current().screenBounds.size
+    }
+    
+    private var isSmallWatch: Bool {
+        screenSize.width < 180  // 38mm and 40mm watches
+    }
+    
+    private var isLargeWatch: Bool {
+        screenSize.width >= 200  // 44mm, 45mm, and Ultra watches
+    }
+    
     // MARK: - State Management
     @State private var currentState: AppState = .idle
     @State private var sourceLanguageIndex: Int = 0
@@ -78,9 +91,11 @@ struct ModernContentView: View {
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
-                VStack(spacing: WatchSpacing.md) {
-                    // MARK: - Header
-                    modernHeaderView
+                VStack(spacing: isSmallWatch ? WatchSpacing.xs : WatchSpacing.sm) {  // Adaptive spacing based on watch size
+                    // MARK: - Header (only show on larger watches)
+                    if !isSmallWatch {
+                        modernHeaderView
+                    }
                     
                     // MARK: - Language Selection
                     modernLanguageSelector
@@ -89,9 +104,11 @@ struct ModernContentView: View {
                     mainContentView
                         .animation(WatchAnimations.smooth, value: currentState)
                     
-                    Spacer(minLength: WatchSpacing.sm)
+                    if !isSmallWatch {
+                        Spacer(minLength: 0)
+                    }
                 }
-                .padding(.horizontal, WatchSpacing.md)
+                .padding(.horizontal, isSmallWatch ? WatchSpacing.xs : WatchSpacing.sm)  // Adaptive padding
             }
             .background(Color.watchBackground)
             .ignoresSafeArea(.all, edges: .bottom)
@@ -126,13 +143,6 @@ struct ModernContentView: View {
     
     private var modernHeaderView: some View {
         HStack {
-            // Time display
-            Text(getCurrentTime())
-                .watchTextStyle(.caption)
-                .opacity(0.7)
-            
-            Spacer()
-            
             // App title with modern typography
             Text("Translator")
                 .watchTextStyle(.headline)
@@ -140,7 +150,7 @@ struct ModernContentView: View {
             
             Spacer()
             
-            // Subtle connection indicator
+            // Connection indicator
             modernConnectionIndicator
         }
         .padding(.vertical, WatchSpacing.xs)
@@ -234,8 +244,8 @@ struct ModernContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, WatchSpacing.sm)
-            .padding(.horizontal, WatchSpacing.sm)
+            .padding(.vertical, WatchSpacing.md)  // Increased padding for easier tapping
+            .padding(.horizontal, WatchSpacing.md)  // Increased padding for easier tapping
             .background(Color.watchSurface2)
             .cornerRadius(WatchCornerRadius.md)
         }
@@ -321,13 +331,13 @@ struct ModernContentView: View {
                 // Outer glow
                 Circle()
                     .fill(WatchGradients.microphoneButton)
-                    .frame(width: 100, height: 100)
+                    .frame(width: isSmallWatch ? 80 : 100, height: isSmallWatch ? 80 : 100)
                     .scaleEffect(microphoneScale)
                 
                 // Main button
                 Circle()
                     .fill(WatchGradients.primary)
-                    .frame(width: 70, height: 70)
+                    .frame(width: isSmallWatch ? 60 : 70, height: isSmallWatch ? 60 : 70)
                     .overlay(
                         Circle()
                             .stroke(Color.watchTextPrimary.opacity(0.1), lineWidth: 1)
@@ -335,7 +345,7 @@ struct ModernContentView: View {
                 
                 // Microphone icon
                 Image(systemName: "mic.fill")
-                    .font(.system(size: 24, weight: .medium))
+                    .font(.system(size: isSmallWatch ? 20 : 24, weight: .medium))
                     .foregroundColor(.white)
             }
         }
@@ -748,12 +758,6 @@ struct ModernContentView: View {
     private func setupInitialState() {
         connectivityManager.activate()
         connectivityManager.requestCreditsUpdate()
-    }
-    
-    private func getCurrentTime() -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: Date())
     }
     
     private func formatTime(_ seconds: Int) -> String {
