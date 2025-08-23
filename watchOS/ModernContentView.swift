@@ -46,6 +46,8 @@ struct ModernContentView: View {
     @State private var audioLevels: [Float] = Array(repeating: 0.1, count: 12)
     @State private var recordingDuration: Int = 0
     @State private var connectionAnimating = false
+    @State private var hasAudioToReplay: Bool = false
+    @State private var isReplaying: Bool = false
     
     // MARK: - Animation States
     @State private var microphoneScale: CGFloat = 1.0
@@ -321,11 +323,48 @@ struct ModernContentView: View {
                 .opacity(0.6)
             }
             
+            // Replay button if we have previous audio
+            if hasAudioToReplay && !translatedText.isEmpty {
+                modernReplayCard
+            }
+            
             // Credits only if needed
             if !connectivityManager.isReachable || connectivityManager.creditsRemaining <= 60 {
                 modernCreditsView
             }
         }
+    }
+    
+    // MARK: - Modern Replay Card
+    
+    private var modernReplayCard: some View {
+        Button(action: replayTranslation) {
+            VStack(alignment: .leading, spacing: WatchSpacing.xs) {
+                HStack {
+                    Text("Last Translation")
+                        .watchTextStyle(.caption2)
+                        .foregroundColor(.watchTextTertiary)
+                    Spacer()
+                    Image(systemName: "speaker.wave.2.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.watchAccent)
+                }
+                
+                Text(translatedText)
+                    .watchTextStyle(.caption)
+                    .foregroundColor(.watchTextPrimary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.vertical, WatchSpacing.sm)
+            .padding(.horizontal, WatchSpacing.sm)
+            .background(Color.watchSurface2.opacity(0.7))
+            .cornerRadius(WatchCornerRadius.sm)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("Replay last translation")
+        .accessibilityHint("Double tap to replay: \(translatedText)")
     }
     
     private var modernMicrophoneButton: some View {
@@ -531,23 +570,42 @@ struct ModernContentView: View {
             HStack(spacing: WatchSpacing.xs) {
                 Image(systemName: volumeIconName)
                     .font(.system(size: 10))
-                    .foregroundColor(.watchSuccess)
-                Text("Playing...")
+                    .foregroundColor(isReplaying ? .watchAccent : .watchSuccess)
+                Text(isReplaying ? "Replaying..." : "Playing...")
                     .watchTextStyle(.caption)
-                    .foregroundColor(.watchSuccess)
+                    .foregroundColor(isReplaying ? .watchAccent : .watchSuccess)
                 Spacer()
                 Text("\(Int(volumeLevel * 100))%")
                     .watchTextStyle(.caption2)
                     .foregroundColor(.watchTextSecondary)
             }
             
-            // New translation button
-            modernActionButton(
-                title: "New Translation",
-                icon: "plus.circle",
-                color: .watchAccent
-            ) {
-                resetForNewTranslation()
+            // Action buttons
+            HStack(spacing: WatchSpacing.sm) {
+                // Replay button (only show if audio is available)
+                if hasAudioToReplay {
+                    modernActionButton(
+                        title: "Replay",
+                        icon: "speaker.wave.2",
+                        color: .watchAccent,
+                        style: .secondary
+                    ) {
+                        replayTranslation()
+                    }
+                    .accessibilityLabel("Replay translation")
+                    .accessibilityHint("Tap to replay the translated audio")
+                }
+                
+                // New translation button
+                modernActionButton(
+                    title: "New",
+                    icon: "plus.circle",
+                    color: .watchAccent
+                ) {
+                    resetForNewTranslation()
+                }
+                .accessibilityLabel("New translation")
+                .accessibilityHint("Tap to start a new translation")
             }
         }
     }
@@ -815,6 +873,8 @@ struct ModernContentView: View {
         recordingDuration = 0
         recordingProgress = 0
         connectionAnimating = false
+        isReplaying = false
+        // Keep hasAudioToReplay and lastTranslationAudio for replay functionality
     }
     
     // MARK: - Recording Actions
@@ -854,8 +914,9 @@ struct ModernContentView: View {
             return
         }
         
+        // Only check iPhone connection for recording/translation, not for replay
         if !connectivityManager.isReachable {
-            errorMessage = "Open iPhone app first"
+            errorMessage = "iPhone connection required for new translations"
             currentState = .error
             WatchHaptics.error()
             return
@@ -962,26 +1023,48 @@ struct ModernContentView: View {
             
             if let audioData = response.audioData {
                 lastTranslationAudio = audioData
-                playTranslation(audioData)
+                hasAudioToReplay = true
+                playTranslation(audioData, isReplay: false)
             } else {
                 lastTranslationAudio = nil
+                hasAudioToReplay = false
                 currentState = .idle
                 WatchHaptics.success()
             }
         }
     }
     
-    private func playTranslation(_ audioData: Data) {
+    private func playTranslation(_ audioData: Data, isReplay: Bool = false) {
         currentState = .playing
+        self.isReplaying = isReplay
         
-        audioManager.playAudio(audioData) { success in
-            // Set the initial volume for the audio player
-            if let player = self.audioManager.audioPlayer {
-                player.volume = Float(self.volumeLevel)
+        // Pass volume directly to audio manager
+        audioManager.playAudio(audioData, volume: Float(volumeLevel)) { success in
+            if success {
+                WatchHaptics.success()
+            } else {
+                self.errorMessage = "Failed to play audio"
+                self.currentState = .error
+                WatchHaptics.error()
             }
-            currentState = .idle
-            WatchHaptics.success()
+            self.currentState = .idle
+            self.isReplaying = false
         }
+    }
+    
+    // MARK: - Replay Functionality
+    
+    private func replayTranslation() {
+        guard let audioData = lastTranslationAudio else {
+            errorMessage = "No audio available to replay"
+            currentState = .error
+            WatchHaptics.error()
+            return
+        }
+        
+        // No iPhone connection check needed for replay - audio is stored locally
+        playTranslation(audioData, isReplay: true)
+        WatchHaptics.selection()
     }
     
     private func startRecordingTimer() {

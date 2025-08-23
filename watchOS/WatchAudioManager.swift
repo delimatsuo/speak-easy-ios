@@ -13,6 +13,7 @@ class WatchAudioManager: NSObject, ObservableObject {
     private var audioRecorder: AVAudioRecorder?
     var audioPlayer: AVAudioPlayer?  // Made internal so it can be accessed for volume control
     private var recordingURL: URL?
+    private var currentAudioSession: AVAudioSession.Category = .playAndRecord
     
     @Published var isRecording = false
     @Published var isPlaying = false
@@ -22,13 +23,22 @@ class WatchAudioManager: NSObject, ObservableObject {
         setupAudioSession()
     }
     
-    private func setupAudioSession() {
+    private func setupAudioSession(for category: AVAudioSession.Category = .playAndRecord) {
         let session = AVAudioSession.sharedInstance()
         do {
-            try session.setCategory(.playAndRecord, mode: .default)
-            try session.setActive(true)
+            // Only change category if it's different to avoid unnecessary interruptions
+            if currentAudioSession != category {
+                try session.setCategory(category, mode: .default, options: [.allowBluetooth, .defaultToSpeaker])
+                currentAudioSession = category
+            }
+            
+            if !session.isOtherAudioPlaying {
+                try session.setActive(true)
+            }
+            
+            print("✅ Audio session configured for: \(category)")
         } catch {
-            print("Failed to setup audio session: \(error)")
+            print("❌ Failed to setup audio session for \(category): \(error)")
         }
     }
     
@@ -70,10 +80,8 @@ class WatchAudioManager: NSObject, ObservableObject {
         ]
         
         do {
-            // Activate audio session
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.record, mode: .default)
-            try session.setActive(true)
+            // Setup audio session for recording
+            setupAudioSession(for: .record)
             
             // Create and start recorder
             guard let url = recordingURL else {
@@ -88,15 +96,20 @@ class WatchAudioManager: NSObject, ObservableObject {
             audioRecorder?.prepareToRecord()
             
             // Set maximum duration
-            audioRecorder?.record(forDuration: AudioConstants.maxRecordingDuration)
+            let success = audioRecorder?.record(forDuration: AudioConstants.maxRecordingDuration) ?? false
             
-            isRecording = true
-            completion(true)
-            
-            print("📹 Watch recording started: \(url.lastPathComponent)")
+            if success {
+                isRecording = true
+                completion(true)
+                print("📹 Watch recording started: \(url.lastPathComponent)")
+            } else {
+                print("❌ Failed to start recording")
+                isRecording = false
+                completion(false)
+            }
             
         } catch {
-            print("Failed to start recording: \(error)")
+            print("❌ Failed to start recording: \(error)")
             isRecording = false
             completion(false)
         }
@@ -111,87 +124,111 @@ class WatchAudioManager: NSObject, ObservableObject {
         audioRecorder?.stop()
         isRecording = false
         
-        // Deactivate audio session for recording
-        do {
-            try AVAudioSession.sharedInstance().setActive(false)
-        } catch {
-            print("Failed to deactivate audio session: \(error)")
-        }
-        
-        // Verify file exists and has content
-        if let url = recordingURL,
-           FileManager.default.fileExists(atPath: url.path) {
-            do {
-                let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
-                let fileSize = attributes[.size] as? Int64 ?? 0
-                print("📹 Watch recording saved: \(url.lastPathComponent), size: \(fileSize) bytes")
-                
-                if fileSize > 0 {
-                    completion(url)
-                } else {
-                    print("❌ Recording file is empty")
+        // Small delay to ensure recording is fully stopped
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            // Verify file exists and has content
+            if let url = self.recordingURL,
+               FileManager.default.fileExists(atPath: url.path) {
+                do {
+                    let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+                    let fileSize = attributes[.size] as? Int64 ?? 0
+                    print("📹 Watch recording saved: \(url.lastPathComponent), size: \(fileSize) bytes")
+                    
+                    if fileSize > 0 {
+                        completion(url)
+                    } else {
+                        print("❌ Recording file is empty")
+                        completion(nil)
+                    }
+                } catch {
+                    print("❌ Failed to verify recording file: \(error)")
                     completion(nil)
                 }
-            } catch {
-                print("Failed to verify recording file: \(error)")
+            } else {
+                print("❌ Recording file not found")
                 completion(nil)
             }
-        } else {
-            print("❌ Recording file not found")
-            completion(nil)
         }
     }
     
     // MARK: - Playback
     
-    func playAudio(_ audioData: Data, completion: @escaping (Bool) -> Void) {
+    func playAudio(_ audioData: Data, volume: Float = 1.0, completion: @escaping (Bool) -> Void) {
         // Save data to temporary file
         let tempURL = AudioConstants.temporaryAudioFileURL()
         
         do {
             try audioData.write(to: tempURL)
-            playAudioFromURL(tempURL, completion: completion)
+            playAudioFromURL(tempURL, volume: volume, completion: completion)
         } catch {
             print("Failed to save audio data: \(error)")
             completion(false)
         }
     }
     
-    func playAudioFromURL(_ url: URL, completion: @escaping (Bool) -> Void) {
+    func playAudioFromURL(_ url: URL, volume: Float = 1.0, completion: @escaping (Bool) -> Void) {
+        // Stop any current playback
+        if isPlaying {
+            stopPlayback()
+        }
+        
         do {
-            // Configure audio session for playback
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .default)
-            try session.setActive(true)
+            // Setup audio session for playback
+            setupAudioSession(for: .playback)
             
-            // Create and play audio
+            // Create and configure audio player
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.delegate = self
+            audioPlayer?.volume = volume  // Set volume before playing
             audioPlayer?.prepareToPlay()
-            audioPlayer?.play()
             
-            isPlaying = true
+            // Store completion for delegate callback
+            playbackCompletion = completion
             
-            // Use completion handler after playback finishes
-            DispatchQueue.main.asyncAfter(deadline: .now() + (audioPlayer?.duration ?? 0)) {
-                completion(true)
+            // Start playback
+            let success = audioPlayer?.play() ?? false
+            
+            if success {
+                isPlaying = true
+                print("🔊 Watch playing audio: \(url.lastPathComponent), duration: \(audioPlayer?.duration ?? 0)s, volume: \(volume)")
+            } else {
+                print("❌ Failed to start audio playback")
+                isPlaying = false
+                completion(false)
             }
             
-            print("🔊 Watch playing audio: \(url.lastPathComponent)")
-            
         } catch {
-            print("Failed to play audio: \(error)")
+            print("❌ Failed to play audio: \(error)")
             isPlaying = false
             completion(false)
         }
     }
     
+    // Store completion handler for delegate callback
+    private var playbackCompletion: ((Bool) -> Void)?
+    
     func stopPlayback() {
         audioPlayer?.stop()
+        audioPlayer = nil
         isPlaying = false
+        playbackCompletion = nil
         
-        // Deactivate audio session
-        try? AVAudioSession.sharedInstance().setActive(false)
+        // Deactivate audio session only if not recording
+        if !isRecording {
+            deactivateAudioSession()
+        }
+    }
+    
+    private func deactivateAudioSession() {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            if !session.isOtherAudioPlaying {
+                try session.setActive(false, options: .notifyOthersOnDeactivation)
+            }
+            print("✅ Audio session deactivated")
+        } catch {
+            print("⚠️ Failed to deactivate audio session: \(error)")
+        }
     }
     
     // MARK: - Cleanup
@@ -228,14 +265,37 @@ extension WatchAudioManager: AVAudioRecorderDelegate {
 extension WatchAudioManager: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         print("🔊 Watch playback finished: \(flag ? "successfully" : "with error")")
-        isPlaying = false
         
-        // Deactivate audio session
-        try? AVAudioSession.sharedInstance().setActive(false)
+        DispatchQueue.main.async {
+            self.isPlaying = false
+            self.audioPlayer = nil
+            
+            // Call completion handler
+            self.playbackCompletion?(flag)
+            self.playbackCompletion = nil
+            
+            // Deactivate audio session if not recording
+            if !self.isRecording {
+                self.deactivateAudioSession()
+            }
+        }
     }
     
     func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
         print("❌ Watch playback error: \(error?.localizedDescription ?? "unknown")")
-        isPlaying = false
+        
+        DispatchQueue.main.async {
+            self.isPlaying = false
+            self.audioPlayer = nil
+            
+            // Call completion handler with error
+            self.playbackCompletion?(false)
+            self.playbackCompletion = nil
+            
+            // Deactivate audio session if not recording
+            if !self.isRecording {
+                self.deactivateAudioSession()
+            }
+        }
     }
 }
