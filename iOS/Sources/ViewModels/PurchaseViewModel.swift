@@ -28,7 +28,8 @@ final class PurchaseViewModel: ObservableObject {
     }
 
     deinit {
-        cleanup()
+        // Cancel the task directly in deinit since we can't call MainActor methods
+        updatesTask?.cancel()
     }
     
     private func cleanup() {

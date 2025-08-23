@@ -11,6 +11,14 @@ import Speech
 import Firebase
 import FirebaseStorage
 
+// Audio error types
+enum AudioError: Error {
+    case fileSystemError
+    case recordingFailed
+    case playbackFailed
+    case permissionDenied
+}
+
 class AudioManager: NSObject, ObservableObject {
     static let shared = AudioManager()
     

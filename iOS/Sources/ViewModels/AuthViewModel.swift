@@ -29,7 +29,10 @@ final class AuthViewModel: NSObject, ObservableObject {
     }
     
     deinit {
-        cleanupAuthStateListener()
+        // Remove the auth state listener directly in deinit
+        if let handle = authStateHandle {
+            Auth.auth().removeStateDidChangeListener(handle)
+        }
     }
     
     private func setupAuthStateListener() {
