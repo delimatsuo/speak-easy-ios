@@ -228,7 +228,7 @@ class PerformanceMonitor: ObservableObject {
     func getMetrics(for type: PerformanceType, since: Date? = nil) -> [PerformanceRecord] {
         return metricsQueue.sync {
             let filtered = metrics.filter { record in
-                record.type == type && (since == nil || record.timestamp >= since!)
+                record.type == type && (since == nil || record.timestamp >= since)
             }
             return filtered
         }
@@ -237,7 +237,7 @@ class PerformanceMonitor: ObservableObject {
     func getAverageResponseTime(for operation: String, since: Date? = nil) -> TimeInterval {
         let records = metricsQueue.sync {
             metrics.filter { record in
-                record.operation == operation && (since == nil || record.timestamp >= since!)
+                record.operation == operation && (since == nil || record.timestamp >= since)
             }
         }
         
@@ -250,7 +250,7 @@ class PerformanceMonitor: ObservableObject {
     func getErrorRate(for operation: String, since: Date? = nil) -> Double {
         let records = metricsQueue.sync {
             metrics.filter { record in
-                record.operation == operation && (since == nil || record.timestamp >= since!)
+                record.operation == operation && (since == nil || record.timestamp >= since)
             }
         }
         

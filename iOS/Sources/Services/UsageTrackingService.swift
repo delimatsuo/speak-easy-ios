@@ -214,7 +214,10 @@ class UsageTrackingService: ObservableObject {
             let calendar = Calendar.current
             let now = Date()
             let startOfToday = calendar.startOfDay(for: now)
-            let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
+            guard let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)) else {
+                print("❌ [UsageTracking] Failed to calculate start of week")
+                return // Skip this week's session statistics if we can't calculate the date
+            }
             
             // Query for today's sessions
             let todayQuery = db.collection("usageSessions")

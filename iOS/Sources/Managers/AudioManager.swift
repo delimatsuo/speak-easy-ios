@@ -157,7 +157,12 @@ class AudioManager: NSObject, ObservableObject {
                 let fileName = "recording_\(Date().timeIntervalSince1970).m4a"
                 self.recordingURL = documentsPath.appendingPathComponent(fileName)
                 
-                print("📁 Recording to: \(self.recordingURL!.lastPathComponent)")
+                if let recordingURL = self.recordingURL {
+                    print("📁 Recording to: \(recordingURL.lastPathComponent)")
+                } else {
+                    print("❌ Failed to create recording URL")
+                    throw AudioError.fileSystemError
+                }
                 
                 // Configure recorder settings for high quality
                 let settings: [String: Any] = [
@@ -169,7 +174,11 @@ class AudioManager: NSObject, ObservableObject {
                 ]
                 
                 // Create and start recorder
-                self.audioRecorder = try AVAudioRecorder(url: self.recordingURL!, settings: settings)
+                guard let recordingURL = self.recordingURL else {
+                    print("❌ [AudioManager] Recording URL is nil")
+                    throw AudioError.fileSystemError
+                }
+                self.audioRecorder = try AVAudioRecorder(url: recordingURL, settings: settings)
                 self.audioRecorder?.delegate = self
                 self.audioRecorder?.isMeteringEnabled = true
                 self.audioRecorder?.prepareToRecord()
@@ -177,7 +186,8 @@ class AudioManager: NSObject, ObservableObject {
                 // Actually start recording
                 let recordingStarted = self.audioRecorder?.record() ?? false
                 
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
                     if recordingStarted {
                         print("🎙️ Recording started successfully")
                         // isRecording already set to true above
@@ -191,8 +201,8 @@ class AudioManager: NSObject, ObservableObject {
                 
             } catch let error as NSError {
                 print("❌ Failed to start recording - Domain: \(error.domain), Code: \(error.code), Description: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    self.isRecording = false
+                DispatchQueue.main.async { [weak self] in
+                    self?.isRecording = false
                 }
                 // Try to clean up audio session
                 try? AVAudioSession.sharedInstance().setActive(false)

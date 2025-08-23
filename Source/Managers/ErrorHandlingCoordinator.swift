@@ -23,20 +23,20 @@ class ErrorHandlingCoordinator {
         logger.logError(error)
         
         switch error {
-        case is SpeechRecognitionError:
-            return handleSTTError(error as! SpeechRecognitionError)
+        case let sttError as SpeechRecognitionError:
+            return handleSTTError(sttError)
             
-        case is URLError:
-            return handleNetworkError(error as! URLError)
+        case let urlError as URLError:
+            return handleNetworkError(urlError)
             
-        case is TranslationError:
-            return handleAPIError(error as! TranslationError)
+        case let translationError as TranslationError:
+            return handleAPIError(translationError)
             
-        case is TTSError:
-            return handleTTSError(error as! TTSError)
+        case let ttsError as TTSError:
+            return handleTTSError(ttsError)
             
-        case is KeychainError:
-            return handleSecurityError(error as! KeychainError)
+        case let keychainError as KeychainError:
+            return handleSecurityError(keychainError)
             
         default:
             return handleGenericError(error)

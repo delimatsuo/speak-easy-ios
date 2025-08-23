@@ -2,7 +2,8 @@
 //  ContentView.swift
 //  UniversalTranslator Watch App
 //
-//  Enhanced UI with Digital Crown language selection, live transcription, and improved visual hierarchy
+//  MODERNIZED Apple Watch UI - Premium design with enhanced UX
+//  Uses ModernContentView for the new design system
 //
 
 import SwiftUI
@@ -10,6 +11,16 @@ import WatchKit
 import WatchConnectivity
 
 struct ContentView: View {
+    
+    var body: some View {
+        // Use the modern redesigned UI
+        ModernContentView()
+    }
+}
+
+// MARK: - Legacy ContentView (Preserved for reference)
+
+struct LegacyContentView: View {
     @StateObject private var audioManager = WatchAudioManager()
     @StateObject private var connectivityManager = WatchConnectivityManager.shared
     

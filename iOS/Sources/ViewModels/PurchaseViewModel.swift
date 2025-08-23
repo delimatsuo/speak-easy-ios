@@ -28,7 +28,12 @@ final class PurchaseViewModel: ObservableObject {
     }
 
     deinit {
+        cleanup()
+    }
+    
+    private func cleanup() {
         updatesTask?.cancel()
+        updatesTask = nil
     }
     
     // MARK: - Helper Functions
@@ -115,7 +120,8 @@ final class PurchaseViewModel: ObservableObject {
     private func listenForTransactionUpdates() {
         updatesTask = Task.detached { [weak self] in
             for await update in StoreKit.Transaction.updates {
-                await self?.processUpdate(update)
+                guard let self = self else { break }
+                await self.processUpdate(update)
             }
         }
     }
@@ -124,7 +130,9 @@ final class PurchaseViewModel: ObservableObject {
         do {
             try await handleVerification(update)
         } catch {
-            await MainActor.run { self.lastError = error.localizedDescription }
+            await MainActor.run { [weak self] in
+                self?.lastError = error.localizedDescription
+            }
         }
     }
 

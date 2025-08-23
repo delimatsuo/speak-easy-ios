@@ -20,16 +20,35 @@ final class AuthViewModel: NSObject, ObservableObject {
     @Published var lastError: String?
 
     private var currentNonce: String?
+    private var authStateHandle: AuthStateDidChangeListenerHandle?
 
     override init() {
         super.init()
-        Auth.auth().addStateDidChangeListener { [weak self] _, user in
-            Task { @MainActor in
-                self?.isSignedIn = user != nil && user?.isAnonymous == false
-                if let _ = user { await CreditsManager.shared.syncWithCloud() }
+        setupAuthStateListener()
+        Task { await ensureAnonymousIfNeeded() }
+    }
+    
+    deinit {
+        cleanupAuthStateListener()
+    }
+    
+    private func setupAuthStateListener() {
+        authStateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                self.isSignedIn = user != nil && user?.isAnonymous == false
+                if user != nil { 
+                    await CreditsManager.shared.syncWithCloud() 
+                }
             }
         }
-        Task { await ensureAnonymousIfNeeded() }
+    }
+    
+    private func cleanupAuthStateListener() {
+        if let handle = authStateHandle {
+            Auth.auth().removeStateDidChangeListener(handle)
+            authStateHandle = nil
+        }
     }
 
     func ensureAnonymousIfNeeded() async {
@@ -83,7 +102,8 @@ final class AuthViewModel: NSObject, ObservableObject {
         
         let firebaseCredential = OAuthProvider.credential(withProviderID: "apple.com", idToken: idTokenString, rawNonce: nonce)
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
                 let authResult: AuthDataResult
                 if let user = Auth.auth().currentUser, user.isAnonymous {
@@ -93,12 +113,14 @@ final class AuthViewModel: NSObject, ObservableObject {
                 }
                 
                 // Create user profile in Firestore for admin dashboard visibility
-                await createUserProfile(user: authResult.user, appleCredential: credential)
+                await self.createUserProfile(user: authResult.user, appleCredential: credential)
                 
                 // Starter grant after first sign-in
                 await CreditsManager.shared.grantStarterIfNeededWithDeviceThrottle()
             } catch {
-                await MainActor.run { self.lastError = error.localizedDescription }
+                await MainActor.run { [weak self] in
+                    self?.lastError = error.localizedDescription
+                }
             }
         }
     }
@@ -179,7 +201,8 @@ extension AuthViewModel: ASAuthorizationControllerDelegate {
         }
         let credential = OAuthProvider.credential(withProviderID: "apple.com", idToken: idTokenString, rawNonce: nonce)
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
                 let authResult: AuthDataResult
                 if let user = Auth.auth().currentUser, user.isAnonymous {
@@ -189,12 +212,14 @@ extension AuthViewModel: ASAuthorizationControllerDelegate {
                 }
                 
                 // Create user profile in Firestore for admin dashboard visibility
-                await createUserProfile(user: authResult.user, appleCredential: appleIDCredential)
+                await self.createUserProfile(user: authResult.user, appleCredential: appleIDCredential)
                 
                 // Starter grant after first sign-in
                 await CreditsManager.shared.grantStarterIfNeededWithDeviceThrottle()
             } catch {
-                await MainActor.run { self.lastError = error.localizedDescription }
+                await MainActor.run { [weak self] in
+                    self?.lastError = error.localizedDescription
+                }
             }
         }
     }

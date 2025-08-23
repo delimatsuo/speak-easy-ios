@@ -251,7 +251,12 @@ class APIKeyValidator {
     }
     
     private func createTestRequest(apiKey: String) -> URLRequest {
-        let url = URL(string: "\(GeminiAPIConfig.baseURL)/\(GeminiAPIConfig.apiVersion)/models/\(GeminiAPIConfig.model):generateContent")!
+        guard let url = URL(string: "\(GeminiAPIConfig.baseURL)/\(GeminiAPIConfig.apiVersion)/models/\(GeminiAPIConfig.model):generateContent") else {
+            print("❌ [APIKeyManager] Invalid URL for Gemini API validation: \(GeminiAPIConfig.baseURL)/\(GeminiAPIConfig.apiVersion)/models/\(GeminiAPIConfig.model):generateContent")
+            // Return a URLRequest with a guaranteed valid URL that will fail validation appropriately
+            let fallbackURL = URL(string: "https://invalid-url") ?? URL(fileURLWithPath: "/dev/null")
+            return URLRequest(url: fallbackURL)
+        }
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

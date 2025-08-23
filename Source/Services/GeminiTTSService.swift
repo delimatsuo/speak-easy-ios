@@ -279,7 +279,10 @@ class DiskCache {
     private let maxSize: Int
     
     init(directory: String, maxSize: Int) {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            print("❌ [GeminiTTSService] Unable to access documents directory for TTS cache")
+            throw TTSError.fileSystemError("Documents directory unavailable")
+        }
         self.directory = documentsPath.appendingPathComponent(directory)
         self.maxSize = maxSize
         

@@ -22,11 +22,23 @@ class WatchSessionManager: NSObject, ObservableObject {
     
     private override init() {
         super.init()
-        
+        setupSession()
+    }
+    
+    deinit {
+        cleanup()
+    }
+    
+    private func setupSession() {
         if WCSession.isSupported() {
             session = WCSession.default
             session?.delegate = self
         }
+    }
+    
+    private func cleanup() {
+        session?.delegate = nil
+        session = nil
     }
     
     func activate() {
@@ -52,8 +64,9 @@ class WatchSessionManager: NSObject, ObservableObject {
     func updateCredits() {
         guard let session = session else { return }
         
-        Task { @MainActor in
-            let credits = creditsManager.remainingSeconds
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            let credits = self.creditsManager.remainingSeconds
             let context = ["credits": credits]
             
             do {
@@ -84,7 +97,8 @@ class WatchSessionManager: NSObject, ObservableObject {
     // MARK: - Processing Watch Requests
     
     private func processTranslationRequest(_ request: TranslationRequest, audioURL: URL?) {
-        Task.detached {  // Use detached to avoid blocking main thread
+        Task.detached { [weak self] in  // Use detached to avoid blocking main thread
+            guard let self = self else { return }
             do {
                 var audioToProcess: URL
                 
@@ -124,7 +138,9 @@ class WatchSessionManager: NSObject, ObservableObject {
                 print("🎵 iPhone: Audio data: \(translationResult.audioData?.count ?? 0) bytes")
                 
                 // 3. Create response
-                let creditsRemaining = await MainActor.run { self.creditsManager.remainingSeconds }
+                let creditsRemaining = await MainActor.run { [weak self] in
+                    self?.creditsManager.remainingSeconds ?? 0
+                }
                 let response = TranslationResponse(
                     requestId: request.requestId,
                     originalText: transcription,
@@ -143,9 +159,9 @@ class WatchSessionManager: NSObject, ObservableObject {
                 self.updateCredits()
                 
                 // Clean up temp files
-                if audioURL != nil {
+                if let audioURL = audioURL {
                     // Clean up the copied file from Watch
-                    try? FileManager.default.removeItem(at: audioURL!)
+                    try? FileManager.default.removeItem(at: audioURL)
                     print("🗑️ iPhone: Cleaned up Watch audio file")
                 } else if let tempURL = audioToProcess as URL? {
                     // Clean up temp file created from audio data
@@ -157,7 +173,9 @@ class WatchSessionManager: NSObject, ObservableObject {
                 print("❌ iPhone: Translation failed: \(error)")
                 
                 // Send error response
-                let creditsRemaining = await MainActor.run { self.creditsManager.remainingSeconds }
+                let creditsRemaining = await MainActor.run { [weak self] in
+                    self?.creditsManager.remainingSeconds ?? 0
+                }
                 let errorResponse = TranslationResponse(
                     requestId: request.requestId,
                     originalText: "",
@@ -196,7 +214,8 @@ extension WatchSessionManager: WCSessionDelegate {
             print("✅ iPhone: Session activated with state: \(activationState.rawValue)")
         }
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             self.isPaired = session.isPaired
             self.isWatchAppInstalled = session.isWatchAppInstalled
             self.isReachable = session.isReachable
@@ -219,7 +238,8 @@ extension WatchSessionManager: WCSessionDelegate {
     }
     
     func sessionWatchStateDidChange(_ session: WCSession) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             self.isPaired = session.isPaired
             self.isWatchAppInstalled = session.isWatchAppInstalled
             print("⌚ iPhone: Watch state changed - Paired: \(session.isPaired), Installed: \(session.isWatchAppInstalled)")
@@ -227,7 +247,8 @@ extension WatchSessionManager: WCSessionDelegate {
     }
     
     func sessionReachabilityDidChange(_ session: WCSession) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             self.isReachable = session.isReachable
             print("📱 iPhone: Watch reachability changed: \(session.isReachable)")
         }
@@ -247,7 +268,10 @@ extension WatchSessionManager: WCSessionDelegate {
         print("📥 iPhone: Received file from Watch: \(file.fileURL.lastPathComponent)")
         
         // IMPORTANT: Copy the file immediately as WCSessionFile is temporary
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            print("❌ [WatchSessionManager] Unable to access documents directory")
+            return
+        }
         let destinationURL = documentsPath.appendingPathComponent("watch_audio_\(UUID().uuidString).m4a")
         
         do {
@@ -264,8 +288,11 @@ extension WatchSessionManager: WCSessionDelegate {
             
             // Send error response
             if let request = TranslationRequest(from: file.metadata ?? [:]) {
-                Task {
-                    let creditsRemaining = await MainActor.run { self.creditsManager.remainingSeconds }
+                Task { [weak self] in
+                    guard let self = self else { return }
+                    let creditsRemaining = await MainActor.run { [weak self] in
+                        self?.creditsManager.remainingSeconds ?? 0
+                    }
                     let errorResponse = TranslationResponse(
                         requestId: request.requestId,
                         originalText: "",
@@ -294,7 +321,8 @@ extension WatchSessionManager: WCSessionDelegate {
             print("🎬 iPhone: Processing action: \(action)")
             switch action {
             case "requestCredits":
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
                     let credits = self.creditsManager.remainingSeconds
                     replyHandler?(["credits": credits])
                     print("💰 iPhone: Sent credits to Watch: \(credits)")

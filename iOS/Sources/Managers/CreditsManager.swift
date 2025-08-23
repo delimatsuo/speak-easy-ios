@@ -36,14 +36,24 @@ final class CreditsManager: ObservableObject {
     private var updatesTask: Task<Void, Never>?
 
     private init() {
-        Task {
-            await ensureAnonymousAuth()
-            await loadFromStorage()
-            await syncWithCloud()
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.ensureAnonymousAuth()
+            await self.loadFromStorage()
+            await self.syncWithCloud()
             // Process any unfinished StoreKit transactions from previous sessions
-            await processUnfinishedTransactions()
-            listenForTransactionUpdates()
+            await self.processUnfinishedTransactions()
+            self.listenForTransactionUpdates()
         }
+    }
+    
+    deinit {
+        cleanup()
+    }
+    
+    private func cleanup() {
+        updatesTask?.cancel()
+        updatesTask = nil
     }
 
     // MARK: - Public API
@@ -56,11 +66,13 @@ final class CreditsManager: ObservableObject {
         updatesTask?.cancel()
         updatesTask = Task.detached { [weak self] in
             for await update in StoreKit.Transaction.updates {
-                guard let self else { continue }
+                guard let self = self else { break }
                 switch update {
                 case .verified(let transaction):
                     if let mapping = CreditProduct(rawValue: transaction.productID) {
-                        await MainActor.run { self.purchaseCompletedGrant(seconds: mapping.grantSeconds) }
+                        await MainActor.run { [weak self] in
+                            self?.purchaseCompletedGrant(seconds: mapping.grantSeconds)
+                        }
                     }
                     await transaction.finish()
                 case .unverified:
@@ -76,7 +88,9 @@ final class CreditsManager: ObservableObject {
             switch result {
             case .verified(let transaction):
                 if let mapping = CreditProduct(rawValue: transaction.productID) {
-                    await MainActor.run { self.purchaseCompletedGrant(seconds: mapping.grantSeconds) }
+                    await MainActor.run { [weak self] in
+                        self?.purchaseCompletedGrant(seconds: mapping.grantSeconds)
+                    }
                 }
                 await transaction.finish()
             case .unverified:
@@ -100,7 +114,9 @@ final class CreditsManager: ObservableObject {
     func add(seconds: Int) {
         guard seconds > 0 else { return }
         remainingSeconds &+= seconds
-        Task { await saveToStorageAndCloud() }
+        Task { [weak self] in
+            await self?.saveToStorageAndCloud()
+        }
     }
     
     func setCredits(to seconds: Int) {
@@ -116,7 +132,9 @@ final class CreditsManager: ObservableObject {
         let toDeduct = min(seconds, remainingSeconds)
         remainingSeconds &-= toDeduct
         sessionSecondsDeducted &+= toDeduct
-        Task { await saveToStorageAndCloud() }
+        Task { [weak self] in
+            await self?.saveToStorageAndCloud()
+        }
     }
 
     func canStartTranslation() -> Bool {

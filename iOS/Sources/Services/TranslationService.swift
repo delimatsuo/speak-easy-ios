@@ -39,6 +39,17 @@ class TranslationService: ObservableObject {
     
     private init() {}
     
+    deinit {
+        cleanup()
+    }
+    
+    private func cleanup() {
+        currentTask?.cancel()
+        currentTask = nil
+        currentCancellable?.cancel()
+        currentCancellable = nil
+    }
+    
     // MARK: - Voice Translation API
     
     func translateWithAudio(text: String, from sourceLanguage: String, to targetLanguage: String) async throws -> TranslationAudioResponse {
@@ -61,7 +72,10 @@ class TranslationService: ObservableObject {
     func remoteSpeechToText(audioURL: URL, language: String) async throws -> String {
         print("🎙️ Starting remote speech-to-text for language: \(language)")
         
-        let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.speechToText)")!
+        guard let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.speechToText)") else {
+            print("❌ [TranslationService] Invalid URL for speech-to-text endpoint: \(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.speechToText)")
+            throw TranslationError.invalidURL
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -127,16 +141,16 @@ class TranslationService: ObservableObject {
     func cancelCurrentTranslation() {
         print("🚫 [\(Date())] Cancelling current translation request")
         
-        Task { @MainActor in
-            self.isCancelling = true
+        Task { @MainActor [weak self] in
+            self?.isCancelling = true
         }
         
         currentTask?.cancel()
         currentCancellable?.cancel()
         
-        Task { @MainActor in
-            self.isTranslating = false
-            self.lastError = "Translation cancelled by user"
+        Task { @MainActor [weak self] in
+            self?.isTranslating = false
+            self?.lastError = "Translation cancelled by user"
         }
     }
     
@@ -145,7 +159,10 @@ class TranslationService: ObservableObject {
             throw TranslationError.emptyText
         }
         
-        let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.translateAudio)")!
+        guard let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.translateAudio)") else {
+            print("❌ [TranslationService] Invalid URL for translation endpoint: \(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.translateAudio)")
+            throw TranslationError.invalidURL
+        }
         #if DEBUG
         print("🔄 [\(Date())] Making translation request to: \(url)")
         #endif
@@ -218,10 +235,10 @@ class TranslationService: ObservableObject {
                 }
                 
                 // Add cancellation check task
-                group.addTask {
+                group.addTask { [weak self] in
                     while !Task.isCancelled {
                         try await Task.sleep(nanoseconds: 500_000_000) // Check every 0.5s
-                        if await self.isCancelling {
+                        if await self?.isCancelling == true {
                             throw TranslationError.cancelled
                         }
                     }
@@ -229,7 +246,10 @@ class TranslationService: ObservableObject {
                 }
                 
                 // Return the first completed task (either success, timeout, or cancellation)
-                let result = try await group.next()!
+                guard let result = try await group.next() else {
+                    print("❌ [TranslationService] No task result received from task group")
+                    throw TranslationError.networkError
+                }
                 group.cancelAll() // Cancel all other tasks
                 return result
             }
@@ -252,12 +272,12 @@ class TranslationService: ObservableObject {
                 #endif
 
                 // Store error for UI display
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     #if DEBUG
                     let dbg = String(data: data, encoding: .utf8) ?? ""
-                    self.lastError = "Server error (\(httpResponse.statusCode)): \(dbg)"
+                    self?.lastError = "Server error (\(httpResponse.statusCode)): \(dbg)"
                     #else
-                    self.lastError = "Server error (\(httpResponse.statusCode))"
+                    self?.lastError = "Server error (\(httpResponse.statusCode))"
                     #endif
                 }
                 
@@ -274,8 +294,8 @@ class TranslationService: ObservableObject {
             #endif
             
             // Clear any previous errors
-            await MainActor.run {
-                self.lastError = nil
+            await MainActor.run { [weak self] in
+                self?.lastError = nil
             }
             
             // Conversation content is NOT persisted by policy
@@ -309,41 +329,41 @@ class TranslationService: ObservableObject {
             let errorMessage: String
             if error.code == .timedOut {
                 errorMessage = "Translation request timed out after \(String(format: "%.0f", duration)) seconds"
-                await MainActor.run {
-                    self.lastError = errorMessage
+                await MainActor.run { [weak self] in
+                    self?.lastError = errorMessage
                 }
                 throw TranslationError.timeout
             } else if error.code == .cannotConnectToHost || error.code == .networkConnectionLost {
                 errorMessage = "Cannot connect to translation server. Please check your internet connection."
-                await MainActor.run {
-                    self.lastError = errorMessage
+                await MainActor.run { [weak self] in
+                    self?.lastError = errorMessage
                 }
                 throw TranslationError.networkError
             } else if error.code == .secureConnectionFailed {
                 errorMessage = "Secure connection failed. Please try again."
-                await MainActor.run {
-                    self.lastError = errorMessage
+                await MainActor.run { [weak self] in
+                    self?.lastError = errorMessage
                 }
                 throw TranslationError.networkError
             } else {
                 errorMessage = "Network error: \(error.localizedDescription)"
-                await MainActor.run {
-                    self.lastError = errorMessage
+                await MainActor.run { [weak self] in
+                    self?.lastError = errorMessage
                 }
                 throw TranslationError.networkError
             }
         } catch let translationError as TranslationError {
             let duration = requestStartTime.map { Date().timeIntervalSince($0) } ?? 0
             print("❌ [\(Date())] Translation Error after \(String(format: "%.2f", duration))s: \(translationError.localizedDescription)")
-            await MainActor.run {
-                self.lastError = translationError.localizedDescription
+            await MainActor.run { [weak self] in
+                self?.lastError = translationError.localizedDescription
             }
             throw translationError
         } catch {
             let duration = requestStartTime.map { Date().timeIntervalSince($0) } ?? 0
             print("❌ [\(Date())] Unexpected Error after \(String(format: "%.2f", duration))s: \(error)")
-            await MainActor.run {
-                self.lastError = "Unexpected error: \(error.localizedDescription)"
+            await MainActor.run { [weak self] in
+                self?.lastError = "Unexpected error: \(error.localizedDescription)"
             }
             throw error
         }
@@ -367,8 +387,9 @@ class TranslationService: ObservableObject {
     }
     
     private func downloadAudioWithRetry(from urlString: String) async throws -> Data {
-        return try await performWithRetry {
-            try await self.downloadAudio(from: urlString)
+        return try await performWithRetry { [weak self] in
+            guard let self = self else { throw TranslationError.networkError }
+            return try await self.downloadAudio(from: urlString)
         }
     }
     
@@ -430,8 +451,8 @@ class TranslationService: ObservableObject {
                         "Translation failed after \(maxRetryAttempts) attempts: \(error.localizedDescription)"
                     }
                     
-                    await MainActor.run {
-                        self.lastError = errorMsg
+                    await MainActor.run { [weak self] in
+                        self?.lastError = errorMsg
                     }
                     throw error
                 }
@@ -442,8 +463,8 @@ class TranslationService: ObservableObject {
                 print("🔄 [\(Date())] Retrying in \(String(format: "%.1f", delay)) seconds (attempt \(attempt)/\(maxRetryAttempts))")
                 
                 // Update UI with retry status
-                await MainActor.run {
-                    self.lastError = "Attempt \(attempt) failed, retrying in \(Int(delay))s..."
+                await MainActor.run { [weak self] in
+                    self?.lastError = "Attempt \(attempt) failed, retrying in \(Int(delay))s..."
                 }
                 
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
@@ -463,7 +484,10 @@ class TranslationService: ObservableObject {
     }
     
     private func fetchSupportedLanguagesInternal() async throws -> [Language] {
-        let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.languages)")!
+        guard let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.languages)") else {
+            print("❌ [TranslationService] Invalid URL for languages endpoint: \(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.languages)")
+            throw TranslationError.invalidURL
+        }
         
         let (data, response) = try await URLSession.shared.data(from: url)
         
@@ -553,7 +577,10 @@ class TranslationService: ObservableObject {
     }
     
     private func checkAPIHealthInternal() async throws -> Bool {
-        let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.health)")!
+        guard let url = URL(string: "\(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.health)") else {
+            print("❌ [TranslationService] Invalid URL for health endpoint: \(NetworkConfig.apiBaseURL)\(NetworkConfig.Endpoint.health)")
+            throw TranslationError.invalidURL
+        }
         
         var request = URLRequest(url: url)
         request.timeoutInterval = 5.0 // Optimized timeout for health check
@@ -588,7 +615,10 @@ class TranslationService: ObservableObject {
                 throw TranslationError.timeout
             }
             
-            let result = try await group.next()!
+            guard let result = try await group.next() else {
+                print("❌ [TranslationService] No task result received from timeout task group")
+                throw TranslationError.timeout
+            }
             group.cancelAll()
             return result
         }

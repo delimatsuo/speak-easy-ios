@@ -95,7 +95,9 @@ class DiskCacheManager {
     private let decoder = JSONDecoder()
     
     init(directory: String) {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            fatalError("Unable to access documents directory. This is a critical system failure.")
+        }
         self.directory = documentsPath.appendingPathComponent(directory)
         
         try? FileManager.default.createDirectory(at: self.directory, withIntermediateDirectories: true)

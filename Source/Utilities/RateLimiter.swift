@@ -28,7 +28,10 @@ class RateLimiter {
                 return nil
             }
             
-            let oldestRequest = requestTimestamps.first!
+            guard let oldestRequest = requestTimestamps.first else {
+                print("❌ [RateLimiter] Unexpected empty timestamps array")
+                return nil
+            }
             let availableTime = oldestRequest.addingTimeInterval(60)
             return availableTime.timeIntervalSince(Date())
         }
