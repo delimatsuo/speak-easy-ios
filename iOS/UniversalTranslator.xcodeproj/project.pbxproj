@@ -36,6 +36,7 @@
 		4865D4AAC7DF298439BABA5F /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0955261519B8B5B7E6172C93 /* WatchConnectivity.framework */; };
 		494552FEADC4B1F9A9E4490C /* WatchAccessibilitySupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E705560972EDE89DECC506B /* WatchAccessibilitySupport.swift */; };
 		51DAC111AFC0180AA6BAD724 /* PurchaseSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322AC51DBFE4BE22DEA83746 /* PurchaseSheet.swift */; };
+		2556E4DC87C646FF8BBEE3A4 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D5D8390E2C40BB8E6E92AB /* AboutView.swift */; };
 		5266A898E84A24F3EA023216 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D6DF412A6C20AAB3E704DA /* AudioManager.swift */; };
 		5339429A0ECA7524D632F8D8 /* ConversationBubblesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD4E1D36AAAE55BCB1B22A96 /* ConversationBubblesView.swift */; };
 		5B48DCB0482B964B74E290D2 /* CreditsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67F69F45D7931C0BBE15C4DB /* CreditsManager.swift */; };
@@ -182,6 +183,7 @@
 		2D277875FCDA3140E47D5F24 /* ModernMicrophoneButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ModernMicrophoneButton.swift; path = Sources/Components/ModernMicrophoneButton.swift; sourceTree = "<group>"; };
 		3190D43A0DF5D17D73EFFBD3 /* Products.storekit */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = Products.storekit; path = Resources/Configuration/Products.storekit; sourceTree = "<group>"; };
 		322AC51DBFE4BE22DEA83746 /* PurchaseSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PurchaseSheet.swift; path = Sources/Views/PurchaseSheet.swift; sourceTree = "<group>"; };
+		99D5D8390E2C40BB8E6E92AB /* AboutView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AboutView.swift; path = Sources/Views/AboutView.swift; sourceTree = "<group>"; };
 		366AC8D9A1E6ECBB1A13A538 /* ModernTextDisplayCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ModernTextDisplayCard.swift; path = Sources/Components/ModernTextDisplayCard.swift; sourceTree = "<group>"; };
 		3AC61928A1813F880F970A6A /* ModernAnimations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ModernAnimations.swift; path = Sources/Extensions/ModernAnimations.swift; sourceTree = "<group>"; };
 		3F19CE5DEF8473703CB36B99 /* Localizable.strings */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = Resources/Localization/hi.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -478,6 +480,7 @@
 				D0D78810219E504692342D82 /* ProfileView.swift */,
 				CC17D2EEA5CA3BC869AF05EC /* UsageStatisticsView.swift */,
 				322AC51DBFE4BE22DEA83746 /* PurchaseSheet.swift */,
+				99D5D8390E2C40BB8E6E92AB /* AboutView.swift */,
 				008636DD4BAACBC1B34BC81E /* LegalDocumentView.swift */,
 				A5CE947E79C159A08720BC92 /* SignInView.swift */,
 				BB75C492B93A3B0BF5BDB4B9 /* ContentView.swift */,
@@ -944,6 +947,7 @@
 				37579BDD04350F3D3B7C00E4 /* ProfileView.swift in Sources */,
 				F624726373D5A389CFBFA2D9 /* UsageStatisticsView.swift in Sources */,
 				51DAC111AFC0180AA6BAD724 /* PurchaseSheet.swift in Sources */,
+				2556E4DC87C646FF8BBEE3A4 /* AboutView.swift in Sources */,
 				312221B3F5ACC468D4496419 /* LegalDocumentView.swift in Sources */,
 				36A4540C43F34BADFD13E7D9 /* SignInView.swift in Sources */,
 				A0CC4DC2ACD8ED11DB4CBADE /* ContentView.swift in Sources */,

@@ -43,6 +43,7 @@ struct ContentView: View {
     @State private var errorMessage = ""
     @State private var showPurchaseSheet = false
     @State private var showProfile = false
+    @State private var showAbout = false
     @State private var showUsageStats = false
     @State private var showLanguagePicker: LanguagePickerType?
     @State private var recordingDuration = 0
@@ -66,6 +67,9 @@ struct ContentView: View {
         contentWithOverlay
             .purchaseSheet(isPresented: $showPurchaseSheet, isAnonymousMode: isAnonymousMode)
             .profileSheet(isPresented: $showProfile)
+            .sheet(isPresented: $showAbout) {
+                AboutView()
+            }
             .usageStatsSheet(isPresented: $showUsageStats)
             .languagePickerSheet(item: $showLanguagePicker, sourceLanguage: $sourceLanguage, targetLanguage: $targetLanguage)
             .errorAlert(isPresented: $showError, message: errorMessage, onRetry: retryLastTranslation, onCancel: {
@@ -133,19 +137,34 @@ struct ContentView: View {
                 remainingSeconds: isAnonymousMode ? anonymousCredits.remainingSeconds : credits.remainingSeconds
             )
             
-            // Watch Connection Status
-            if watchSession.isPaired {
-                HStack {
-                    Image(systemName: watchSession.isReachable ? "applewatch" : "applewatch.slash")
-                        .font(.caption)
-                        .foregroundColor(watchSession.isReachable ? .green : .orange)
-                    Text(watchSession.isReachable ? "Watch Connected" : "Watch Disconnected")
-                        .font(.caption)
-                        .foregroundColor(watchSession.isReachable ? .green : .orange)
-                    Spacer()
+            // Info and Watch Status Row
+            HStack {
+                // Info button
+                Button(action: { showAbout = true }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 14))
+                        Text("About")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.blue)
                 }
-                .padding(.horizontal)
+                
+                Spacer()
+                
+                // Watch Connection Status
+                if watchSession.isPaired {
+                    HStack {
+                        Image(systemName: watchSession.isReachable ? "applewatch" : "applewatch.slash")
+                            .font(.caption)
+                            .foregroundColor(watchSession.isReachable ? .green : .orange)
+                        Text(watchSession.isReachable ? "Watch Connected" : "Watch Disconnected")
+                            .font(.caption)
+                            .foregroundColor(watchSession.isReachable ? .green : .orange)
+                    }
+                }
             }
+            .padding(.horizontal)
         }
     }
     
