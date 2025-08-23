@@ -90,21 +90,23 @@ struct ModernContentView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: WatchSpacing.xs) {  // Reduced spacing for all sizes
-                    // MARK: - Compact Header with connection indicator only
-                    compactHeaderView
-                    
-                    // MARK: - Language Selection
-                    modernLanguageSelector
-                    
-                    // MARK: - Main Content Area
-                    mainContentView
-                        .animation(WatchAnimations.smooth, value: currentState)
-                }
-                .padding(.horizontal, WatchSpacing.xs)  // Minimal horizontal padding
-                .padding(.top, 2)  // Minimal top padding to maximize screen usage
+            VStack(spacing: WatchSpacing.xs) {  // Changed from ScrollView to VStack for better centering
+                // MARK: - Compact Header with connection indicator only
+                compactHeaderView
+                
+                // MARK: - Language Selection
+                modernLanguageSelector
+                
+                Spacer(minLength: 0)  // Push content to center
+                
+                // MARK: - Main Content Area
+                mainContentView
+                    .animation(WatchAnimations.smooth, value: currentState)
+                
+                Spacer(minLength: 0)  // Push content to center
             }
+            .padding(.horizontal, WatchSpacing.xs)  // Minimal horizontal padding
+            .padding(.vertical, 4)  // Small vertical padding for balance
             .background(Color.watchBackground)
             .ignoresSafeArea(.all, edges: .bottom)
             .navigationTitle("")
@@ -291,36 +293,38 @@ struct ModernContentView: View {
                 modernErrorView
             }
         }
-        .frame(minHeight: 80)  // Reduced minimum height to maximize screen usage
+        // Removed fixed minimum height to allow natural centering
     }
     
     // MARK: - Modern Idle View
     
     private var modernIdleView: some View {
-        VStack(spacing: WatchSpacing.sm) {  // Reduced spacing between elements
+        VStack(spacing: WatchSpacing.xs) {  // Even tighter spacing
             // Modern microphone button
             modernMicrophoneButton
             
-            // Instruction text
-            Text("Tap to translate")
-                .watchTextStyle(.caption2)  // Smaller text
-                .foregroundColor(.watchTextTertiary)
-                .font(.system(size: 10))
-            
-            // Volume indicator - more compact
-            HStack(spacing: 2) {
-                Image(systemName: volumeIconName)
-                    .font(.system(size: 9))
-                    .foregroundColor(.watchTextTertiary)
-                Text("\(Int(volumeLevel * 100))%")
+            // Combined instruction and volume in one line
+            VStack(spacing: 2) {
+                Text("Tap to translate")
                     .watchTextStyle(.caption2)
                     .foregroundColor(.watchTextTertiary)
-                    .font(.system(size: 9))
+                    .font(.system(size: 10))
+                
+                HStack(spacing: 2) {
+                    Image(systemName: volumeIconName)
+                        .font(.system(size: 8))
+                        .foregroundColor(.watchTextTertiary)
+                    Text("\(Int(volumeLevel * 100))%")
+                        .font(.system(size: 8))
+                        .foregroundColor(.watchTextTertiary)
+                }
+                .opacity(0.6)
             }
-            .opacity(0.7)
             
-            // Credits and status (subtle)
-            modernCreditsView
+            // Credits only if needed
+            if !connectivityManager.isReachable || connectivityManager.creditsRemaining <= 60 {
+                modernCreditsView
+            }
         }
     }
     
