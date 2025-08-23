@@ -11,7 +11,7 @@ import WatchKit
 
 class WatchAudioManager: NSObject, ObservableObject {
     private var audioRecorder: AVAudioRecorder?
-    private var audioPlayer: AVAudioPlayer?
+    var audioPlayer: AVAudioPlayer?  // Made internal so it can be accessed for volume control
     private var recordingURL: URL?
     
     @Published var isRecording = false

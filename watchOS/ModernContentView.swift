@@ -20,7 +20,7 @@ struct ModernContentView: View {
     @State private var targetLanguageIndex: Int = 1
     @State private var showingLanguageSelection = false
     @State private var isSelectingSourceLanguage = true
-    @State private var crownValue: Double = 0
+    @State private var volumeLevel: Double = 0.5  // Changed from crownValue to volumeLevel for volume control
     
     // MARK: - Translation Data
     @State private var errorMessage = ""
@@ -99,16 +99,16 @@ struct ModernContentView: View {
             .navigationBarHidden(true)
             .focusable(true)
             .digitalCrownRotation(
-                $crownValue,
-                from: 0,
-                through: Double(languages.count - 1),
-                by: 1,
+                $volumeLevel,
+                from: 0.0,
+                through: 1.0,
+                by: 0.05,  // 5% volume increments
                 sensitivity: .medium,
-                isContinuous: false,
+                isContinuous: true,
                 isHapticFeedbackEnabled: true
             )
-            .onChange(of: crownValue) { _, newValue in
-                handleCrownRotation(newValue)
+            .onChange(of: volumeLevel) { _, newValue in
+                handleVolumeChange(newValue)
             }
         }
         .onAppear {
@@ -298,6 +298,17 @@ struct ModernContentView: View {
             Text("Tap to translate")
                 .watchTextStyle(.caption)
                 .foregroundColor(.watchTextTertiary)
+            
+            // Volume indicator
+            HStack(spacing: WatchSpacing.xs) {
+                Image(systemName: volumeIconName)
+                    .font(.system(size: 10))
+                    .foregroundColor(.watchTextTertiary)
+                Text("Volume: \(Int(volumeLevel * 100))%")
+                    .watchTextStyle(.caption2)
+                    .foregroundColor(.watchTextTertiary)
+            }
+            .opacity(0.8)
             
             // Credits and status (subtle)
             modernCreditsView
@@ -503,14 +514,18 @@ struct ModernContentView: View {
                 isHighlighted: true
             )
             
-            // Playing indicator
+            // Playing indicator with volume level
             HStack(spacing: WatchSpacing.xs) {
-                Image(systemName: "speaker.wave.2.fill")
+                Image(systemName: volumeIconName)
                     .font(.system(size: 10))
                     .foregroundColor(.watchSuccess)
                 Text("Playing...")
                     .watchTextStyle(.caption)
                     .foregroundColor(.watchSuccess)
+                Spacer()
+                Text("\(Int(volumeLevel * 100))%")
+                    .watchTextStyle(.caption2)
+                    .foregroundColor(.watchTextSecondary)
             }
             
             // New translation button
@@ -592,6 +607,18 @@ struct ModernContentView: View {
     
     private var creditColor: Color {
         connectivityManager.creditsRemaining <= 60 ? .watchWarning : .watchTextTertiary
+    }
+    
+    private var volumeIconName: String {
+        if volumeLevel <= 0 {
+            return "speaker.slash.fill"
+        } else if volumeLevel < 0.33 {
+            return "speaker.fill"
+        } else if volumeLevel < 0.66 {
+            return "speaker.wave.1.fill"
+        } else {
+            return "speaker.wave.2.fill"
+        }
     }
     
     // MARK: - Helper Views
@@ -753,20 +780,15 @@ struct ModernContentView: View {
         WatchHaptics.selection()
     }
     
-    private func handleCrownRotation(_ value: Double) {
-        let newIndex = Int(value.rounded())
-        if newIndex >= 0 && newIndex < languages.count {
-            if isSelectingSourceLanguage {
-                if newIndex != sourceLanguageIndex {
-                    sourceLanguageIndex = newIndex
-                    WatchHaptics.selection()
-                }
-            } else {
-                if newIndex != targetLanguageIndex {
-                    targetLanguageIndex = newIndex
-                    WatchHaptics.selection()
-                }
-            }
+    private func handleVolumeChange(_ value: Double) {
+        // Update the audio player volume if it's currently playing
+        if let player = audioManager.audioPlayer {
+            player.volume = Float(value)
+        }
+        
+        // Provide haptic feedback at min/max volume
+        if value <= 0.0 || value >= 1.0 {
+            WatchHaptics.selection()
         }
     }
     
@@ -946,6 +968,10 @@ struct ModernContentView: View {
         currentState = .playing
         
         audioManager.playAudio(audioData) { success in
+            // Set the initial volume for the audio player
+            if let player = self.audioManager.audioPlayer {
+                player.volume = Float(self.volumeLevel)
+            }
             currentState = .idle
             WatchHaptics.success()
         }
