@@ -8,6 +8,8 @@
 import UIKit
 import Firebase
 import FirebaseFirestore
+import AVFoundation
+import Speech
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -34,6 +36,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Configure appearance
         configureAppearance()
+        
+        // PERFORMANCE OPTIMIZATION: Preload critical components
+        preloadCriticalSystems()
         
         return true
     }
@@ -66,5 +71,76 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Configure tab bar if needed
         UITabBar.appearance().tintColor = UIColor.label
+    }
+    
+    // MARK: - Performance Optimization
+    
+    private func preloadCriticalSystems() {
+        print("🚀 Starting critical system preload...")
+        
+        // Dispatch to background queue to avoid blocking main thread
+        DispatchQueue.global(qos: .userInitiated).async {
+            // 1. Preload Audio Session
+            self.preloadAudioSession()
+            
+            // 2. Preload Speech Recognition
+            self.preloadSpeechRecognition()
+            
+            // 3. Initialize Core Managers (singleton pattern ensures thread safety)
+            self.preloadCoreManagers()
+            
+            // 4. Warm up translation API connection
+            self.warmupTranslationAPI()
+            
+            print("✅ Critical system preload completed")
+        }
+    }
+    
+    private func preloadAudioSession() {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            // Configure audio session early but don't activate yet
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            print("🎵 Audio session preconfigured")
+        } catch {
+            print("⚠️ Audio session preload failed: \(error)")
+        }
+    }
+    
+    private func preloadSpeechRecognition() {
+        // Request speech recognition permission early (async, won't block)
+        SFSpeechRecognizer.requestAuthorization { status in
+            print("🎤 Speech recognition preload status: \(status.rawValue)")
+        }
+        
+        // Initialize speech recognizer for default locale to warm up the engine
+        _ = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+        print("🧠 Speech recognizer engine warmed up")
+    }
+    
+    private func preloadCoreManagers() {
+        // Initialize singleton managers to warm up their internal state
+        _ = AnonymousCreditsManager.shared  // Load user credits
+        print("💳 Credits manager preloaded")
+        
+        // Initialize APIKeyManager (already done in DEBUG, do for RELEASE too)
+        #if !DEBUG
+        _ = APIKeyManager.shared
+        #endif
+        print("🔑 API manager preloaded")
+    }
+    
+    private func warmupTranslationAPI() {
+        // Create a minimal network request to warm up URLSession and DNS resolution
+        guard let url = URL(string: "https://generativelanguage.googleapis.com") else { return }
+        
+        let task = URLSession.shared.dataTask(with: url) { _, response, _ in
+            if let httpResponse = response as? HTTPURLResponse {
+                print("🌐 Translation API warmup: \(httpResponse.statusCode)")
+            }
+        }
+        task.resume()
+        
+        // Don't wait for completion - this is just warming up the connection
     }
 }

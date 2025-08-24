@@ -11,6 +11,14 @@ import Speech
 import Firebase
 import FirebaseStorage
 
+// Audio error types
+enum AudioError: Error {
+    case fileSystemError
+    case recordingFailed
+    case playbackFailed
+    case permissionDenied
+}
+
 class AudioManager: NSObject, ObservableObject {
     static let shared = AudioManager()
     
@@ -344,17 +352,33 @@ class AudioManager: NSObject, ObservableObject {
         recognitionRequest.shouldReportPartialResults = true
         recognitionRequest.requiresOnDeviceRecognition = false
         
-        // Configure audio engine with hardware's exact format
+        // Configure audio engine with proper format handling
         let inputNode = audioEngine.inputNode
         
         // Remove any existing tap first (removeTap doesn't throw)
         inputNode.removeTap(onBus: 0)
         print("🔧 Existing audio tap removed")
         
-        // Use the hardware's exact native format to avoid any conversion
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-        print("🎵 Using hardware format: \(recordingFormat)")
+        // CRITICAL FIX: Use hardware's input format, not output format
+        let hardwareFormat = inputNode.inputFormat(forBus: 0)
+        print("🎵 Hardware input format: \(hardwareFormat)")
         
+        // For speech recognition, we need PCM format with specific parameters
+        // Use the hardware sample rate but ensure we have the right format
+        let sampleRate = hardwareFormat.sampleRate
+        
+        // Create a compatible format for speech recognition
+        guard let recordingFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, 
+                                                 sampleRate: sampleRate, 
+                                                 channels: 1, 
+                                                 interleaved: false) else {
+            print("❌ Failed to create recording format")
+            throw TranscriptionError.requestCreationFailed
+        }
+        
+        print("🎵 Using recording format: \(recordingFormat)")
+        
+        // Install tap with the compatible format
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
             self.recognitionRequest?.append(buffer)
         }
