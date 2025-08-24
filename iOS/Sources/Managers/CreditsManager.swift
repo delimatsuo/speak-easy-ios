@@ -48,8 +48,7 @@ final class CreditsManager: ObservableObject {
     }
     
     deinit {
-        // Cancel the task directly in deinit since we can't call MainActor methods
-        updatesTask?.cancel()
+        cleanup()
     }
     
     private func cleanup() {

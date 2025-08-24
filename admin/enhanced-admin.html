@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mervyn Talks - Enhanced Admin Dashboard</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Universal Translator - Enhanced Admin Dashboard</title>
+    <!-- Version: 2025-01-24 v2.0 - Correct pricing $1.99/$2.99 -->
     <style>
         :root {
             --primary: #2563eb;
@@ -388,7 +392,7 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <div class="logo">🗣️ Mervyn Talks Admin</div>
+            <div class="logo">🌐 Universal Translator Admin</div>
             <div class="user-info">
                 <span id="userStatus" class="status-badge status-loading">Loading...</span>
                 <button id="signInBtn" class="btn btn-primary hidden">Sign In</button>
@@ -988,25 +992,87 @@
 
                         // Get revenue from actual purchases
                         let userRevenue = 0;
-                        try {
+                        
+                        // Exclude test accounts from revenue calculations entirely
+                        const email = userData.email || '';
+                        const isTestAccount = email.includes('delimatsuo@gmail.com') || 
+                                            email.includes('privaterelayappleid.com') ||
+                                            credits > 3000; // More than 50 minutes likely test account
+                        
+                        if (isTestAccount) {
+                            userRevenue = 0; // Test accounts don't count as revenue
+                        } else {
+                            try {
                             const userTransactions = await getDocs(
                                 collection(db, 'purchases', uid, 'items')
                             );
                             const prices = this.getCurrentPrices();
-                            userTransactions.forEach(transDoc => {
-                                const transData = transDoc.data();
-                                // Use productId to get price
-                                const price = prices[transData.productId] || 0;
-                                userRevenue += price;
-                            });
+                            if (userTransactions.empty) {
+                                // No purchase records - use credit-based estimation
+                                if (credits >= 300 && credits <= 360) {
+                                    // Exactly 5 minutes (300s) or slightly used = bought 5-minute package
+                                    userRevenue = 1.99;
+                                } else if (credits >= 600 && credits <= 660) {
+                                    // Exactly 10 minutes (600s) or slightly used = bought 10-minute package  
+                                    userRevenue = 2.99;
+                                } else if (credits > 660) {
+                                    // More than 10 minutes = multiple purchases
+                                    const fiveMinPackages = Math.floor(credits / 300);
+                                    userRevenue = fiveMinPackages * 1.99;
+                                }
+                            } else {
+                                userTransactions.forEach(transDoc => {
+                                    const transData = transDoc.data();
+                                    // Use productId to get price with correct defaults
+                                    let price = prices[transData.productId];
+                                    if (!price) {
+                                        // Use default prices based on product ID
+                                        if (transData.productId === 'com.universaltranslator.credits.300s' || 
+                                            transData.productId === 'com.mervyntalks.credits.300s') {
+                                            price = 1.99;
+                                        } else if (transData.productId === 'com.universaltranslator.credits.600s' || 
+                                                   transData.productId === 'com.mervyntalks.credits.600s') {
+                                            price = 2.99;
+                                        } else {
+                                            price = 0;
+                                        }
+                                    }
+                                    userRevenue += price;
+                                });
+                            }
                         } catch (e) {
-                            // If no purchases found, estimate based on credits for legacy users
-                            if (credits >= 300 && credits < 600) {
+                            // If no purchase records found, estimate based on credits
+                            // Users with exactly 300 seconds (5:00) likely bought the 5-minute package
+                            // Users with large amounts are likely test accounts
+                            
+                            // Exclude test accounts from revenue calculations
+                            const email = userData.email || '';
+                            if (email.includes('delimatsuo@gmail.com') || 
+                                email.includes('privaterelayappleid.com') ||
+                                credits > 3000) { // More than 50 minutes likely test account
+                                userRevenue = 0; // Test accounts don't count as revenue
+                            } else if (credits >= 300 && credits <= 360) {
+                                // Exactly 5 minutes (300s) or slightly used = bought 5-minute package
                                 userRevenue = 1.99;
-                            } else if (credits >= 1800) {
-                                userRevenue = 9.99;
+                            } else if (credits >= 600 && credits <= 660) {
+                                // Exactly 10 minutes (600s) or slightly used = bought 10-minute package  
+                                userRevenue = 2.99;
+                            } else if (credits > 660) {
+                                // More than 10 minutes = multiple purchases
+                                const fiveMinPackages = Math.floor(credits / 300);
+                                const tenMinPackages = Math.floor(credits / 600);
+                                
+                                if (tenMinPackages > 0) {
+                                    userRevenue = (tenMinPackages * 2.99) + ((fiveMinPackages - (tenMinPackages * 2)) * 1.99);
+                                } else {
+                                    userRevenue = fiveMinPackages * 1.99;
+                                }
+                            } else {
+                                // Less than 5 minutes = likely free user or partial usage
+                                userRevenue = 0;
                             }
                         }
+                        } // End of isTestAccount else block
 
                         return {
                             uid,
@@ -1502,80 +1568,171 @@ New Balance: ${this.formatTime(finalCredits)}`);
 
             async loadRevenueData() {
                 try {
+                    console.log('📊 Loading revenue data...');
                     const prices = this.getCurrentPrices();
-                    const transactionsSnap = await getDocs(collectionGroup(db, 'items'));
+                    
+                    // Show loading state
+                    document.getElementById('product300Stats').textContent = 'Loading...';
+                    document.getElementById('product600Stats').textContent = 'Loading...';
+                    document.getElementById('arpuStats').textContent = 'Loading...';
                     
                     let product300Count = 0, product600Count = 0;
                     let product300Revenue = 0, product600Revenue = 0;
                     
-                    transactionsSnap.forEach(doc => {
-                        const data = doc.data();
-                        if (data.productId === 'com.mervyntalks.credits.300s') {
-                            product300Count++;
-                            product300Revenue += prices[data.productId] || 0;
-                        } else if (data.productId === 'com.mervyntalks.credits.600s') {
-                            product600Count++;
-                            product600Revenue += prices[data.productId] || 0;
+                    try {
+                        // Try to load transactions from collection group
+                        const transactionsSnap = await getDocs(collectionGroup(db, 'items'));
+                        console.log(`📊 Found ${transactionsSnap.size} transactions`);
+                        
+                        transactionsSnap.forEach(doc => {
+                            const data = doc.data();
+                            if (data.productId === 'com.universaltranslator.credits.300s' || data.productId === 'com.mervyntalks.credits.300s') {
+                                product300Count++;
+                                product300Revenue += prices[data.productId] || prices['com.universaltranslator.credits.300s'] || prices['com.mervyntalks.credits.300s'] || 1.99;
+                            } else if (data.productId === 'com.universaltranslator.credits.600s' || data.productId === 'com.mervyntalks.credits.600s') {
+                                product600Count++;
+                                product600Revenue += prices[data.productId] || prices['com.universaltranslator.credits.600s'] || prices['com.mervyntalks.credits.600s'] || 2.99;
+                            }
+                        });
+                    } catch (collectionError) {
+                        console.warn('⚠️ Collection group query failed, trying alternative method:', collectionError);
+                        
+                        // Fallback: iterate through users and check their purchases
+                        const usersSnap = await getDocs(collection(db, 'users'));
+                        for (const userDoc of usersSnap.docs) {
+                            try {
+                                const purchasesSnap = await getDocs(collection(db, 'purchases', userDoc.id, 'items'));
+                                purchasesSnap.forEach(doc => {
+                                    const data = doc.data();
+                                    if (data.productId === 'com.universaltranslator.credits.300s' || data.productId === 'com.mervyntalks.credits.300s') {
+                                        product300Count++;
+                                        product300Revenue += 1.99; // Use default price for fallback
+                                    } else if (data.productId === 'com.universaltranslator.credits.600s' || data.productId === 'com.mervyntalks.credits.600s') {
+                                        product600Count++;
+                                        product600Revenue += 2.99; // Use default price for fallback
+                                    }
+                                });
+                            } catch (e) {
+                                // Skip users without purchases
+                            }
                         }
-                    });
+                    }
 
+                    // Update display
                     document.getElementById('product300Stats').textContent = 
                         `${product300Count} sold • $${product300Revenue.toFixed(2)} revenue`;
                     document.getElementById('product600Stats').textContent = 
                         `${product600Count} sold • $${product600Revenue.toFixed(2)} revenue`;
 
                     // Calculate ARPU
-                    const totalUsers = document.getElementById('totalUsers').textContent;
+                    const totalUsersText = document.getElementById('totalUsers').textContent;
+                    const totalUsers = parseInt(totalUsersText) || 0;
                     const totalRevenue = product300Revenue + product600Revenue;
-                    const arpu = totalUsers > 0 ? (totalRevenue / parseInt(totalUsers)) : 0;
+                    const arpu = totalUsers > 0 ? (totalRevenue / totalUsers) : 0;
                     document.getElementById('arpuStats').textContent = `$${arpu.toFixed(2)}`;
+
+                    console.log(`✅ Revenue data loaded: 5-min: ${product300Count}, 10-min: ${product600Count}, Total: $${totalRevenue.toFixed(2)}`);
 
                     // Load recent transactions
                     await this.loadRecentTransactions();
                     
                 } catch (error) {
-                    console.error('Failed to load revenue data:', error);
+                    console.error('❌ Failed to load revenue data:', error);
+                    document.getElementById('product300Stats').textContent = 'Error loading data';
+                    document.getElementById('product600Stats').textContent = 'Error loading data';
+                    document.getElementById('arpuStats').textContent = 'Error loading data';
                 }
             }
 
             async loadRecentTransactions() {
+                const transactionsBody = document.getElementById('transactionsTableBody');
+                
                 try {
-                    const transactionsSnap = await getDocs(
-                        query(collectionGroup(db, 'items'), 
-                              orderBy('purchasedAt', 'desc'), 
-                              limit(10))
-                    );
-
-                    const transactionsBody = document.getElementById('transactionsTableBody');
+                    console.log('📊 Loading recent transactions...');
+                    transactionsBody.innerHTML = '<tr><td colspan="5" class="loading">Loading transactions...</td></tr>';
                     
-                    if (transactionsSnap.empty) {
+                    let transactions = [];
+                    const prices = this.getCurrentPrices();
+                    
+                    try {
+                        // Try collection group query first
+                        const transactionsSnap = await getDocs(
+                            query(collectionGroup(db, 'items'), 
+                                  orderBy('purchasedAt', 'desc'), 
+                                  limit(10))
+                        );
+                        
+                        if (!transactionsSnap.empty) {
+                            for (const transDoc of transactionsSnap.docs) {
+                                const data = transDoc.data();
+                                const userId = transDoc.ref.parent.parent.id;
+                                
+                                // Get user email
+                                let userEmail = 'Unknown';
+                                try {
+                                    const userDoc = await getDoc(doc(db, 'users', userId));
+                                    if (userDoc.exists()) {
+                                        userEmail = userDoc.data().email || userId;
+                                    }
+                                } catch (e) {}
+
+                                const productId = data.productId;
+                                const isSmallPackage = productId === 'com.universaltranslator.credits.300s' || 
+                                                       productId === 'com.mervyntalks.credits.300s';
+                                
+                                transactions.push({
+                                    date: data.purchasedAt?.toDate() || new Date(),
+                                    user: userEmail,
+                                    product: isSmallPackage ? '5-min package' : '10-min package',
+                                    amount: prices[productId] || (isSmallPackage ? 1.99 : 2.99),
+                                    status: 'Completed'
+                                });
+                            }
+                        }
+                    } catch (queryError) {
+                        console.warn('⚠️ Collection group query failed, using fallback:', queryError);
+                        
+                        // Fallback: check recent users' purchases
+                        const usersSnap = await getDocs(
+                            query(collection(db, 'users'), 
+                                  orderBy('lastSessionTime', 'desc'), 
+                                  limit(20))
+                        );
+                        
+                        for (const userDoc of usersSnap.docs) {
+                            if (transactions.length >= 10) break;
+                            
+                            try {
+                                const purchasesSnap = await getDocs(
+                                    query(collection(db, 'purchases', userDoc.id, 'items'), 
+                                          limit(5))
+                                );
+                                
+                                purchasesSnap.forEach(transDoc => {
+                                    if (transactions.length >= 10) return;
+                                    
+                                    const data = transDoc.data();
+                                    const productId = data.productId;
+                                    const isSmallPackage = productId === 'com.universaltranslator.credits.300s' || 
+                                                           productId === 'com.mervyntalks.credits.300s';
+                                    
+                                    transactions.push({
+                                        date: data.purchasedAt?.toDate() || new Date(),
+                                        user: userDoc.data().email || userDoc.id,
+                                        product: isSmallPackage ? '5-min package' : '10-min package',
+                                        amount: isSmallPackage ? 1.99 : 2.99,
+                                        status: 'Completed'
+                                    });
+                                });
+                            } catch (e) {
+                                // Skip users without purchases
+                            }
+                        }
+                    }
+                    
+                    if (transactions.length === 0) {
                         transactionsBody.innerHTML = '<tr><td colspan="5" class="loading">No transactions found</td></tr>';
                         return;
-                    }
-
-                    const prices = this.getCurrentPrices();
-                    const transactions = [];
-
-                    for (const transDoc of transactionsSnap.docs) {
-                        const data = transDoc.data();
-                        const userId = transDoc.ref.parent.parent.id;
-                        
-                        // Get user email
-                        let userEmail = 'Unknown';
-                        try {
-                            const userDoc = await getDoc(doc(db, 'users', userId));
-                            if (userDoc.exists()) {
-                                userEmail = userDoc.data().email || userId;
-                            }
-                        } catch (e) {}
-
-                        transactions.push({
-                            date: data.purchasedAt?.toDate() || new Date(),
-                            user: userEmail,
-                            product: data.productId === 'com.mervyntalks.credits.300s' ? '5-min package' : '10-min package',
-                            amount: prices[data.productId] || 0,
-                            status: 'Completed'
-                        });
                     }
 
                     transactionsBody.innerHTML = transactions.map(trans => `
@@ -1645,12 +1802,14 @@ New Balance: ${this.formatTime(finalCredits)}`);
 
             loadPrices() {
                 const saved = JSON.parse(localStorage.getItem('skuPrices') || '{}');
-                document.getElementById('price300Input').value = saved['com.mervyntalks.credits.300s'] || '0.99';
-                document.getElementById('price600Input').value = saved['com.mervyntalks.credits.600s'] || '1.99';
+                document.getElementById('price300Input').value = saved['com.universaltranslator.credits.300s'] || saved['com.mervyntalks.credits.300s'] || '1.99';
+                document.getElementById('price600Input').value = saved['com.universaltranslator.credits.600s'] || saved['com.mervyntalks.credits.600s'] || '2.99';
             }
 
             getCurrentPrices() {
                 return {
+                    'com.universaltranslator.credits.300s': parseFloat(document.getElementById('price300Input').value) || 0,
+                    'com.universaltranslator.credits.600s': parseFloat(document.getElementById('price600Input').value) || 0,
                     'com.mervyntalks.credits.300s': parseFloat(document.getElementById('price300Input').value) || 0,
                     'com.mervyntalks.credits.600s': parseFloat(document.getElementById('price600Input').value) || 0
                 };

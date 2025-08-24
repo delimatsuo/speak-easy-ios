@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mervyn Talks - Enhanced Admin Dashboard</title>
+    <title>Universal Translator - Admin Dashboard</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -388,7 +388,7 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <div class="logo">🗣️ Mervyn Talks Admin</div>
+            <div class="logo">🌐 Universal Translator Admin</div>
             <div class="user-info">
                 <span id="userStatus" class="status-badge status-loading">Loading...</span>
                 <button id="signInBtn" class="btn btn-primary hidden">Sign In</button>
@@ -1499,12 +1499,12 @@ New Balance: ${this.formatTime(finalCredits)}`);
                     
                     transactionsSnap.forEach(doc => {
                         const data = doc.data();
-                        if (data.productId === 'com.mervyntalks.credits.300s') {
+                        if (data.productId === 'com.universaltranslator.credits.300s' || data.productId === 'com.mervyntalks.credits.300s') {
                             product300Count++;
-                            product300Revenue += prices[data.productId] || 0;
-                        } else if (data.productId === 'com.mervyntalks.credits.600s') {
+                            product300Revenue += prices[data.productId] || prices['com.universaltranslator.credits.300s'] || 1.99;
+                        } else if (data.productId === 'com.universaltranslator.credits.600s' || data.productId === 'com.mervyntalks.credits.600s') {
                             product600Count++;
-                            product600Revenue += prices[data.productId] || 0;
+                            product600Revenue += prices[data.productId] || prices['com.universaltranslator.credits.600s'] || 2.99;
                         }
                     });
 
@@ -1561,7 +1561,7 @@ New Balance: ${this.formatTime(finalCredits)}`);
                         transactions.push({
                             date: data.purchasedAt?.toDate() || new Date(),
                             user: userEmail,
-                            product: data.productId === 'com.mervyntalks.credits.300s' ? '5-min package' : '10-min package',
+                            product: (data.productId === 'com.universaltranslator.credits.300s' || data.productId === 'com.mervyntalks.credits.300s') ? '5-min package' : '10-min package',
                             amount: prices[data.productId] || 0,
                             status: 'Completed'
                         });
@@ -1634,12 +1634,14 @@ New Balance: ${this.formatTime(finalCredits)}`);
 
             loadPrices() {
                 const saved = JSON.parse(localStorage.getItem('skuPrices') || '{}');
-                document.getElementById('price300Input').value = saved['com.mervyntalks.credits.300s'] || '0.99';
-                document.getElementById('price600Input').value = saved['com.mervyntalks.credits.600s'] || '1.99';
+                document.getElementById('price300Input').value = saved['com.universaltranslator.credits.300s'] || saved['com.mervyntalks.credits.300s'] || '1.99';
+                document.getElementById('price600Input').value = saved['com.universaltranslator.credits.600s'] || saved['com.mervyntalks.credits.600s'] || '2.99';
             }
 
             getCurrentPrices() {
                 return {
+                    'com.universaltranslator.credits.300s': parseFloat(document.getElementById('price300Input').value) || 0,
+                    'com.universaltranslator.credits.600s': parseFloat(document.getElementById('price600Input').value) || 0,
                     'com.mervyntalks.credits.300s': parseFloat(document.getElementById('price300Input').value) || 0,
                     'com.mervyntalks.credits.600s': parseFloat(document.getElementById('price600Input').value) || 0
                 };

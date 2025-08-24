@@ -56,6 +56,11 @@ service cloud.firestore {
       allow delete: if isOwner(uid) || isAdmin(); // Allow users to delete their own profile
     }
 
+    // Allow admins to read collection groups for revenue analytics
+    match /{path=**}/items/{item} {
+      allow read: if isAdmin();
+    }
+
     // Deny all else
     match /{document=**} {
       allow read, write: if false;

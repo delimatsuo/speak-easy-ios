@@ -46,20 +46,6 @@ private struct FirstRunConsentView: View {
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                         .lineLimit(nil)
-                    
-                    // Weekly free credit info
-                    HStack(spacing: 8) {
-                        Image(systemName: "gift.fill")
-                            .foregroundColor(.green)
-                            .font(.system(size: 20))
-                        
-                        Text("Get 1 free minute of translation every Monday!")
-                            .font(.subheadline.weight(.medium))
-                            .foregroundColor(.primary)
-                    }
-                    .padding()
-                    .background(Color.green.opacity(0.1))
-                    .cornerRadius(12)
                 }
                 
                 VStack(spacing: 12) {

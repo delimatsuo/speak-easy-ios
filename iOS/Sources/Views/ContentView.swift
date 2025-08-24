@@ -133,21 +133,15 @@ struct ContentView: View {
                 remainingSeconds: isAnonymousMode ? anonymousCredits.remainingSeconds : credits.remainingSeconds
             )
             
-            // Watch Status Row - Only show if watch app is installed
-            if watchSession.isWatchAppInstalled {
+            // Watch Connection Status
+            if watchSession.isPaired {
                 HStack {
-                    Spacer()
-                    
-                    // Watch Connection Status
-                    HStack {
-                        Image(systemName: watchSession.isReachable ? "applewatch" : "applewatch.slash")
-                            .font(.caption)
-                            .foregroundColor(watchSession.isReachable ? .green : .orange)
-                        Text(watchSession.isReachable ? "Watch Connected" : "Watch Not Reachable")
-                            .font(.caption)
-                            .foregroundColor(watchSession.isReachable ? .green : .orange)
-                    }
-                    
+                    Image(systemName: watchSession.isReachable ? "applewatch" : "applewatch.slash")
+                        .font(.caption)
+                        .foregroundColor(watchSession.isReachable ? .green : .orange)
+                    Text(watchSession.isReachable ? "Watch Connected" : "Watch Disconnected")
+                        .font(.caption)
+                        .foregroundColor(watchSession.isReachable ? .green : .orange)
                     Spacer()
                 }
                 .padding(.horizontal)
@@ -257,10 +251,10 @@ struct ContentView: View {
             forName: UIApplication.willResignActiveNotification,
             object: nil,
             queue: .main
-        ) { _ in
-            clearConversationText()
+        ) { [weak self] _ in
+            self?.clearConversationText()
             // Clean up audio sessions when app goes to background
-            audioManager.forceCleanupAllSessions()
+            self?.audioManager.forceCleanupAllSessions()
         }
         
         // Listen for purchase sheet requests from ProfileView
@@ -268,8 +262,8 @@ struct ContentView: View {
             forName: NSNotification.Name("ShowPurchaseSheet"),
             object: nil,
             queue: .main
-        ) { _ in
-            showPurchaseSheet = true
+        ) { [weak self] _ in
+            self?.showPurchaseSheet = true
         }
         
         updateModeBasedOnAuth() // Check if user is already signed in
@@ -357,15 +351,18 @@ struct ContentView: View {
         startRecordingTimer()
         
         print("🔍 [UI] Calling audioManager.startRecording...")
-        audioManager.startRecording { success in
-            Task { @MainActor in
+        audioManager.startRecording { [weak self] success in
+            guard let self = self else { return }
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
                 print("🔍 [UI] audioManager.startRecording completion: success=\(success)")
                 if success {
                     // Defer live transcription to avoid blocking UI
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                        guard let self = self else { return }
                         do {
-                            print("🔍 [UI] Starting live transcription for language: \(sourceLanguage)")
-                            try audioManager.startLiveTranscription(language: sourceLanguage)
+                            print("🔍 [UI] Starting live transcription for language: \(self.sourceLanguage)")
+                            try self.audioManager.startLiveTranscription(language: self.sourceLanguage)
                         } catch {
                             print("❌ [UI] Failed to start live transcription: \(error)")
                             // Don't show error for transcription failure - recording still works
@@ -373,36 +370,38 @@ struct ContentView: View {
                     }
                 } else {
                     print("❌ [UI] Recording failed - resetting state")
-                    showError("Failed to start recording")
-                    recordingTimer?.invalidate()
-                    recordingTimer = nil
+                    self.showError("Failed to start recording")
+                    self.recordingTimer?.invalidate()
+                    self.recordingTimer = nil
                 }
             }
         }
     }
     
     private func startRecordingTimer() {
-        recordingTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            Task { @MainActor in
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
                 // Deduct credits per elapsed second from appropriate manager
-                if isAnonymousMode {
-                    anonymousCredits.deduct(seconds: 1)
+                if self.isAnonymousMode {
+                    self.anonymousCredits.deduct(seconds: 1)
                 } else {
-                    credits.deduct(seconds: 1)
+                    self.credits.deduct(seconds: 1)
                 }
-                recordingDuration += 1
+                self.recordingDuration += 1
                 
                 // Stop if out of credits
-                if currentCredits <= 0 {
-                    stopRecording()
-                    showPurchaseSheet = true
+                if self.currentCredits <= 0 {
+                    self.stopRecording()
+                    self.showPurchaseSheet = true
                     return
                 }
                 
                 // Safety cap at 2 minutes
-                if recordingDuration >= 120 {
-                    stopRecording()
-                    showError("Recording stopped at 2-minute limit")
+                if self.recordingDuration >= 120 {
+                    self.stopRecording()
+                    self.showError("Recording stopped at 2-minute limit")
                     return
                 }
             }
@@ -424,8 +423,8 @@ struct ContentView: View {
         print("🔍 [UI] Transcribed text: '\(transcribedText.prefix(50))...' (length: \(transcribedText.count))")
         
         print("🔍 [UI] Stopping audio recording...")
-        audioManager.stopRecording { _ in
-            // Completion handler
+        audioManager.stopRecording { [weak self] _ in
+            // Completion handler with weak self
         }
         
         if !transcribedText.isEmpty {
@@ -457,25 +456,27 @@ struct ContentView: View {
                 let translationDuration = Date().timeIntervalSince(translationStartTime)
                 print("🚀 Translation completed in \(String(format: "%.2f", translationDuration))s")
                 
-                await MainActor.run {
-                    translatedText = result.translatedText
-                    isProcessing = false
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    self.translatedText = result.translatedText
+                    self.isProcessing = false
                     
                     // Cache audio data for replay
-                    cachedTranslationAudio = result.audioData
+                    self.cachedTranslationAudio = result.audioData
                     
                     // Auto-play the translation
                     if let audioData = result.audioData {
-                        playAudio(audioData)
+                        self.playAudio(audioData)
                     }
                 }
             } catch {
                 let translationDuration = Date().timeIntervalSince(translationStartTime)
                 print("❌ Translation failed after \(String(format: "%.2f", translationDuration))s: \(error)")
                 
-                await MainActor.run {
-                    isProcessing = false
-                    showError(error.localizedDescription)
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    self.isProcessing = false
+                    self.showError(error.localizedDescription)
                 }
             }
         }
@@ -500,20 +501,22 @@ struct ContentView: View {
                         to: targetLanguage
                     )
                     
-                    await MainActor.run {
-                        isProcessing = false
+                    await MainActor.run { [weak self] in
+                        guard let self = self else { return }
+                        self.isProcessing = false
                         
                         // Cache the audio for future replays
-                        cachedTranslationAudio = result.audioData
+                        self.cachedTranslationAudio = result.audioData
                         
                         if let audioData = result.audioData {
-                            playAudio(audioData)
+                            self.playAudio(audioData)
                         }
                     }
                 } catch {
-                    await MainActor.run {
-                        isProcessing = false
-                        showError(error.localizedDescription)
+                    await MainActor.run { [weak self] in
+                        guard let self = self else { return }
+                        self.isProcessing = false
+                        self.showError(error.localizedDescription)
                     }
                 }
             }
@@ -523,11 +526,13 @@ struct ContentView: View {
     private func playAudio(_ audioData: Data) {
         isPlaying = true
         
-        audioManager.playAudio(audioData) { success in
-            Task { @MainActor in
-                isPlaying = false
+        audioManager.playAudio(audioData) { [weak self] success in
+            guard let self = self else { return }
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                self.isPlaying = false
                 if !success {
-                    showError("Failed to play audio")
+                    self.showError("Failed to play audio")
                 }
             }
         }
