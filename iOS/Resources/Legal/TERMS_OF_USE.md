@@ -4,11 +4,11 @@ Version 1.0
 
 Effective Date: August 9, 2025
 
-Owner/Operator: Electus USA LLC (Massachusetts, USA)
+Owner/Operator: Travel Advisory LLC (Massachusetts, USA)
 
 Address: 175 Fox Run Rd., Bolton, MA 01740
 
-Contact: contact@electus.dev
+Contact: contact@traveladvisory.online
 
 
 1. Service

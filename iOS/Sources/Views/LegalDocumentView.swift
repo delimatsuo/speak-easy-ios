@@ -115,7 +115,7 @@ struct LegalDocumentView: View {
             • Free weekly translation credits are provided
             • Additional credits can be purchased as needed
             
-            For the complete Terms of Use, please visit our website or contact us at contact@electus.dev
+            For the complete Terms of Use, please visit our website or contact us at support@traveladvisory.online
             
             By using this app, you agree to these terms and our Privacy Policy.
             """
@@ -133,12 +133,12 @@ struct LegalDocumentView: View {
             • No sharing of personal information with third parties
             • Data retention is limited to 12 months maximum
             
-            For complete privacy details, please contact us at contact@electus.dev
+            For complete privacy details, please contact us at support@traveladvisory.online
             
             This privacy policy is effective as of the app installation date.
             """
         } else {
-            fallbackContent = "Document not available. Please contact support at contact@electus.dev"
+            fallbackContent = "Document not available. Please contact support at support@traveladvisory.online"
         }
         
         content = AttributedString(fallbackContent)

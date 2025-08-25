@@ -2,7 +2,7 @@ Mervyn Talks - Support & Help
 
 App Support Page
 Last Updated: January 25, 2025
-Contact: contact@electus.dev
+Contact: support@traveladvisory.online
 
 ---
 
@@ -157,7 +157,7 @@ We focus on these popular languages to ensure the highest translation quality an
 Contact Support
 
 Email Support
-Primary Contact: contact@electus.dev
+Primary Contact: support@traveladvisory.online
 
 Response Time: Within 24-48 hours
 Languages: English, Spanish, Portuguese
@@ -215,12 +215,12 @@ Emergency Support
 
 Critical Issues
 For urgent technical problems affecting app functionality:
-- Email: contact@electus.dev (mark as "URGENT")
+- Email: support@traveladvisory.online (mark as "URGENT")
 - Include: Device details, iOS version, exact error messages
 
 Privacy Concerns
 For privacy-related questions or data deletion requests:
-- Email: contact@electus.dev (mark as "PRIVACY")
+- Email: support@traveladvisory.online (mark as "PRIVACY")
 - Response: Within 24 hours
 
 ---
@@ -252,10 +252,10 @@ Additional Resources
 - Privacy Policy: Available in-app under Settings
 - Terms of Service: Available in-app under Settings
 - App Store Page: Search "Mervyn Talks" in the App Store
-- Company: Electus USA LLC (Massachusetts, USA)
+- Company: Travel Advisory LLC (Massachusetts, USA)
 
 ---
 
-Need more help? Contact us at contact@electus.dev
+Need more help? Contact us at support@traveladvisory.online
 
 This support page is regularly updated. Last update: January 25, 2025

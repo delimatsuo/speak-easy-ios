@@ -1,19 +1,19 @@
-Mervyn Talks - Terms of Use
+Universal AI Translator - Terms of Use
 
 Version 1.0
 
 Effective Date: August 9, 2025
 
-Owner/Operator: Electus USA LLC (Massachusetts, USA)
+Owner/Operator: Travel Advisory LLC (Massachusetts, USA)
 
 Address: 175 Fox Run Rd., Bolton, MA 01740
 
-Contact: contact@electus.dev
+Contact: contact@traveladvisory.online
 
 
 1. Service
 
-Mervyn Talks provides real-time translation and speech services. By using the app you agree to these terms.
+Universal AI Translator provides real-time translation and speech services. By using the app you agree to these terms.
 
 
 2. Accounts & Authentication

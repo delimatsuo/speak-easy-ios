@@ -2,9 +2,9 @@
 
 Effective date: August 9, 2025
 
-Controller: Electus USA LLC (Massachusetts, USA)
+Controller: Travel Advisory LLC (Massachusetts, USA)
 Address: 175 Fox Run Rd., Bolton, MA 01740
-Contact: contact@electus.dev
+Contact: contact@traveladvisory.online
 
 ## Summary
 We do not retain conversation content. Voice/text is processed in real time to provide translation, then purged. We store minimal metadata to operate the service (e.g., credits, purchases, session duration), never the conversation content.
@@ -42,6 +42,6 @@ The Service is not directed to children under 13. Do not use if you are under ap
 Data may be processed in regions where our processors operate.
 
 ## Contact
-support@mervyntalks.app
+support@traveladvisory.online
 
 

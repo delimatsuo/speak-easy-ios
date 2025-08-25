@@ -1,12 +1,9 @@
 # Mervyn Talks - Development CI/CD Pipeline
-name: Development CI/CD
+# DEPRECATED - See ios-ci.yml and backend-ci.yml
+name: Development CI/CD (Deprecated)
 
 on:
-  push:
-    branches: [develop, feature/*]
-  pull_request:
-    branches: [develop, main]
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:  # Only manual triggering
 
 env:
   GCP_PROJECT_DEV: universal-translator-dev

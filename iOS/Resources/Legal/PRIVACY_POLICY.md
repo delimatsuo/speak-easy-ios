@@ -4,9 +4,9 @@ Version 2.0
 
 Effective Date: August 18, 2025
 
-Owner/Operator: Electus USA LLC (Massachusetts, USA)
+Owner/Operator: Travel Advisory LLC (Massachusetts, USA)
 
-Contact: contact@electus.dev
+Contact: contact@traveladvisory.online
 
 Support: support@electus.dev
 

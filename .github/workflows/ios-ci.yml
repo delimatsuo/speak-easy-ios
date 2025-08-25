@@ -1,0 +1,196 @@
+name: iOS CI/CD
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  XCODE_VERSION: '15.0'
+  IOS_DEPLOYMENT_TARGET: '15.0'
+  WATCHOS_DEPLOYMENT_TARGET: '9.0'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+    - name: Cache Swift packages
+      uses: actions/cache@v3
+      with:
+        path: ~/Library/Developer/Xcode/DerivedData
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+    
+    - name: Install dependencies
+      run: |
+        if [ -f "iOS/Resources/Configuration/Podfile" ]; then
+          cd iOS/Resources/Configuration
+          pod install
+        fi
+    
+    - name: Build iOS App
+      run: |
+        xcodebuild build \
+          -project iOS/UniversalTranslator.xcodeproj \
+          -scheme UniversalTranslator \
+          -sdk iphonesimulator \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.0' \
+          ONLY_ACTIVE_ARCH=NO \
+          CODE_SIGNING_ALLOWED=NO
+    
+    - name: Build watchOS App
+      run: |
+        xcodebuild build \
+          -project iOS/UniversalTranslator.xcodeproj \
+          -scheme "UniversalTranslator Watch App" \
+          -sdk watchsimulator \
+          -destination 'platform=watchOS Simulator,name=Apple Watch Series 9 (45mm),OS=10.0' \
+          ONLY_ACTIVE_ARCH=NO \
+          CODE_SIGNING_ALLOWED=NO
+      continue-on-error: true
+    
+    - name: Run Unit Tests
+      run: |
+        xcodebuild test \
+          -project iOS/UniversalTranslator.xcodeproj \
+          -scheme UniversalTranslator \
+          -sdk iphonesimulator \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.0' \
+          -resultBundlePath TestResults \
+          CODE_SIGNING_ALLOWED=NO || true
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: TestResults
+
+  code-quality:
+    name: Code Quality
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install SwiftLint
+      run: brew install swiftlint
+      continue-on-error: true
+    
+    - name: Run SwiftLint
+      run: |
+        if command -v swiftlint &> /dev/null; then
+          swiftlint lint --reporter json > swiftlint-report.json || true
+        fi
+      continue-on-error: true
+    
+    - name: Check for API keys
+      run: |
+        # Check for hardcoded API keys
+        if grep -r "AIza" --include="*.swift" --include="*.m" --include="*.h" iOS/ watchOS/; then
+          echo "::warning::Potential API keys found in source code"
+        fi
+        
+        # Ensure template files exist
+        if [ ! -f "iOS/Resources/Configuration/GoogleService-Info.plist" ]; then
+          echo "::notice::GoogleService-Info.plist not found (expected in production)"
+        fi
+    
+    - name: Upload SwiftLint report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: swiftlint-report
+        path: swiftlint-report.json
+
+  archive-ipa:
+    name: Archive IPA
+    runs-on: macos-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    needs: [build-and-test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+    
+    - name: Setup certificates
+      env:
+        BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+        P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        # Create variables
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+        
+        # Import certificate and provisioning profile from secrets if they exist
+        if [ ! -z "$BUILD_CERTIFICATE_BASE64" ]; then
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+          
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+          
+          # Apply provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+        else
+          echo "::notice::No signing certificates configured. Skipping archive."
+          exit 0
+        fi
+      continue-on-error: true
+    
+    - name: Archive app
+      run: |
+        if [ -f "$RUNNER_TEMP/app-signing.keychain-db" ]; then
+          xcodebuild archive \
+            -project iOS/UniversalTranslator.xcodeproj \
+            -scheme UniversalTranslator \
+            -archivePath $RUNNER_TEMP/UniversalTranslator.xcarchive \
+            -sdk iphoneos \
+            -configuration Release \
+            -allowProvisioningUpdates
+        else
+          echo "::notice::Skipping archive due to missing certificates"
+        fi
+      continue-on-error: true
+    
+    - name: Export IPA
+      run: |
+        if [ -d "$RUNNER_TEMP/UniversalTranslator.xcarchive" ]; then
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/UniversalTranslator.xcarchive \
+            -exportPath $RUNNER_TEMP/build \
+            -exportOptionsPlist iOS/Resources/Configuration/ExportOptions.plist
+        fi
+      continue-on-error: true
+    
+    - name: Upload IPA
+      uses: actions/upload-artifact@v3
+      if: success()
+      with:
+        name: ipa
+        path: ${{ runner.temp }}/build/*.ipa

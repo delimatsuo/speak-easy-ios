@@ -2,20 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>com.universaltranslator.app</string>
-	<key>CFBundleName</key>
-	<string>Universal AI Translator</string>
+	<key>APPLE_CLIENT_ID</key>
+	<string>$(APPLE_CLIENT_ID)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Universal AI Translator</string>
-	<key>CFBundleVersion</key>
-	<string>2.3</string>
-	<key>CFBundleShortVersionString</key>
-	<string>2.3</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundlePrimaryIcon</key>
@@ -26,43 +18,14 @@
 			</array>
 		</dict>
 	</dict>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Universal AI Translator needs microphone access to record your voice for real-time translation. Audio is processed locally and immediately deleted after translation - we never store your conversations.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Universal AI Translator uses speech recognition to convert your spoken words into text for accurate translation. Speech processing happens on-device for privacy protection.</string>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>armv7</string>
-	</array>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	
-	<!-- OAuth 2.0 Configuration -->
-	<key>GOOGLE_CLIENT_ID</key>
-	<string>$(GOOGLE_CLIENT_ID)</string>
-	<key>APPLE_CLIENT_ID</key>
-	<string>$(APPLE_CLIENT_ID)</string>
-	<key>MICROSOFT_CLIENT_ID</key>
-	<string>$(MICROSOFT_CLIENT_ID)</string>
-	<key>GITHUB_CLIENT_ID</key>
-	<string>$(GITHUB_CLIENT_ID)</string>
-	
-	<!-- URL Schemes for OAuth Callbacks -->
+	<key>CFBundleIdentifier</key>
+	<string>com.universaltranslator.app</string>
+	<key>CFBundleName</key>
+	<string>Universal AI Translator</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>3.0.0</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -74,12 +37,16 @@
 			</array>
 		</dict>
 	</array>
-	
-	<!-- Privacy - Biometric Authentication -->
-	<key>NSFaceIDUsageDescription</key>
-	<string>Universal AI Translator uses Face ID to securely access your authentication tokens and protect your account information.</string>
-	
-	<!-- App Transport Security -->
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>GITHUB_CLIENT_ID</key>
+	<string>$(GITHUB_CLIENT_ID)</string>
+	<key>GOOGLE_CLIENT_ID</key>
+	<string>$(GOOGLE_CLIENT_ID)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>MICROSOFT_CLIENT_ID</key>
+	<string>$(MICROSOFT_CLIENT_ID)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -115,5 +82,30 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Universal AI Translator uses Face ID to securely access your authentication tokens and protect your account information.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Universal AI Translator needs microphone access to record your voice for real-time translation. Audio is processed locally and immediately deleted after translation - we never store your conversations.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Universal AI Translator uses speech recognition to convert your spoken words into text for accurate translation. Speech processing happens on-device for privacy protection.</string>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 </dict>
 </plist>

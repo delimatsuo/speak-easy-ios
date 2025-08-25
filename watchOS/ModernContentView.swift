@@ -14,13 +14,26 @@ struct ModernContentView: View {
     @StateObject private var audioManager = WatchAudioManager()
     @StateObject private var connectivityManager = WatchConnectivityManager.shared
     
+    // MARK: - Screen Size Detection
+    private var screenSize: CGSize {
+        WKInterfaceDevice.current().screenBounds.size
+    }
+    
+    private var isSmallWatch: Bool {
+        screenSize.width < 180  // 38mm and 40mm watches
+    }
+    
+    private var isLargeWatch: Bool {
+        screenSize.width >= 200  // 44mm, 45mm, and Ultra watches
+    }
+    
     // MARK: - State Management
     @State private var currentState: AppState = .idle
     @State private var sourceLanguageIndex: Int = 0
     @State private var targetLanguageIndex: Int = 1
     @State private var showingLanguageSelection = false
     @State private var isSelectingSourceLanguage = true
-    @State private var crownValue: Double = 0
+    @State private var volumeLevel: Double = 0.5  // Changed from crownValue to volumeLevel for volume control
     
     // MARK: - Translation Data
     @State private var errorMessage = ""
@@ -33,6 +46,8 @@ struct ModernContentView: View {
     @State private var audioLevels: [Float] = Array(repeating: 0.1, count: 12)
     @State private var recordingDuration: Int = 0
     @State private var connectionAnimating = false
+    @State private var hasAudioToReplay: Bool = false
+    @State private var isReplaying: Bool = false
     
     // MARK: - Animation States
     @State private var microphoneScale: CGFloat = 1.0
@@ -77,38 +92,39 @@ struct ModernContentView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: WatchSpacing.md) {
-                    // MARK: - Header
-                    modernHeaderView
-                    
-                    // MARK: - Language Selection
-                    modernLanguageSelector
-                    
-                    // MARK: - Main Content Area
-                    mainContentView
-                        .animation(WatchAnimations.smooth, value: currentState)
-                    
-                    Spacer(minLength: WatchSpacing.sm)
-                }
-                .padding(.horizontal, WatchSpacing.md)
+            VStack(spacing: WatchSpacing.xs) {  // Changed from ScrollView to VStack for better centering
+                // MARK: - Compact Header with connection indicator only
+                compactHeaderView
+                
+                // MARK: - Language Selection
+                modernLanguageSelector
+                
+                Spacer(minLength: 0)  // Push content to center
+                
+                // MARK: - Main Content Area
+                mainContentView
+                    .animation(WatchAnimations.smooth, value: currentState)
+                
+                Spacer(minLength: 0)  // Push content to center
             }
+            .padding(.horizontal, WatchSpacing.xs)  // Minimal horizontal padding
+            .padding(.vertical, 4)  // Small vertical padding for balance
             .background(Color.watchBackground)
             .ignoresSafeArea(.all, edges: .bottom)
             .navigationTitle("")
             .navigationBarHidden(true)
             .focusable(true)
             .digitalCrownRotation(
-                $crownValue,
-                from: 0,
-                through: Double(languages.count - 1),
-                by: 1,
+                $volumeLevel,
+                from: 0.0,
+                through: 1.0,
+                by: 0.05,  // 5% volume increments
                 sensitivity: .medium,
-                isContinuous: false,
+                isContinuous: true,
                 isHapticFeedbackEnabled: true
             )
-            .onChange(of: crownValue) { _, newValue in
-                handleCrownRotation(newValue)
+            .onChange(of: volumeLevel) { _, newValue in
+                handleVolumeChange(newValue)
             }
         }
         .onAppear {
@@ -122,28 +138,22 @@ struct ModernContentView: View {
         }
     }
     
-    // MARK: - Modern Header View
+    // MARK: - Compact Header View
     
-    private var modernHeaderView: some View {
+    private var compactHeaderView: some View {
         HStack {
-            // Time display
-            Text(getCurrentTime())
-                .watchTextStyle(.caption)
-                .opacity(0.7)
-            
-            Spacer()
-            
-            // App title with modern typography
+            // App title - smaller and more compact
             Text("Translator")
-                .watchTextStyle(.headline)
+                .watchTextStyle(.caption)
                 .foregroundColor(.watchTextPrimary)
+                .fontWeight(.medium)
             
             Spacer()
             
-            // Subtle connection indicator
+            // Connection indicator
             modernConnectionIndicator
         }
-        .padding(.vertical, WatchSpacing.xs)
+        .padding(.vertical, 2)  // Minimal vertical padding
     }
     
     // MARK: - Modern Connection Indicator
@@ -217,25 +227,26 @@ struct ModernContentView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: WatchSpacing.xs) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .watchTextStyle(.caption2)
                     .foregroundColor(.watchTextTertiary)
+                    .font(.system(size: 9))  // Smaller label
                 
                 HStack(spacing: WatchSpacing.xs) {
                     Text(language.3) // Flag emoji
-                        .font(.system(size: 12))
+                        .font(.system(size: 11))  // Slightly smaller flag
                     
                     Text(getLanguageDisplayName(language))
                         .watchTextStyle(.caption)
                         .foregroundColor(.watchTextPrimary)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .minimumScaleFactor(0.7)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, WatchSpacing.sm)
-            .padding(.horizontal, WatchSpacing.sm)
+            .padding(.vertical, WatchSpacing.sm)  // Reduced vertical padding
+            .padding(.horizontal, WatchSpacing.sm)  // Reduced horizontal padding
             .background(Color.watchSurface2)
             .cornerRadius(WatchCornerRadius.md)
         }
@@ -284,24 +295,76 @@ struct ModernContentView: View {
                 modernErrorView
             }
         }
-        .frame(minHeight: 120)
+        // Removed fixed minimum height to allow natural centering
     }
     
     // MARK: - Modern Idle View
     
     private var modernIdleView: some View {
-        VStack(spacing: WatchSpacing.lg) {
+        VStack(spacing: WatchSpacing.xs) {  // Even tighter spacing
             // Modern microphone button
             modernMicrophoneButton
             
-            // Instruction text
-            Text("Tap to translate")
-                .watchTextStyle(.caption)
-                .foregroundColor(.watchTextTertiary)
+            // Combined instruction and volume in one line
+            VStack(spacing: 2) {
+                Text("Tap to translate")
+                    .watchTextStyle(.caption2)
+                    .foregroundColor(.watchTextTertiary)
+                    .font(.system(size: 10))
+                
+                HStack(spacing: 2) {
+                    Image(systemName: volumeIconName)
+                        .font(.system(size: 8))
+                        .foregroundColor(.watchTextTertiary)
+                    Text("\(Int(volumeLevel * 100))%")
+                        .font(.system(size: 8))
+                        .foregroundColor(.watchTextTertiary)
+                }
+                .opacity(0.6)
+            }
             
-            // Credits and status (subtle)
-            modernCreditsView
+            // Replay button if we have previous audio
+            if hasAudioToReplay && !translatedText.isEmpty {
+                modernReplayCard
+            }
+            
+            // Credits only if needed
+            if !connectivityManager.isReachable || connectivityManager.creditsRemaining <= 60 {
+                modernCreditsView
+            }
         }
+    }
+    
+    // MARK: - Modern Replay Card
+    
+    private var modernReplayCard: some View {
+        Button(action: replayTranslation) {
+            VStack(alignment: .leading, spacing: WatchSpacing.xs) {
+                HStack {
+                    Text("Last Translation")
+                        .watchTextStyle(.caption2)
+                        .foregroundColor(.watchTextTertiary)
+                    Spacer()
+                    Image(systemName: "speaker.wave.2.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.watchAccent)
+                }
+                
+                Text(translatedText)
+                    .watchTextStyle(.caption)
+                    .foregroundColor(.watchTextPrimary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.vertical, WatchSpacing.sm)
+            .padding(.horizontal, WatchSpacing.sm)
+            .background(Color.watchSurface2.opacity(0.7))
+            .cornerRadius(WatchCornerRadius.sm)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("Replay last translation")
+        .accessibilityHint("Double tap to replay: \(translatedText)")
     }
     
     private var modernMicrophoneButton: some View {
@@ -310,13 +373,13 @@ struct ModernContentView: View {
                 // Outer glow
                 Circle()
                     .fill(WatchGradients.microphoneButton)
-                    .frame(width: 100, height: 100)
+                    .frame(width: isSmallWatch ? 80 : 100, height: isSmallWatch ? 80 : 100)
                     .scaleEffect(microphoneScale)
                 
                 // Main button
                 Circle()
                     .fill(WatchGradients.primary)
-                    .frame(width: 70, height: 70)
+                    .frame(width: isSmallWatch ? 60 : 70, height: isSmallWatch ? 60 : 70)
                     .overlay(
                         Circle()
                             .stroke(Color.watchTextPrimary.opacity(0.1), lineWidth: 1)
@@ -324,7 +387,7 @@ struct ModernContentView: View {
                 
                 // Microphone icon
                 Image(systemName: "mic.fill")
-                    .font(.system(size: 24, weight: .medium))
+                    .font(.system(size: isSmallWatch ? 20 : 24, weight: .medium))
                     .foregroundColor(.white)
             }
         }
@@ -503,23 +566,46 @@ struct ModernContentView: View {
                 isHighlighted: true
             )
             
-            // Playing indicator
+            // Playing indicator with volume level
             HStack(spacing: WatchSpacing.xs) {
-                Image(systemName: "speaker.wave.2.fill")
+                Image(systemName: volumeIconName)
                     .font(.system(size: 10))
-                    .foregroundColor(.watchSuccess)
-                Text("Playing...")
+                    .foregroundColor(isReplaying ? .watchAccent : .watchSuccess)
+                Text(isReplaying ? "Replaying..." : "Playing...")
                     .watchTextStyle(.caption)
-                    .foregroundColor(.watchSuccess)
+                    .foregroundColor(isReplaying ? .watchAccent : .watchSuccess)
+                Spacer()
+                Text("\(Int(volumeLevel * 100))%")
+                    .watchTextStyle(.caption2)
+                    .foregroundColor(.watchTextSecondary)
             }
             
-            // New translation button
-            modernActionButton(
-                title: "New Translation",
-                icon: "plus.circle",
-                color: .watchAccent
-            ) {
-                resetForNewTranslation()
+            // Action buttons
+            HStack(spacing: WatchSpacing.sm) {
+                // Replay button (only show if audio is available)
+                if hasAudioToReplay {
+                    modernActionButton(
+                        title: "Replay",
+                        icon: "speaker.wave.2",
+                        color: .watchAccent,
+                        style: .secondary
+                    ) {
+                        replayTranslation()
+                    }
+                    .accessibilityLabel("Replay translation")
+                    .accessibilityHint("Tap to replay the translated audio")
+                }
+                
+                // New translation button
+                modernActionButton(
+                    title: "New",
+                    icon: "plus.circle",
+                    color: .watchAccent
+                ) {
+                    resetForNewTranslation()
+                }
+                .accessibilityLabel("New translation")
+                .accessibilityHint("Tap to start a new translation")
             }
         }
     }
@@ -592,6 +678,18 @@ struct ModernContentView: View {
     
     private var creditColor: Color {
         connectivityManager.creditsRemaining <= 60 ? .watchWarning : .watchTextTertiary
+    }
+    
+    private var volumeIconName: String {
+        if volumeLevel <= 0 {
+            return "speaker.slash.fill"
+        } else if volumeLevel < 0.33 {
+            return "speaker.fill"
+        } else if volumeLevel < 0.66 {
+            return "speaker.wave.1.fill"
+        } else {
+            return "speaker.wave.2.fill"
+        }
     }
     
     // MARK: - Helper Views
@@ -723,12 +821,6 @@ struct ModernContentView: View {
         connectivityManager.requestCreditsUpdate()
     }
     
-    private func getCurrentTime() -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: Date())
-    }
-    
     private func formatTime(_ seconds: Int) -> String {
         let minutes = seconds / 60
         let remainingSeconds = seconds % 60
@@ -753,20 +845,15 @@ struct ModernContentView: View {
         WatchHaptics.selection()
     }
     
-    private func handleCrownRotation(_ value: Double) {
-        let newIndex = Int(value.rounded())
-        if newIndex >= 0 && newIndex < languages.count {
-            if isSelectingSourceLanguage {
-                if newIndex != sourceLanguageIndex {
-                    sourceLanguageIndex = newIndex
-                    WatchHaptics.selection()
-                }
-            } else {
-                if newIndex != targetLanguageIndex {
-                    targetLanguageIndex = newIndex
-                    WatchHaptics.selection()
-                }
-            }
+    private func handleVolumeChange(_ value: Double) {
+        // Update the audio player volume if it's currently playing
+        if let player = audioManager.audioPlayer {
+            player.volume = Float(value)
+        }
+        
+        // Provide haptic feedback at min/max volume
+        if value <= 0.0 || value >= 1.0 {
+            WatchHaptics.selection()
         }
     }
     
@@ -786,6 +873,8 @@ struct ModernContentView: View {
         recordingDuration = 0
         recordingProgress = 0
         connectionAnimating = false
+        isReplaying = false
+        // Keep hasAudioToReplay and lastTranslationAudio for replay functionality
     }
     
     // MARK: - Recording Actions
@@ -825,8 +914,9 @@ struct ModernContentView: View {
             return
         }
         
+        // Only check iPhone connection for recording/translation, not for replay
         if !connectivityManager.isReachable {
-            errorMessage = "Open iPhone app first"
+            errorMessage = "iPhone connection required for new translations"
             currentState = .error
             WatchHaptics.error()
             return
@@ -933,22 +1023,48 @@ struct ModernContentView: View {
             
             if let audioData = response.audioData {
                 lastTranslationAudio = audioData
-                playTranslation(audioData)
+                hasAudioToReplay = true
+                playTranslation(audioData, isReplay: false)
             } else {
                 lastTranslationAudio = nil
+                hasAudioToReplay = false
                 currentState = .idle
                 WatchHaptics.success()
             }
         }
     }
     
-    private func playTranslation(_ audioData: Data) {
+    private func playTranslation(_ audioData: Data, isReplay: Bool = false) {
         currentState = .playing
+        self.isReplaying = isReplay
         
-        audioManager.playAudio(audioData) { success in
-            currentState = .idle
-            WatchHaptics.success()
+        // Pass volume directly to audio manager
+        audioManager.playAudio(audioData, volume: Float(volumeLevel)) { success in
+            if success {
+                WatchHaptics.success()
+            } else {
+                self.errorMessage = "Failed to play audio"
+                self.currentState = .error
+                WatchHaptics.error()
+            }
+            self.currentState = .idle
+            self.isReplaying = false
         }
+    }
+    
+    // MARK: - Replay Functionality
+    
+    private func replayTranslation() {
+        guard let audioData = lastTranslationAudio else {
+            errorMessage = "No audio available to replay"
+            currentState = .error
+            WatchHaptics.error()
+            return
+        }
+        
+        // No iPhone connection check needed for replay - audio is stored locally
+        playTranslation(audioData, isReplay: true)
+        WatchHaptics.selection()
     }
     
     private func startRecordingTimer() {
